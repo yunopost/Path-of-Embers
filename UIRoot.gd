@@ -24,15 +24,13 @@ func _ready():
 	RunState.gold_changed.connect(_on_gold_changed)
 	RunState.node_position_changed.connect(_on_node_position_changed)
 	
-	# Connect buttons
-	map_button.pressed.connect(_on_map_button_pressed)
-	deck_button.pressed.connect(_on_deck_button_pressed)
-	settings_button.pressed.connect(_on_settings_button_pressed)
-	
-	# Make buttons work with touch (no hover required)
-	map_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	deck_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	settings_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	# Connect buttons (with safety check)
+	if map_button:
+		map_button.pressed.connect(_on_map_button_pressed)
+	if deck_button:
+		deck_button.pressed.connect(_on_deck_button_pressed)
+	if settings_button:
+		settings_button.pressed.connect(_on_settings_button_pressed)
 	
 	# Initial UI update
 	_update_all_ui()

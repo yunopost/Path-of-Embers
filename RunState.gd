@@ -20,7 +20,7 @@ signal buffs_changed
 var party: Array = []  # Will contain character data
 
 # Deck
-var deck: Array = []  # Will contain card data
+var deck: Array = []  # Will contain DeckCardData with upgrades and transcend state
 
 # Relics
 var relics: Array = []  # Will contain relic data
@@ -50,7 +50,12 @@ var tap_to_play: bool = false
 func _ready():
 	# Initialize with dummy values
 	party = ["Character1", "Character2", "Character3"]
-	deck = ["Strike", "Defend", "Bash"]
+	# Initialize deck with simple card IDs (will be converted to DeckCardData by SaveManager if loading)
+	deck = [
+		DeckCardData.new("strike_1"),
+		DeckCardData.new("defend_1"),
+		DeckCardData.new("bash_1")
+	]
 	relics = ["Starting Relic"]
 	gold = 100
 	current_hp = 42
@@ -106,4 +111,19 @@ func set_map(value: String):
 	if map != value:
 		map = value
 		map_changed.emit()
+
+func add_card_to_deck(card_id: String, upgrades: Array = [], transcended: bool = false, transcendent_card_id: String = ""):
+	## Add a card to the deck with optional upgrades
+	var deck_card = DeckCardData.new(card_id, upgrades, transcended, transcendent_card_id)
+	deck.append(deck_card)
+	deck_changed.emit()
+
+func remove_card_from_deck(index: int):
+	## Remove a card from the deck by index
+	if index >= 0 and index < deck.size():
+		deck.remove_at(index)
+		deck_changed.emit()
+
+func get_deck_size() -> int:
+	return deck.size()
 

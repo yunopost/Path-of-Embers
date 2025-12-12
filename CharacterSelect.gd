@@ -11,4 +11,3 @@ func _ready():
 
 func _on_continue_pressed():
 	SceneRouter.change_scene("map")
-

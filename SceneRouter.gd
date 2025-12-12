@@ -25,6 +25,7 @@ func _ready():
 	ui_root = ui_root_scene.instantiate()
 	get_tree().root.add_child(ui_root)
 	ui_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ui_root.visible = false  # Start hidden, will show on Map/Combat/etc.
 	
 	# Main scene will handle initial transition
 
@@ -44,9 +45,14 @@ func change_scene(scene_name: String):
 	get_tree().root.add_child(new_scene)
 	current_scene = new_scene
 	
-	# Ensure UI is on top
+	# Show/hide UI based on scene
 	if ui_root:
 		get_tree().root.move_child(ui_root, get_tree().root.get_child_count() - 1)
+		# Hide UI on Main and CharacterSelect screens
+		if scene_name == "main" or scene_name == "character_select":
+			ui_root.visible = false
+		else:
+			ui_root.visible = true
 	
 	scene_changed.emit(scene_name)
 

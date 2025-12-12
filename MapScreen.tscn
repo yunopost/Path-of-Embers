@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://e0z9m4o1x3p6r"]
+[gd_scene load_steps=2 format=3 uid="uid://5me12rsevuf0"]
 
-[ext_resource type="Script" path="res://Path-of-Embers/MapScreen.gd" id="1_mapscreen"]
+[ext_resource type="Script" uid="uid://2pxnrvkbonxh" path="res://Path-of-Embers/MapScreen.gd" id="1_mapscreen"]
 
 [node name="MapScreen" type="Control"]
 layout_mode = 3
@@ -34,3 +34,18 @@ horizontal_alignment = 1
 layout_mode = 2
 text = "Test: Add 10 Gold"
 
+[node name="SaveButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Save Game"
+
+[node name="LoadButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Load Game"
+
+[node name="AddCardButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Add Card to Deck"
+
+[node name="RemoveCardButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Remove Last Card"

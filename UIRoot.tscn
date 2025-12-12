@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bqj8k3x7v2n1m"]
 
-[ext_resource type="Script" path="res://Path-of-Embers/UIRoot.gd" id="1_uiroot"]
+[ext_resource type="Script" uid="uid://23t01xeclxpe" path="res://Path-of-Embers/UIRoot.gd" id="1_uiroot"]
 
 [node name="UIRoot" type="Control"]
 layout_mode = 3
@@ -14,24 +14,22 @@ script = ExtResource("1_uiroot")
 
 [node name="TopLeft" type="VBoxContainer" parent="."]
 layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
 offset_left = 20.0
 offset_top = 20.0
 offset_right = 400.0
 offset_bottom = 200.0
 grow_horizontal = 0
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="HPContainer" type="HBoxContainer" parent="TopLeft"]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="HPBar" type="ProgressBar" parent="TopLeft/HPContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 max_value = 50.0
 value = 42.0
 show_percentage = false
@@ -50,6 +48,7 @@ vertical_alignment = 1
 [node name="BlockContainer" type="HBoxContainer" parent="TopLeft/HPContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 
 [node name="BlockNumber" type="Label" parent="TopLeft/HPContainer/BlockContainer"]
 layout_mode = 2
@@ -59,6 +58,7 @@ vertical_alignment = 1
 [node name="BlockBar" type="ProgressBar" parent="TopLeft/HPContainer/BlockContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 max_value = 50.0
 fill_mode = 1
 
@@ -67,26 +67,28 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="Portrait1" type="Panel" parent="TopLeft/PartyPortraits"]
+custom_minimum_size = Vector2(80, 100)
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(80, 100)
+mouse_filter = 2
 
 [node name="Portrait2" type="Panel" parent="TopLeft/PartyPortraits"]
+custom_minimum_size = Vector2(80, 100)
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(80, 100)
+mouse_filter = 2
 
 [node name="Portrait3" type="Panel" parent="TopLeft/PartyPortraits"]
+custom_minimum_size = Vector2(80, 100)
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(80, 100)
+mouse_filter = 2
 
 [node name="TopRight" type="VBoxContainer" parent="."]
 layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
+anchors_preset = 1
+anchor_left = 1.0
 anchor_right = 1.0
-anchor_bottom = 1.0
 offset_left = -400.0
 offset_top = 20.0
 offset_right = -20.0
@@ -133,4 +135,3 @@ text = "Deck"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Settings"
-
