@@ -15,12 +15,18 @@ signal hp_changed
 signal block_changed
 signal energy_changed
 signal buffs_changed
+signal hand_changed
+signal draw_pile_changed
+signal discard_pile_changed
 
 # Party (3 characters)
 var party: Array = []  # Will contain character data
 
 # Deck
-var deck: Array = []  # Will contain DeckCardData with upgrades and transcend state
+var deck: Array = []  # Full deck - all cards owned
+var draw_pile: Array = []  # Cards available to draw
+var hand: Array = []  # Cards currently in hand
+var discard_pile: Array = []  # Cards that have been played/discarded
 
 # Relics
 var relics: Array = []  # Will contain relic data
@@ -56,6 +62,7 @@ func _ready():
 		DeckCardData.new("defend_1"),
 		DeckCardData.new("bash_1")
 	]
+	_initialize_deck_piles()
 	relics = ["Starting Relic"]
 	gold = 100
 	current_hp = 42
@@ -116,6 +123,10 @@ func add_card_to_deck(card_id: String, upgrades: Array = [], transcended: bool =
 	## Add a card to the deck with optional upgrades
 	var deck_card = DeckCardData.new(card_id, upgrades, transcended, transcendent_card_id)
 	deck.append(deck_card)
+	# Also add to draw pile (create a copy)
+	var card_copy = DeckCardData.new(card_id, upgrades, transcended, transcendent_card_id)
+	draw_pile.append(card_copy)
+	draw_pile_changed.emit()
 	deck_changed.emit()
 
 func remove_card_from_deck(index: int):
@@ -126,4 +137,70 @@ func remove_card_from_deck(index: int):
 
 func get_deck_size() -> int:
 	return deck.size()
+
+func _initialize_deck_piles():
+	## Initialize draw pile with all cards from deck, clear hand and discard
+	# Create deep copies of deck cards for draw pile
+	draw_pile.clear()
+	for card in deck:
+		if card is DeckCardData:
+			# Create a copy of the DeckCardData
+			var card_copy = DeckCardData.new(card.card_id, card.applied_upgrades.duplicate(), card.is_transcended, card.transcendent_card_id)
+			draw_pile.append(card_copy)
+		else:
+			draw_pile.append(card)
+	hand.clear()
+	discard_pile.clear()
+	_shuffle_draw_pile()
+
+func _shuffle_draw_pile():
+	## Shuffle the draw pile randomly
+	draw_pile.shuffle()
+	draw_pile_changed.emit()
+
+func shuffle_discard_into_draw():
+	## Shuffle discard pile into draw pile (when draw is empty)
+	if discard_pile.size() > 0:
+		# Move all discard to draw
+		for card in discard_pile:
+			draw_pile.append(card)
+		discard_pile.clear()
+		_shuffle_draw_pile()
+		discard_pile_changed.emit()
+
+func draw_cards(count: int = 5):
+	## Draw cards from draw pile into hand
+	## If draw pile is empty, shuffle discard into draw first
+	for i in range(count):
+		if draw_pile.size() == 0:
+			shuffle_discard_into_draw()
+			# If still empty after shuffle, can't draw
+			if draw_pile.size() == 0:
+				break
+		
+		if draw_pile.size() > 0:
+			var card = draw_pile.pop_front()
+			hand.append(card)
+	
+	if hand.size() > 0:
+		hand_changed.emit()
+	if draw_pile.size() >= 0:  # Always emit if we modified draw pile
+		draw_pile_changed.emit()
+
+func discard_hand():
+	## Move all cards from hand to discard pile
+	for card in hand:
+		discard_pile.append(card)
+	hand.clear()
+	hand_changed.emit()
+	discard_pile_changed.emit()
+
+func get_draw_pile_count() -> int:
+	return draw_pile.size()
+
+func get_discard_pile_count() -> int:
+	return discard_pile.size()
+
+func get_hand_size() -> int:
+	return hand.size()
 

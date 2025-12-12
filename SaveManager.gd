@@ -135,6 +135,8 @@ func _deserialize_run_state(save_data: Dictionary):
 			else:
 				# Legacy string format
 				RunState.deck.append(DeckCardData.new(str(card_data)))
+		# Reinitialize deck piles from loaded deck
+		RunState._initialize_deck_piles()
 		RunState.deck_changed.emit()
 	
 	# Restore relics

@@ -19,9 +19,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -150.0
-offset_top = -75.0
+offset_top = -200.0
 offset_right = 150.0
-offset_bottom = 75.0
+offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -49,3 +49,22 @@ text = "Add Card to Deck"
 [node name="RemoveCardButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "Remove Last Card"
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Setup15CardButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Setup 15-Card Deck"
+
+[node name="Draw5Button" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Draw 5 Cards"
+
+[node name="DiscardHandButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Discard Hand"
+
+[node name="ResetDeckButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Reset Deck Piles"
