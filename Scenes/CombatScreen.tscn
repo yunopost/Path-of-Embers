@@ -16,61 +16,99 @@ script = ExtResource("1_combatscreen")
 [node name="CombatController" type="Node" parent="."]
 script = ExtResource("2_combatcontroller")
 
-[node name="CombatArea" type="VBoxContainer" parent="."]
+[node name="CombatArea" type="Control" parent="."]
 layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -800.0
-offset_top = -400.0
-offset_right = -20.0
-offset_bottom = -150.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PlayerAnchor" type="Control" parent="CombatArea"]
+layout_mode = 1
+anchors_preset = 2
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = -470.0
+offset_right = 560.0
+offset_bottom = -170.0
 grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
 
-[node name="PlayerArea" type="VBoxContainer" parent="CombatArea"]
-layout_mode = 2
+[node name="PlayerArea" type="VBoxContainer" parent="CombatArea/PlayerAnchor"]
+layout_mode = 1
+anchors_preset = 15
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 
-[node name="PlayerLabel" type="Label" parent="CombatArea/PlayerArea"]
+[node name="PlayerLabel" type="Label" parent="CombatArea/PlayerAnchor/PlayerArea"]
 layout_mode = 2
 text = "Player"
 horizontal_alignment = 1
 
-[node name="PlayerHPLabel" type="Label" parent="CombatArea/PlayerArea"]
+[node name="PlayerHPLabel" type="Label" parent="CombatArea/PlayerAnchor/PlayerArea"]
 layout_mode = 2
 text = "HP: 50/50"
 horizontal_alignment = 1
 
-[node name="PlayerSlots" type="HBoxContainer" parent="CombatArea/PlayerArea"]
+[node name="PlayerSlots" type="HBoxContainer" parent="CombatArea/PlayerAnchor/PlayerArea"]
 layout_mode = 2
 alignment = 1
 
-[node name="PlayerSlot1" type="Panel" parent="CombatArea/PlayerArea/PlayerSlots"]
+[node name="PlayerSlot1" type="Panel" parent="CombatArea/PlayerAnchor/PlayerArea/PlayerSlots"]
 custom_minimum_size = Vector2(100, 150)
 layout_mode = 2
 
-[node name="PlayerSlot2" type="Panel" parent="CombatArea/PlayerArea/PlayerSlots"]
+[node name="PlayerSlot2" type="Panel" parent="CombatArea/PlayerAnchor/PlayerArea/PlayerSlots"]
 custom_minimum_size = Vector2(100, 150)
 layout_mode = 2
 
-[node name="PlayerSlot3" type="Panel" parent="CombatArea/PlayerArea/PlayerSlots"]
+[node name="PlayerSlot3" type="Panel" parent="CombatArea/PlayerAnchor/PlayerArea/PlayerSlots"]
 custom_minimum_size = Vector2(100, 150)
 layout_mode = 2
 
-[node name="EnemyArea" type="VBoxContainer" parent="CombatArea"]
-layout_mode = 2
+[node name="EnemyAnchor" type="Control" parent="CombatArea"]
+layout_mode = 1
+anchors_preset = 4
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -760.0
+offset_top = -220.0
+offset_right = -40.0
+offset_bottom = 200.0
+grow_horizontal = 0
+grow_vertical = 0
 mouse_filter = 2
 
-[node name="EnemyLabel" type="Label" parent="CombatArea/EnemyArea"]
+[node name="EnemyArea" type="VBoxContainer" parent="CombatArea/EnemyAnchor"]
+layout_mode = 1
+anchors_preset = 15
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="EnemyLabel" type="Label" parent="CombatArea/EnemyAnchor/EnemyArea"]
 layout_mode = 2
 text = "Enemies"
 horizontal_alignment = 1
 
-[node name="EnemySlots" type="HBoxContainer" parent="CombatArea/EnemyArea"]
+[node name="EnemySlots" type="HBoxContainer" parent="CombatArea/EnemyAnchor/EnemyArea"]
 layout_mode = 2
 alignment = 1
 

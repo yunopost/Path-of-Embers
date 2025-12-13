@@ -3,15 +3,15 @@ extends Control
 ## Combat screen with full combat implementation
 
 @onready var combat_controller: CombatController = $CombatController
-@onready var player_slots: HBoxContainer = $CombatArea/PlayerArea/PlayerSlots
-@onready var enemy_slots: HBoxContainer = $CombatArea/EnemyArea/EnemySlots
+@onready var player_slots: HBoxContainer = $CombatArea/PlayerAnchor/PlayerArea/PlayerSlots
+@onready var enemy_slots: HBoxContainer = $CombatArea/EnemyAnchor/EnemyArea/EnemySlots
 @onready var hand_container: HBoxContainer = $HandArea/HandContainer
 @onready var draw_pile_label: Label = $BottomUI/DrawPileArea/DrawPileLabel
 @onready var energy_label: Label = $BottomUI/EnergyArea/EnergyLabel
 @onready var discard_pile_label: Label = $BottomUI/DiscardPileArea/DiscardPileLabel
 @onready var end_turn_button: Button = $BottomUI/EndTurnButton
 @onready var play_area: ColorRect = $PlayArea
-@onready var player_hp_label: Label = $CombatArea/PlayerArea/PlayerHPLabel
+@onready var player_hp_label: Label = $CombatArea/PlayerAnchor/PlayerArea/PlayerHPLabel
 
 var card_ui_instances: Array[CardUI] = []
 var is_updating_hand: bool = false
