@@ -49,8 +49,7 @@ func start_player_turn():
 	
 	# Refill energy
 	current_energy = max_energy
-	RunState.energy = current_energy
-	RunState.max_energy = max_energy
+	# Use set_energy() which will emit the signal if value changed
 	RunState.set_energy(current_energy, max_energy)
 	
 	# Draw 5 cards
@@ -78,7 +77,7 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	
 	# Spend energy
 	current_energy -= card_cost
-	RunState.energy = current_energy
+	# Use set_energy() which will emit the signal if value changed
 	RunState.set_energy(current_energy, max_energy)
 	
 	# Resolve card effects

@@ -121,13 +121,25 @@ func _update_hand():
 		
 		card_ui_instances.append(card_ui)
 		
-		# Wait for card to be ready
+		# Wait for layout to update so card has proper size
 		await get_tree().process_frame
+		await get_tree().process_frame  # Extra frame for layout
+		
+		# Ensure card is properly set up
+		card_ui.mouse_filter = Control.MOUSE_FILTER_STOP
+		card_ui.visible = true
+		
+		# Force minimum size if card still has no size
+		if card_ui.size == Vector2.ZERO:
+			card_ui.custom_minimum_size = Vector2(120, 160)
+			card_ui.size = Vector2(120, 160)
 		
 		# Set play area after layout updates
 		if play_area:
 			var play_area_rect = Rect2(play_area.global_position, play_area.size)
 			card_ui.play_area = play_area_rect
+		
+		print("CardUI created: ", deck_card.card_id, " visible: ", card_ui.visible, " mouse_filter: ", card_ui.mouse_filter, " size: ", card_ui.size)
 
 func _on_card_played(card_ui: CardUI, target: Node = null):
 	## Handle card being played

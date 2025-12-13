@@ -60,7 +60,9 @@ func _ready():
 	deck = [
 		DeckCardData.new("strike_1"),
 		DeckCardData.new("defend_1"),
-		DeckCardData.new("bash_1")
+		DeckCardData.new("bash_1"),
+		DeckCardData.new("defend_1"),
+		DeckCardData.new("defend_1")
 	]
 	_initialize_deck_piles()
 	relics = ["Starting Relic"]

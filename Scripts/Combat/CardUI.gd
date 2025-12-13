@@ -26,6 +26,11 @@ func _ready():
 	_setup_ui()
 	# Also process input globally when dragging
 	set_process_input(true)
+	# Ensure we can receive input
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	# Set minimum size to ensure card has area for input
+	custom_minimum_size = Vector2(120, 160)
+	print("CardUI _ready: mouse_filter=", mouse_filter, " visible=", visible, " size=", size, " custom_min_size=", custom_minimum_size)
 
 func _setup_ui():
 	# Create card panel
@@ -40,12 +45,14 @@ func _setup_ui():
 	vbox.offset_top = 5
 	vbox.offset_right = -5
 	vbox.offset_bottom = -5
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card_panel.add_child(vbox)
 	
 	# Cost label (top)
 	cost_label = Label.new()
 	cost_label.text = "1"
 	cost_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	cost_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(cost_label)
 	
 	# Name label (middle)
@@ -53,6 +60,7 @@ func _setup_ui():
 	name_label.text = "Card"
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(name_label)
 	
 	# Create targeting line using a custom control (simpler for UI)
@@ -60,7 +68,8 @@ func _setup_ui():
 	
 	# Make card draggable and interactive
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	card_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	# card_panel should be IGNORE so events reach CardUI, not the panel
+	card_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	custom_minimum_size = Vector2(120, 160)
 	
 	# Ensure card can receive input
@@ -84,7 +93,10 @@ func _update_display():
 func _can_play() -> bool:
 	# Check if player has enough energy
 	var cost = 1  # Placeholder - should get from card_data
-	return RunState.energy >= cost
+	var can_play = RunState.energy >= cost
+	if not can_play:
+		print("CardUI: Cannot play card - not enough energy. Have: ", RunState.energy, " Need: ", cost)
+	return can_play
 
 func _is_targeting_card() -> bool:
 	# For now, assume cards with "attack" or "strike" in name need targets
@@ -101,7 +113,8 @@ func _gui_input(event):
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
 				var local_pos = get_local_mouse_position()
-				if Rect2(Vector2.ZERO, size).has_point(local_pos):
+				var card_rect = Rect2(Vector2.ZERO, size)
+				if size != Vector2.ZERO and card_rect.has_point(local_pos):
 					_start_drag(get_global_mouse_position())
 					accept_event()
 			elif not event.pressed and is_dragging:
