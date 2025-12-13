@@ -32,4 +32,3 @@ enum TargetingMode {
 func _init():
 	base_effects = []
 	upgrade_pool = []
-

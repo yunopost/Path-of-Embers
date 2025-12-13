@@ -79,32 +79,36 @@ func _serialize_run_state() -> Dictionary:
 			# Fallback for legacy string format
 			deck_data.append({
 				"card_id": str(deck_card),
+				"owner_character_id": "",
 				"applied_upgrades": [],
 				"is_transcended": false,
 				"transcendent_card_id": ""
 			})
 	
-	# Convert quests to serializable format
-	var quests_data = []
-	for quest in RunState.quests:
-		if quest is Dictionary:
-			quests_data.append(quest)
-		elif quest is QuestData:
-			quests_data.append({
-				"id": quest.id,
-				"name": quest.name,
-				"description": quest.description,
-				"progress_fields": quest.progress_fields,
-				"completion_condition": quest.completion_condition,
-				"is_complete": quest.is_complete
-			})
+	# Convert quests to serializable format (now Dictionary)
+	var quests_data = {}
+	for key in RunState.quests:
+		var quest_state = RunState.quests[key]
+		if quest_state is Dictionary:
+			quests_data[key] = quest_state
 		else:
-			# Fallback for string/other formats
-			quests_data.append({"id": str(quest)})
+			# Fallback
+			quests_data[key] = {"id": str(quest_state)}
+	
+	# Convert reward_card_pool to serializable format
+	var reward_pool_data = []
+	for card_data in RunState.reward_card_pool:
+		if card_data is CardData:
+			reward_pool_data.append({
+				"id": card_data.id,
+				"name": card_data.name,
+				"cost": card_data.cost
+			})
 	
 	return {
-		"version": 1,
+		"version": 2,
 		"party": RunState.party,
+		"party_ids": RunState.party_ids,
 		"deck": deck_data,
 		"relics": RunState.relics,
 		"gold": RunState.gold,
@@ -117,6 +121,7 @@ func _serialize_run_state() -> Dictionary:
 		"map": RunState.map,
 		"node_position": RunState.node_position,
 		"quests": quests_data,
+		"reward_card_pool": reward_pool_data,
 		"buffs": RunState.buffs,
 		"tap_to_play": RunState.tap_to_play
 	}
@@ -131,10 +136,13 @@ func _deserialize_run_state(save_data: Dictionary):
 		RunState.deck.clear()
 		for card_data in save_data["deck"]:
 			if card_data is Dictionary:
+				# Handle legacy saves that might not have owner_character_id
+				if not card_data.has("owner_character_id"):
+					card_data["owner_character_id"] = ""
 				RunState.deck.append(DeckCardData.from_dict(card_data))
 			else:
 				# Legacy string format
-				RunState.deck.append(DeckCardData.new(str(card_data)))
+				RunState.deck.append(DeckCardData.new(str(card_data), ""))
 		# Reinitialize deck piles from loaded deck
 		RunState._initialize_deck_piles()
 		RunState.deck_changed.emit()
@@ -166,10 +174,39 @@ func _deserialize_run_state(save_data: Dictionary):
 	if save_data.has("node_position"):
 		RunState.set_node_position(save_data["node_position"])
 	
-	# Restore quests
+	# Restore party_ids (new in version 2)
+	if save_data.has("party_ids"):
+		RunState.party_ids = save_data["party_ids"]
+	else:
+		# Legacy: convert party array to party_ids
+		if save_data.has("party"):
+			RunState.party_ids = save_data["party"].duplicate()
+		RunState.party_changed.emit()
+	
+	# Restore quests (now Dictionary)
 	if save_data.has("quests"):
-		RunState.quests = save_data["quests"]
+		if save_data["quests"] is Dictionary:
+			RunState.quests = save_data["quests"]
+		else:
+			# Legacy: convert Array to Dictionary
+			RunState.quests = {}
+			for quest in save_data["quests"]:
+				if quest is Dictionary and quest.has("id"):
+					var key = quest.get("character_id", quest.get("id", ""))
+					RunState.quests[key] = quest
 		RunState.quests_changed.emit()
+	
+	# Restore reward_card_pool (new in version 2)
+	if save_data.has("reward_card_pool"):
+		RunState.reward_card_pool.clear()
+		for card_data in save_data["reward_card_pool"]:
+			if card_data is Dictionary:
+				# Reconstruct CardData from saved data
+				var card = CardData.new()
+				card.id = card_data.get("id", "")
+				card.name = card_data.get("name", "")
+				card.cost = card_data.get("cost", 1)
+				RunState.reward_card_pool.append(card)
 	
 	# Restore buffs
 	if save_data.has("buffs"):
