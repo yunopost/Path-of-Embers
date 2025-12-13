@@ -80,6 +80,7 @@ func change_scene(scene_name: String):
 	# Ensure new scene is visible if it's a Control
 	if new_scene is Control:
 		new_scene.visible = true
+		new_scene.set_process_mode(Node.PROCESS_MODE_INHERIT)
 	print("SceneRouter: Successfully loaded scene: ", scene_name)
 	
 	# Show/hide UI based on scene
@@ -90,6 +91,10 @@ func change_scene(scene_name: String):
 			ui_root.visible = false
 		else:
 			ui_root.visible = true
+	
+	# Ensure the scene is processing
+	new_scene.set_process_mode(Node.PROCESS_MODE_INHERIT)
+	new_scene.set_process(true)
 	
 	scene_changed.emit(scene_name)
 

@@ -2,24 +2,37 @@ extends Control
 
 ## Reusable Party HUD component showing party members with portraits, names, and quest info
 
-@onready var party_margin: MarginContainer = $PartyMargin
-@onready var party_row: HBoxContainer = $PartyMargin/VBoxContainer/PartyRow
+var party_margin: MarginContainer = null
+var party_row: HBoxContainer = null
 
 var character_hud_blocks: Array[Control] = []
 
 func _ready():
+	# Wait one frame to ensure nodes are ready
+	await get_tree().process_frame
+	
+	# Get node references safely
+	party_margin = get_node_or_null("PartyMargin")
+	party_row = get_node_or_null("PartyMargin/VBoxContainer/PartyRow")
+	
 	# Enforce padding and spacing at runtime
 	_apply_layout_overrides()
 	
-	# Connect to RunState signals
-	RunState.party_changed.connect(_on_party_changed)
-	RunState.quests_changed.connect(_on_quests_changed)
+	# Connect to RunState signals (with safety check)
+	if RunState:
+		if not RunState.party_changed.is_connected(_on_party_changed):
+			RunState.party_changed.connect(_on_party_changed)
+		if not RunState.quests_changed.is_connected(_on_quests_changed):
+			RunState.quests_changed.connect(_on_quests_changed)
 	
-	# Initial refresh
-	refresh()
+	# Initial refresh (deferred to ensure everything is ready)
+	call_deferred("refresh")
 
 func _apply_layout_overrides():
 	## Apply theme constant overrides for spacing and padding
+	if not is_instance_valid(party_margin) or not is_instance_valid(party_row):
+		return
+	
 	# PartyMargin padding
 	party_margin.add_theme_constant_override("margin_left", 16)
 	party_margin.add_theme_constant_override("margin_top", 8)
@@ -48,7 +61,7 @@ func refresh():
 	character_hud_blocks.clear()
 	
 	# Create blocks for each party member
-	if RunState.party_ids.size() == 3:
+	if RunState and RunState.party_ids.size() == 3 and is_instance_valid(party_row):
 		for i in range(3):
 			var char_id = RunState.party_ids[i]
 			var block = _create_character_hud_block(char_id)
@@ -90,7 +103,10 @@ func _create_character_hud_block(character_id: String) -> Control:
 	
 	# Character name label centered over portrait
 	var name_label = Label.new()
-	name_label.text = DataRegistry.get_character_display_name(character_id)
+	if DataRegistry:
+		name_label.text = DataRegistry.get_character_display_name(character_id)
+	else:
+		name_label.text = character_id
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name_label.add_theme_color_override("font_color", Color.WHITE)
@@ -119,7 +135,7 @@ func _create_character_hud_block(character_id: String) -> Control:
 	quest_progress_label.add_theme_font_size_override("font_size", 10)
 	
 	# Get quest data from RunState
-	if RunState.quests.has(character_id):
+	if RunState and RunState.quests.has(character_id):
 		var quest_state = RunState.quests[character_id]
 		var is_complete = quest_state.get("is_complete", false)
 		var progress = quest_state.get("progress", 0)

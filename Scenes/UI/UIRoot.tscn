@@ -52,15 +52,38 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="HPBar" type="ProgressBar" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer"]
+[node name="BarStack" type="Control" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer"]
+clip_contents = true
+custom_minimum_size = Vector2(0, 22)
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 0
 mouse_filter = 2
-max_value = 50.0
-value = 42.0
-show_percentage = false
 
-[node name="HPNumber" type="Label" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer/HPBar"]
+[node name="Background" type="ColorRect" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer/BarStack"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2, 0.2, 0.2, 1)
+
+[node name="HPFill" type="ColorRect" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer/BarStack"]
+z_index = 1
+layout_mode = 0
+mouse_filter = 2
+color = Color(0.8, 0.1, 0.1, 1)
+
+[node name="BlockOverlay" type="ColorRect" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer/BarStack"]
+z_index = 2
+layout_mode = 0
+mouse_filter = 2
+color = Color(0.7, 0.8, 1, 0.7)
+
+[node name="HPNumber" type="Label" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer/BarStack"]
+z_index = 3
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -71,24 +94,12 @@ text = "42/50"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="BlockContainer" type="HBoxContainer" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-
-[node name="BlockNumber" type="Label" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer/BlockContainer"]
+[node name="BlockNumber" type="Label" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer"]
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 0
 text = "0"
 vertical_alignment = 1
-
-[node name="BlockBar" type="ProgressBar" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer/BlockContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-max_value = 50.0
-fill_mode = 1
 
 [node name="PartyHUD" parent="TopLeft/TopLeftMargin/TopLeftHUD" instance=ExtResource("2_partyhud")]
 layout_mode = 2

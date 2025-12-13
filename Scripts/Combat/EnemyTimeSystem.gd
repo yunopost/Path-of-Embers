@@ -39,7 +39,7 @@ func force_all_enemies_to_zero():
 		enemy.time_current = 0
 		enemy.time_changed.emit(enemy.time_current, enemy.time_max)
 
-func resolve_enemy_time_triggers(reason: String):
+func resolve_enemy_time_triggers(_reason: String):
 	## Resolve all enemies whose timer has hit 0
 	## reason: String describing why this was called (e.g., "card_played", "end_turn")
 	

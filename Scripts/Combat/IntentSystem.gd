@@ -4,7 +4,7 @@ class_name IntentSystem
 ## Generates intents for enemies
 ## For Slice 4, uses simple deterministic logic that can be expanded later
 
-func generate_intent(enemy) -> IntentData:
+func generate_intent(_enemy) -> IntentData:
 	## Generate a new intent for the given enemy
 	## For Slice 4: deterministic simple attack
 	## Can be expanded later with pattern systems, RNG, etc.
