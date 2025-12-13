@@ -3,11 +3,12 @@ extends Control
 ## Persistent UI overlay that stays across all scenes
 ## Subscribes to RunState signals and updates UI reactively
 
-@onready var hp_label: Label = $TopLeft/HPContainer/HPBar/HPNumber
-@onready var hp_bar: ProgressBar = $TopLeft/HPContainer/HPBar
-@onready var block_label: Label = $TopLeft/HPContainer/BlockContainer/BlockNumber
-@onready var block_bar: ProgressBar = $TopLeft/HPContainer/BlockContainer/BlockBar
-@onready var party_portraits: HBoxContainer = $TopLeft/PartyPortraits
+@onready var hp_label: Label = $TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer/HPBar/HPNumber
+@onready var hp_bar: ProgressBar = $TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer/HPBar
+@onready var block_label: Label = $TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer/BlockContainer/BlockNumber
+@onready var block_bar: ProgressBar = $TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer/BlockContainer/BlockBar
+@onready var party_hud: Control = $TopLeft/TopLeftMargin/TopLeftHUD/PartyHUD
+@onready var debug_label: Label = $TopCenter/DebugLabel
 @onready var gold_label: Label = $TopRight/GoldContainer/GoldValue
 @onready var node_progress_label: Label = $TopRight/NodeProgressContainer/NodeProgressValue
 @onready var map_button: Button = $TopRight/ButtonContainer/MapButton
@@ -37,6 +38,13 @@ func _ready():
 	
 	# Load popups
 	_load_popups()
+	
+	# Setup debug info (only in debug builds)
+	if OS.is_debug_build():
+		_setup_debug_info()
+	else:
+		if debug_label:
+			debug_label.visible = false
 
 func _load_popups():
 	# Load Settings popup
@@ -76,7 +84,7 @@ func _on_gold_changed():
 
 func _on_node_position_changed():
 	if node_progress_label:
-		node_progress_label.text = "Node: " + str(RunState.node_position)
+		node_progress_label.text = "Node: %d" % RunState.node_position
 
 func _on_map_button_pressed():
 	SceneRouter.change_scene("map")
@@ -101,3 +109,18 @@ func close_popup(popup_name: String):
 	elif popup_name == "deck" and deck_popup:
 		deck_popup.visible = false
 
+func _setup_debug_info():
+	## Setup debug info label (debug builds only)
+	# Debug label is now in the scene at TopCenter/DebugLabel
+	# Connect to signals to update debug info
+	RunState.party_changed.connect(_update_debug_info)
+	RunState.deck_changed.connect(_update_debug_info)
+	_update_debug_info()
+
+func _update_debug_info():
+	## Update debug info display
+	if debug_label and OS.is_debug_build():
+		var party_str = ", ".join(RunState.party_ids) if RunState.party_ids.size() > 0 else "None"
+		var deck_count = RunState.get_deck_size()
+		debug_label.text = "Party: [%s] | Deck: %d" % [party_str, deck_count]
+		debug_label.visible = true

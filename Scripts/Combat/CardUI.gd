@@ -15,6 +15,7 @@ var original_position: Vector2
 var card_panel: Panel
 var name_label: Label
 var cost_label: Label
+var owner_label: Label
 var targeting_line_visible: bool = false
 var targeting_line_end: Vector2 = Vector2.ZERO
 
@@ -62,6 +63,14 @@ func _setup_ui():
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(name_label)
 	
+	# Owner label (bottom)
+	owner_label = Label.new()
+	owner_label.text = ""
+	owner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	owner_label.add_theme_font_size_override("font_size", 10)
+	owner_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(owner_label)
+	
 	# Create targeting line using a custom control (simpler for UI)
 	# Will be drawn manually in _draw() if needed
 	
@@ -88,6 +97,14 @@ func _update_display():
 	# TODO: Load actual CardData and show cost
 	if cost_label:
 		cost_label.text = "1"  # Placeholder
+	
+	# Show owner
+	if owner_label:
+		if deck_card_data.owner_character_id:
+			var owner_name = DataRegistry.get_character_display_name(deck_card_data.owner_character_id)
+			owner_label.text = owner_name
+		else:
+			owner_label.text = ""
 
 func _can_play() -> bool:
 	# Check if player has enough energy

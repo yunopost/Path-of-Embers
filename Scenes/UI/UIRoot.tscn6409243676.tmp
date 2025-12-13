@@ -16,34 +16,29 @@ script = ExtResource("1_uiroot")
 [node name="TopLeft" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 0
+offset_left = 20.0
+offset_top = 20.0
 offset_right = 600.0
 offset_bottom = 500.0
 grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
 
-[node name="TopLeftMargin" type="MarginContainer" parent="TopLeft"]
+[node name="TopLeftHUD" type="VBoxContainer" parent="TopLeft"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 0
-theme_override_constants/margin_bottom = 0
+theme_override_constants/separation = 20
 
-[node name="TopLeftHUD" type="VBoxContainer" parent="TopLeft/TopLeftMargin"]
-layout_mode = 2
-theme_override_constants/separation = 32
-
-[node name="HPRow" type="Control" parent="TopLeft/TopLeftMargin/TopLeftHUD"]
+[node name="HPRow" type="Control" parent="TopLeft/TopLeftHUD"]
 custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="HPContainer" type="HBoxContainer" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow"]
+[node name="HPContainer" type="HBoxContainer" parent="TopLeft/TopLeftHUD/HPRow"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -52,7 +47,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="HPBar" type="ProgressBar" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer"]
+[node name="HPBar" type="ProgressBar" parent="TopLeft/TopLeftHUD/HPRow/HPContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -60,7 +55,7 @@ max_value = 50.0
 value = 42.0
 show_percentage = false
 
-[node name="HPNumber" type="Label" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer/HPBar"]
+[node name="HPNumber" type="Label" parent="TopLeft/TopLeftHUD/HPRow/HPContainer/HPBar"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -71,27 +66,24 @@ text = "42/50"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="BlockContainer" type="HBoxContainer" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer"]
+[node name="BlockContainer" type="HBoxContainer" parent="TopLeft/TopLeftHUD/HPRow/HPContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="BlockNumber" type="Label" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer/BlockContainer"]
+[node name="BlockNumber" type="Label" parent="TopLeft/TopLeftHUD/HPRow/HPContainer/BlockContainer"]
 layout_mode = 2
-size_flags_horizontal = 8
-size_flags_vertical = 0
 text = "0"
 vertical_alignment = 1
 
-[node name="BlockBar" type="ProgressBar" parent="TopLeft/TopLeftMargin/TopLeftHUD/HPRow/HPContainer/BlockContainer"]
+[node name="BlockBar" type="ProgressBar" parent="TopLeft/TopLeftHUD/HPRow/HPContainer/BlockContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 max_value = 50.0
 fill_mode = 1
 
-[node name="PartyHUD" parent="TopLeft/TopLeftMargin/TopLeftHUD" instance=ExtResource("2_partyhud")]
-layout_mode = 2
+[node name="PartyHUD" parent="TopLeft/TopLeftHUD" instance=ExtResource("2_partyhud")]
 
 [node name="TopRight" type="VBoxContainer" parent="."]
 layout_mode = 1

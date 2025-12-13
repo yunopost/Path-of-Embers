@@ -80,6 +80,14 @@ func _create_card_visual(deck_card: DeckCardData) -> Control:
 	name_label.add_theme_font_size_override("font_size", 12)
 	vbox.add_child(name_label)
 	
+	# Owner info
+	if deck_card.owner_character_id:
+		var owner_label = Label.new()
+		owner_label.text = "Owner: " + DataRegistry.get_character_display_name(deck_card.owner_character_id)
+		owner_label.add_theme_font_size_override("font_size", 10)
+		owner_label.add_theme_color_override("font_color", Color(0.8, 0.8, 1.0))
+		vbox.add_child(owner_label)
+	
 	# Upgrades info
 	if deck_card.applied_upgrades.size() > 0:
 		var upgrades_label = Label.new()

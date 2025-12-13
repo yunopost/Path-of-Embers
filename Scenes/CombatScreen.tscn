@@ -28,9 +28,7 @@ mouse_filter = 2
 [node name="PlayerAnchor" type="Control" parent="CombatArea"]
 layout_mode = 1
 anchors_preset = 2
-anchor_left = 0.0
 anchor_top = 1.0
-anchor_right = 0.0
 anchor_bottom = 1.0
 offset_left = 40.0
 offset_top = -470.0
@@ -43,8 +41,6 @@ mouse_filter = 2
 [node name="PlayerArea" type="VBoxContainer" parent="CombatArea/PlayerAnchor"]
 layout_mode = 1
 anchors_preset = 15
-anchor_left = 0.0
-anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
@@ -79,7 +75,7 @@ layout_mode = 2
 
 [node name="EnemyAnchor" type="Control" parent="CombatArea"]
 layout_mode = 1
-anchors_preset = 4
+anchors_preset = 6
 anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
@@ -95,8 +91,6 @@ mouse_filter = 2
 [node name="EnemyArea" type="VBoxContainer" parent="CombatArea/EnemyAnchor"]
 layout_mode = 1
 anchors_preset = 15
-anchor_left = 0.0
-anchor_top = 0.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2

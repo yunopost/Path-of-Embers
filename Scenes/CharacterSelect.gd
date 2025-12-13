@@ -5,6 +5,7 @@ extends Control
 @onready var selection_count_label: Label = $VBoxContainer/SelectionCountLabel
 @onready var character_grid: GridContainer = $VBoxContainer/CharacterGrid
 @onready var confirm_button: Button = $VBoxContainer/ConfirmButton
+@onready var party_summary_label: Label = $VBoxContainer/PartySummaryLabel
 
 var available_characters: Array[CharacterData] = []
 var selected_character_ids: Array[String] = []
@@ -55,6 +56,8 @@ func _create_placeholder_characters():
 		char_data.quest = quest
 		
 		available_characters.append(char_data)
+		# Register with DataRegistry
+		DataRegistry.register_character(char_data)
 	
 	# Healer characters
 	for i in range(2):
@@ -82,6 +85,8 @@ func _create_placeholder_characters():
 		char_data.quest = quest
 		
 		available_characters.append(char_data)
+		# Register with DataRegistry
+		DataRegistry.register_character(char_data)
 	
 	# Defender characters
 	for i in range(2):
@@ -109,6 +114,8 @@ func _create_placeholder_characters():
 		char_data.quest = quest
 		
 		available_characters.append(char_data)
+		# Register with DataRegistry
+		DataRegistry.register_character(char_data)
 
 func _populate_character_grid():
 	## Create buttons for each available character
@@ -152,8 +159,31 @@ func _update_ui():
 		else:
 			button.modulate = Color.WHITE
 	
+	# Update party summary
+	_update_party_summary()
+	
 	# Enable/disable confirm button
 	confirm_button.disabled = selected_character_ids.size() != 3
+
+func _update_party_summary():
+	## Update the party summary label
+	if not party_summary_label:
+		return
+	
+	if selected_character_ids.size() == 3:
+		var summary_lines: Array[String] = []
+		summary_lines.append("Selected Party:")
+		for char_id in selected_character_ids:
+			var char_data = DataRegistry.get_character(char_id)
+			if char_data:
+				summary_lines.append("  • %s (%s)" % [char_data.display_name, char_data.role])
+			else:
+				summary_lines.append("  • %s" % char_id)
+		party_summary_label.text = "\n".join(summary_lines)
+		party_summary_label.visible = true
+	else:
+		party_summary_label.text = ""
+		party_summary_label.visible = false
 
 func _on_confirm_pressed():
 	## Confirm party selection and initialize run
