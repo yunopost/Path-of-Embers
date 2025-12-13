@@ -156,7 +156,10 @@ func _get_card_effects(deck_card: DeckCardData) -> Array:
 	var effects: Array = []
 	
 	# Simple placeholder logic based on card_id
-	if "attack" in deck_card.card_id or "strike" in deck_card.card_id:
+	if "strike" in deck_card.card_id:
+		var damage_effect = EffectData.new("DealDamage", {"amount": 40})
+		effects.append(damage_effect)
+	elif "attack" in deck_card.card_id:
 		var damage_effect = EffectData.new("DealDamage", {"amount": 6})
 		effects.append(damage_effect)
 	elif "defend" in deck_card.card_id or "block" in deck_card.card_id:

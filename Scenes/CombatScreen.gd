@@ -14,6 +14,7 @@ extends Control
 @onready var player_hp_label: Label = $CombatArea/PlayerArea/PlayerHPLabel
 
 var card_ui_instances: Array[CardUI] = []
+var is_updating_hand: bool = false
 
 var enemy_displays: Array[Control] = []
 
@@ -47,9 +48,8 @@ func _start_combat():
 	## - Single enemy with timer=3 for basic tests
 	## - Can add second enemy for multi-enemy trigger tests
 	var enemy_data = [
-		{"id": "enemy1", "name": "Test Enemy 1", "max_hp": 40, "time_max": 3}
-		# Uncomment below to test multiple enemies acting simultaneously
-		# {"id": "enemy2", "name": "Test Enemy 2", "max_hp": 40, "time_max": 3}
+		{"id": "enemy1", "name": "Test Enemy 1", "max_hp": 40, "time_max": 3},
+		{"id": "enemy2", "name": "Test Enemy 2", "max_hp": 40, "time_max": 1}
 	]
 	combat_controller.start_combat(enemy_data)
 	_setup_enemies()
@@ -123,12 +123,20 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 
 func _update_hand():
 	## Update hand UI with current cards
-	# Clear existing
+	# Prevent concurrent updates
+	if is_updating_hand:
+		return
+	is_updating_hand = true
+	
+	# Immediately remove all existing card UIs from container
 	for card_ui in card_ui_instances:
+		if is_instance_valid(card_ui) and card_ui.get_parent():
+			card_ui.get_parent().remove_child(card_ui)
 		card_ui.queue_free()
 	card_ui_instances.clear()
 	
-	# Wait for layout to update
+	# Wait for layout to update and nodes to be freed
+	await get_tree().process_frame
 	await get_tree().process_frame
 	
 	# Create card UIs for each card in hand
@@ -160,6 +168,8 @@ func _update_hand():
 		if play_area:
 			var play_area_rect = Rect2(play_area.global_position, play_area.size)
 			card_ui.play_area = play_area_rect
+	
+	is_updating_hand = false
 
 func _on_card_played(card_ui: CardUI, target: Node = null):
 	## Handle card being played

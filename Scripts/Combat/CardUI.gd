@@ -126,11 +126,15 @@ func _input(event):
 	# Handle drag motion globally when dragging
 	if is_dragging and event is InputEventMouseMotion:
 		_update_drag(get_global_mouse_position())
-		get_viewport().set_input_as_handled()
+		var viewport = get_viewport()
+		if viewport:
+			viewport.set_input_as_handled()
 	elif is_dragging and event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 			_end_drag(get_global_mouse_position())
-			get_viewport().set_input_as_handled()
+			var viewport = get_viewport()
+			if viewport:
+				viewport.set_input_as_handled()
 
 func _start_drag(start_pos: Vector2):
 	if not _can_play():
