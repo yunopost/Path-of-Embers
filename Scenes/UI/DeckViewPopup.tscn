@@ -1,0 +1,58 @@
+[gd_scene load_steps=2 format=3 uid="uid://cflel50n7t4je"]
+
+[ext_resource type="Script" path="res://Path-of-Embers/Scenes/UI/DeckViewPopup.gd" id="1_deckviewpopup"]
+
+[node name="DeckViewPopup" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_deckviewpopup")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Deck View"
+horizontal_alignment = 1
+
+[node name="HeaderContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="TotalCardsLabel" type="Label" parent="VBoxContainer/HeaderContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Total Cards: 0"
+horizontal_alignment = 1
+
+[node name="CountsLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Draw: 0 | Hand: 0 | Discard: 0"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CardGrid" type="GridContainer" parent="VBoxContainer/ScrollContainer"]
+layout_mode = 2
+columns = 3
+
+[node name="CloseButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Close"

@@ -1,0 +1,77 @@
+[gd_scene load_steps=2 format=3 uid="uid://5me12rsevuf0"]
+
+[ext_resource type="Script" path="res://Path-of-Embers/Scenes/MapScreen.gd" id="1_mapscreen"]
+
+[node name="MapScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_mapscreen")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -200.0
+offset_right = 150.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Map Screen"
+horizontal_alignment = 1
+
+[node name="TestGoldButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Test: Add 10 Gold"
+
+[node name="SaveButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Save Game"
+
+[node name="LoadButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Load Game"
+
+[node name="AddCardButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Add Card to Deck"
+
+[node name="RemoveCardButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Remove Last Card"
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Setup15CardButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Setup 15-Card Deck"
+
+[node name="Draw5Button" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Draw 5 Cards"
+
+[node name="DiscardHandButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Discard Hand"
+
+[node name="ResetDeckButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Reset Deck Piles"
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="GoToCombatButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Go to Combat (Debug)"
