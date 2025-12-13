@@ -8,27 +8,46 @@ signal combat_started
 signal combat_ended
 
 var player_stats: EntityStats
-var enemies: Array[CombatEnemy] = []
+var enemies: Array[Enemy] = []
 var current_energy: int = 3
 var max_energy: int = 3
 var combat_active: bool = false
 
+var enemy_time_system: EnemyTimeSystem
+var intent_system: IntentSystem
+
 func _ready():
 	player_stats = EntityStats.new(RunState.current_hp, RunState.max_hp)
+	
+	# Initialize timer and intent systems
+	intent_system = IntentSystem.new()
+	enemy_time_system = EnemyTimeSystem.new(intent_system, self)
 
 func start_combat(enemy_data: Array):
 	## Initialize combat with enemies
 	combat_active = true
 	
+	# Initialize deck piles (ensure fresh state for combat)
+	RunState._initialize_deck_piles()
+	
 	# Create enemies
 	enemies.clear()
 	for enemy_info in enemy_data:
-		var enemy = CombatEnemy.new(
+		var enemy = Enemy.new(
 			enemy_info.get("id", "enemy"),
 			enemy_info.get("name", "Enemy"),
-			enemy_info.get("max_hp", 50)
+			enemy_info.get("max_hp", 50),
+			enemy_info.get("time_max", 3)
 		)
+		
+		# Generate initial intent
+		var initial_intent = intent_system.generate_intent(enemy)
+		enemy.set_intent(initial_intent)
+		
 		enemies.append(enemy)
+	
+	# Register enemies with time system
+	enemy_time_system.register_enemies(enemies)
 	
 	# Sync player HP with RunState
 	player_stats.current_hp = RunState.current_hp
@@ -83,6 +102,15 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	# Resolve card effects
 	_resolve_card_effects(deck_card, target)
 	
+	# Determine timer tick amount (default 1, can be overridden by card)
+	var timer_tick_amount = _get_card_timer_tick(deck_card)
+	
+	# Tick all enemies
+	enemy_time_system.tick_all_enemies(timer_tick_amount)
+	
+	# Resolve any enemies that hit 0
+	enemy_time_system.resolve_enemy_time_triggers("card_played")
+	
 	# Move card to discard
 	RunState.discard_pile.append(deck_card)
 	RunState.discard_pile_changed.emit()
@@ -102,7 +130,7 @@ func _resolve_card_effects(deck_card: DeckCardData, target: Node = null):
 			target_stats = target.get_stats()
 		elif target.has_meta("enemy"):
 			var enemy = target.get_meta("enemy")
-			if enemy is CombatEnemy:
+			if enemy is Enemy:
 				target_stats = enemy.stats
 		else:
 			# Try to find enemy by iterating through enemies
@@ -137,6 +165,14 @@ func _get_card_effects(deck_card: DeckCardData) -> Array:
 	
 	return effects
 
+func _get_card_timer_tick(deck_card: DeckCardData) -> int:
+	## Get the timer tick amount for a card
+	## Default is 1, but can be overridden by card properties
+	## For Slice 4: check for timer_tick_override in card_id as placeholder logic
+	if "hasten" in deck_card.card_id or "timer_2" in deck_card.card_id:
+		return 2  # Test card with timer_tick_override = 2
+	return 1
+
 func end_player_turn():
 	## End the player turn and start enemy turn
 	if not combat_active:
@@ -145,35 +181,16 @@ func end_player_turn():
 	# Discard hand
 	RunState.discard_hand()
 	
-	# Enemy turn
-	await _enemy_turn()
+	# Force all enemies to 0 and resolve triggers
+	enemy_time_system.force_all_enemies_to_zero()
+	enemy_time_system.resolve_enemy_time_triggers("end_turn")
 	
 	# Start new player turn
 	start_player_turn()
 	turn_ended.emit()
 
-func _enemy_turn():
-	## Execute enemy actions
-	for enemy in enemies:
-		if not enemy.stats.is_alive():
-			continue
-		
-		# Set basic attack intent (placeholder)
-		var attack_effect = EffectData.new("DealDamage", {"amount": 5})
-		enemy.set_intent(attack_effect)
-		
-		# Execute intent
-		if enemy.intent:
-			EffectResolver.resolve_effect(enemy.intent, enemy.stats, player_stats)
-		
-		# Small delay between enemy actions
-		await get_tree().create_timer(0.5).timeout
-	
-	# Update RunState HP
-	RunState.set_hp(player_stats.current_hp, player_stats.max_hp)
-
 func get_player_stats() -> EntityStats:
 	return player_stats
 
-func get_enemies() -> Array[CombatEnemy]:
+func get_enemies() -> Array[Enemy]:
 	return enemies

@@ -62,12 +62,13 @@ func _ready():
 		DeckCardData.new("defend_1"),
 		DeckCardData.new("bash_1"),
 		DeckCardData.new("defend_1"),
-		DeckCardData.new("defend_1")
+		DeckCardData.new("defend_1"),
+		DeckCardData.new("hasten_1")  # Test card with timer_tick_override = 2
 	]
 	_initialize_deck_piles()
 	relics = ["Starting Relic"]
 	gold = 100
-	current_hp = 42
+	current_hp = 50
 	max_hp = 50
 	block = 0
 	energy = 3

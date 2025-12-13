@@ -42,13 +42,19 @@ func _ready():
 	_start_combat()
 
 func _start_combat():
-	## Initialize combat
+	## Initialize combat with test enemies
+	## For testing timer system:
+	## - Single enemy with timer=3 for basic tests
+	## - Can add second enemy for multi-enemy trigger tests
 	var enemy_data = [
-		{"id": "enemy1", "name": "Test Enemy", "max_hp": 50}
+		{"id": "enemy1", "name": "Test Enemy 1", "max_hp": 40, "time_max": 3}
+		# Uncomment below to test multiple enemies acting simultaneously
+		# {"id": "enemy2", "name": "Test Enemy 2", "max_hp": 40, "time_max": 3}
 	]
 	combat_controller.start_combat(enemy_data)
 	_setup_enemies()
-	_update_hand()
+	# Note: _update_hand() will be called automatically via hand_changed signal when draw_cards() is called
+	# Similarly, other updates will be triggered by their respective signals
 	_update_draw_pile_count()
 	_update_discard_pile_count()
 	_update_energy()
@@ -65,7 +71,7 @@ func _setup_enemies():
 		enemy_slots.add_child(enemy_display)
 		enemy_displays.append(enemy_display)
 
-func _create_enemy_display(enemy: CombatEnemy) -> Control:
+func _create_enemy_display(enemy: Enemy) -> Control:
 	var enemy_panel = Panel.new()
 	enemy_panel.custom_minimum_size = Vector2(150, 200)
 	enemy_panel.name = "Enemy_" + enemy.enemy_id
@@ -92,8 +98,24 @@ func _create_enemy_display(enemy: CombatEnemy) -> Control:
 	hp_label.text = "HP: %d/%d" % [enemy.stats.current_hp, enemy.stats.max_hp]
 	vbox.add_child(hp_label)
 	
+	# Timer label
+	var timer_label = Label.new()
+	timer_label.name = "TimerLabel"
+	timer_label.text = "Timer: %d/%d" % [enemy.time_current, enemy.time_max]
+	vbox.add_child(timer_label)
+	
+	# Intent label
+	var intent_label = Label.new()
+	intent_label.name = "IntentLabel"
+	intent_label.text = "Intent: %s" % (enemy.intent.telegraph_text if enemy.intent else "None")
+	vbox.add_child(intent_label)
+	
 	# Connect to stats signals
 	enemy.stats.hp_changed.connect(func(hp): hp_label.text = "HP: %d/%d" % [hp, enemy.stats.max_hp])
+	
+	# Connect to timer and intent signals
+	enemy.time_changed.connect(func(current, max_time): timer_label.text = "Timer: %d/%d" % [current, max_time])
+	enemy.intent_changed.connect(func(new_intent): intent_label.text = "Intent: %s" % (new_intent.telegraph_text if new_intent else "None"))
 	
 	# Store enemy reference in metadata for targeting
 	
@@ -138,8 +160,6 @@ func _update_hand():
 		if play_area:
 			var play_area_rect = Rect2(play_area.global_position, play_area.size)
 			card_ui.play_area = play_area_rect
-		
-		print("CardUI created: ", deck_card.card_id, " visible: ", card_ui.visible, " mouse_filter: ", card_ui.mouse_filter, " size: ", card_ui.size)
 
 func _on_card_played(card_ui: CardUI, target: Node = null):
 	## Handle card being played

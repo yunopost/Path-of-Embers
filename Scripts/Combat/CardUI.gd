@@ -30,7 +30,6 @@ func _ready():
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	# Set minimum size to ensure card has area for input
 	custom_minimum_size = Vector2(120, 160)
-	print("CardUI _ready: mouse_filter=", mouse_filter, " visible=", visible, " size=", size, " custom_min_size=", custom_minimum_size)
 
 func _setup_ui():
 	# Create card panel
@@ -93,10 +92,7 @@ func _update_display():
 func _can_play() -> bool:
 	# Check if player has enough energy
 	var cost = 1  # Placeholder - should get from card_data
-	var can_play = RunState.energy >= cost
-	if not can_play:
-		print("CardUI: Cannot play card - not enough energy. Have: ", RunState.energy, " Need: ", cost)
-	return can_play
+	return RunState.energy >= cost
 
 func _is_targeting_card() -> bool:
 	# For now, assume cards with "attack" or "strike" in name need targets
