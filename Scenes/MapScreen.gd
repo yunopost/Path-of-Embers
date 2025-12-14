@@ -1,96 +1,570 @@
 extends Control
 
-## Map screen - shows the current map/act
+## Map screen - displays STS-style node map with branching paths
 
-@onready var test_gold_button: Button = $VBoxContainer/TestGoldButton
-@onready var save_button: Button = $VBoxContainer/SaveButton
-@onready var load_button: Button = $VBoxContainer/LoadButton
-@onready var add_card_button: Button = $VBoxContainer/AddCardButton
-@onready var remove_card_button: Button = $VBoxContainer/RemoveCardButton
-@onready var setup_15_card_button: Button = $VBoxContainer/Setup15CardButton
-@onready var draw_5_button: Button = $VBoxContainer/Draw5Button
-@onready var discard_hand_button: Button = $VBoxContainer/DiscardHandButton
-@onready var reset_deck_button: Button = $VBoxContainer/ResetDeckButton
-@onready var go_to_combat_button: Button = $VBoxContainer/GoToCombatButton
+var map_generator: MapGenerator = null
+var node_widgets: Dictionary = {}  # Key: node_id, Value: MapNodeWidget
+var connection_data: Array[Dictionary] = []  # Store connection data for _draw() rendering
 
-func _ready() -> void:
-	test_gold_button.pressed.connect(_on_test_gold_pressed)
-	save_button.pressed.connect(_on_save_pressed)
-	load_button.pressed.connect(_on_load_pressed)
-	add_card_button.pressed.connect(_on_add_card_pressed)
-	remove_card_button.pressed.connect(_on_remove_card_pressed)
-	setup_15_card_button.pressed.connect(_on_setup_15_card_pressed)
-	draw_5_button.pressed.connect(_on_draw_5_pressed)
-	discard_hand_button.pressed.connect(_on_discard_hand_pressed)
-	reset_deck_button.pressed.connect(_on_reset_deck_pressed)
-	go_to_combat_button.pressed.connect(_on_go_to_combat_pressed)
+@onready var map_safe_area: MarginContainer = $MapSafeArea
+@onready var scroll_container: ScrollContainer = $MapSafeArea/ScrollContainer
+@onready var map_root: Control = $MapSafeArea/ScrollContainer/MapRoot
+@onready var map_connections: Control = $MapSafeArea/ScrollContainer/MapRoot/MapConnections
+@onready var map_nodes: Control = $MapSafeArea/ScrollContainer/MapRoot/MapNodes
+@onready var debug_label: Label = $MapSafeArea/DebugLabel
 
-func _on_test_gold_pressed():
-	# Test RunState update - should update UI instantly
-	RunState.set_gold(RunState.gold + 10)
+func _ready():
+	# Initialize map generator
+	map_generator = MapGenerator.new()
+	
+	# Connect to RunState signals
+	RunState.map_changed.connect(_on_map_changed)
+	RunState.current_node_changed.connect(_on_current_node_changed)
+	RunState.available_next_node_ids_changed.connect(_on_available_nodes_changed)
+	
+	# Setup scroll container
+	if scroll_container:
+		scroll_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+		scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		await get_tree().process_frame  # Wait for layout
+		scroll_container.scroll_horizontal = 0  # Start at left
+	
+	# Generate map if none exists
+	if not RunState.current_map:
+		_generate_map()
+	
+	# Render map
+	_render_map()
+	
+	# Debug tools (debug builds only)
+	if OS.is_debug_build():
+		_setup_debug_ui()
 
-func _on_save_pressed():
-	var success = SaveManager.save_game()
-	if success:
-		print("Game saved successfully!")
+func _setup_scroll_input():
+	## Setup mouse wheel scrolling for map (handled in _gui_input)
+	pass
+
+func _gui_input(event: InputEvent):
+	## Handle input for scrolling and node clicks
+	if not scroll_container:
+		return
+	
+	# Handle mouse button clicks (for node selection)
+	if event is InputEventMouseButton:
+		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			# Check if click is over a node widget using global coordinates
+			var global_mouse_pos = get_global_mouse_position()
+			
+			# Check each node widget
+			for node_id in node_widgets:
+				var widget = node_widgets[node_id]
+				if not is_instance_valid(widget):
+					continue
+				
+				# Get widget's global rect
+				var widget_global_pos = widget.get_global_position()
+				var widget_rect = Rect2(widget_global_pos, widget.size)
+				
+				if widget_rect.has_point(global_mouse_pos):
+					print("MapScreen._gui_input: Click detected over node ", node_id)  # Debug
+					# Trigger node click handler
+					_on_node_clicked(node_id)
+					get_viewport().set_input_as_handled()
+					return
+		
+		# Mouse wheel scrolling (horizontal)
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			# Shift+wheel for horizontal scroll, or just wheel if vertical is disabled
+			if event.shift_pressed or scroll_container.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED:
+				var scroll_delta = -event.factor * 20  # Negative because wheel up should scroll right
+				var new_scroll = scroll_container.scroll_horizontal + scroll_delta
+				var h_scroll_bar = scroll_container.get_h_scroll_bar()
+				var max_scroll = h_scroll_bar.max_value if h_scroll_bar else 0
+				scroll_container.scroll_horizontal = clamp(new_scroll, 0, max_scroll)
+				get_viewport().set_input_as_handled()
+
+
+func _setup_debug_ui():
+	## Setup debug buttons (debug builds only)
+	# Add debug buttons if they don't exist
+	if not has_node("MapSafeArea/DebugButtons"):
+		var debug_vbox = VBoxContainer.new()
+		debug_vbox.name = "DebugButtons"
+		debug_vbox.position = Vector2(10, 100)
+		map_safe_area.add_child(debug_vbox)
+		
+		var generate_btn = Button.new()
+		generate_btn.text = "Generate New Map"
+		generate_btn.pressed.connect(_generate_map)
+		debug_vbox.add_child(generate_btn)
+		
+		var reset_btn = Button.new()
+		reset_btn.text = "Reset Progress"
+		reset_btn.pressed.connect(_reset_progress)
+		debug_vbox.add_child(reset_btn)
+
+func _generate_map():
+	## Generate a new map
+	var map_data = map_generator.generate_map(RunState.act)
+	RunState.set_map_data(map_data)
+	RunState.current_node_id = ""
+	RunState.node_position = 0
+	_update_available_nodes()
+
+func _reset_progress():
+	## Reset map progress (debug tool)
+	if RunState.current_map:
+		# Mark all nodes as not completed
+		for node in RunState.current_map.nodes.values():
+			node.is_completed = false
+		RunState.current_node_id = ""
+		RunState.node_position = 0
+		_update_available_nodes()
+		_render_map()
+
+func _update_available_nodes():
+	## Update which nodes are available for selection (calls RunState method)
+	RunState._update_available_nodes()
+	_update_node_states()
+
+func _update_node_states():
+	## Update visual states of all node widgets
+	if OS.is_debug_build():
+		print("MapScreen: _update_node_states called, available nodes: ", RunState.available_next_node_ids)  # Debug
+	
+	for node_id in node_widgets:
+		var widget = node_widgets[node_id]
+		if not is_instance_valid(widget):
+			continue
+		
+		var is_selectable = node_id in RunState.available_next_node_ids
+		var is_selected = node_id == RunState.current_node_id
+		
+		if OS.is_debug_build() and is_selectable:
+			print("MapScreen: Setting node ", node_id, " as selectable")  # Debug
+		
+		widget.set_selectable(is_selectable)
+		widget.set_selected(is_selected)
+	
+	# Rebuild connection data with updated selectability
+	if RunState.current_map:
+		_build_connection_data_for_existing_nodes()
+	
+	# Trigger redraw of connections
+	_draw_all_connections()
+	
+	_update_debug_info()
+
+func _build_connection_data_for_existing_nodes():
+	## Rebuild connection data using existing widget positions (for state updates)
+	
+	# Build selectable set for fast lookup
+	var selectable_set: Dictionary = {}
+	for node_id in RunState.available_next_node_ids:
+		selectable_set[node_id] = true
+	
+	var current_node_id = RunState.current_node_id
+	
+	connection_data.clear()
+	
+	# Build connection data for each edge
+	for from_node_id in RunState.current_map.nodes:
+		var from_node = RunState.current_map.nodes[from_node_id]
+		var from_widget = node_widgets.get(from_node_id)
+		
+		if not from_widget or not is_instance_valid(from_widget):
+			continue
+		
+		# Get button center in map_root's local coordinates
+		var from_center_global = from_widget.get_button_center_global()
+		var from_center: Vector2
+		if map_root:
+			var map_root_global_pos = map_root.get_global_rect().position
+			from_center = from_center_global - map_root_global_pos
+		else:
+			from_center = from_widget.position
+		var from_radius = from_widget.get_button_radius()
+		
+		for to_node_id in from_node.connected_to:
+			var to_widget = node_widgets.get(to_node_id)
+			if not to_widget or not is_instance_valid(to_widget):
+				continue
+			
+			# Get button center in map_root's local coordinates
+			var to_center_global = to_widget.get_button_center_global()
+			var to_center: Vector2
+			if map_root:
+				var map_root_global_pos = map_root.get_global_rect().position
+				to_center = to_center_global - map_root_global_pos
+			else:
+				to_center = to_widget.position
+			var to_radius = to_widget.get_button_radius()
+			
+			# Calculate direction and edge points (edge-to-edge connection)
+			var dir = (to_center - from_center).normalized()
+			var start_pos = from_center + dir * from_radius
+			var end_pos = to_center - dir * to_radius
+			
+			var is_selectable = to_node_id in selectable_set
+			var is_current_outgoing = from_node_id == current_node_id and is_selectable
+			
+			connection_data.append({
+				"start": start_pos,
+				"end": end_pos,
+				"is_selectable": is_selectable,
+				"is_current_outgoing": is_current_outgoing
+			})
+
+func _render_map():
+	## Render the entire map with nodes and connections (horizontal layout: left → right)
+	# Clear existing widgets and lines
+	_clear_map()
+	
+	if not RunState.current_map:
+		push_warning("MapScreen: No map to render")
+		return
+	
+	# Layout constants
+	const STEP_SPACING_X = 120  # Horizontal spacing between progression steps (rows)
+	const LANE_SPACING_Y = 90   # Vertical spacing between lanes (columns)
+	const NODE_SIZE = 50        # Node button size (for connection calculations)
+	const NODE_RADIUS = NODE_SIZE * 0.5
+	
+	# Get screen and available area
+	var screen_size = get_viewport_rect().size
+	var scroll_viewport_size = scroll_container.get_viewport_rect().size if scroll_container else screen_size
+	var viewport_height = scroll_viewport_size.y
+	
+	# Find max lanes (columns) across all rows
+	var max_cols = 0
+	for row in range(RunState.current_map.total_rows):
+		var row_nodes = RunState.current_map.get_nodes_in_row(row)
+		max_cols = max(max_cols, row_nodes.size())
+	
+	# Calculate step spacing (fixed for scrolling)
+	var step_spacing_x = STEP_SPACING_X
+	var left_padding = 100
+	var right_padding = 100
+	
+	# Store node positions for bounding box calculation
+	var node_positions: Array[Vector2] = []
+	var node_positions_by_id: Dictionary = {}
+	
+	# First pass: calculate raw positions
+	for row in range(RunState.current_map.total_rows):
+		var row_nodes = RunState.current_map.get_nodes_in_row(row)
+		if row_nodes.is_empty():
+			continue
+		
+		# Debug: Print node col order for this row
+		if OS.is_debug_build():
+			var col_list: Array[int] = []
+			for node in row_nodes:
+				col_list.append(node.col)
+			print("MapScreen: Row ", row, " cols order (after get_nodes_in_row): ", col_list)
+		
+		# Ensure nodes are sorted by col (defensive check)
+		row_nodes.sort_custom(func(a, b): return a.col < b.col)
+		
+		if OS.is_debug_build():
+			var col_list_sorted: Array[int] = []
+			for node in row_nodes:
+				col_list_sorted.append(node.col)
+			print("MapScreen: Row ", row, " cols order (after explicit sort): ", col_list_sorted)
+		
+		# X position: progression axis (row becomes X)
+		var x = (row * step_spacing_x) + (NODE_RADIUS)
+		
+		# Y positions: lane axis - use node.col directly for consistent lane ordering
+		# Find min and max col values to center the lanes
+		var min_col = row_nodes[0].col
+		var max_col = row_nodes[row_nodes.size() - 1].col
+		var col_range = max_col - min_col
+		
+		# Calculate base_y to center the lanes vertically
+		var total_lane_height = col_range * LANE_SPACING_Y if col_range > 0 else 0
+		var base_y = (viewport_height - total_lane_height) / 2.0
+		
+		# Store positions using node.col for Y positioning (these are button center positions)
+		for node in row_nodes:
+			# Use node.col relative to min_col for Y position
+			var col_offset = node.col - min_col
+			var y = base_y + (col_offset * LANE_SPACING_Y)
+			var pos = Vector2(x, y)
+			node_positions.append(pos)
+			node_positions_by_id[node.id] = pos
+	
+	# Calculate bounding box
+	var min_x = INF
+	var max_x = -INF
+	var min_y = INF
+	var max_y = -INF
+	for pos in node_positions:
+		min_x = min(min_x, pos.x)
+		max_x = max(max_x, pos.x)
+		min_y = min(min_y, pos.y)
+		max_y = max(max_y, pos.y)
+	
+	var map_width = max_x - min_x + left_padding + right_padding
+	var map_height = max_y - min_y
+	
+	# Calculate offsets
+	# X: Start at left padding (no centering for horizontal scroll)
+	var offset_x = left_padding - min_x
+	# Y: Center vertically
+	var offset_y = (viewport_height - map_height) / 2.0 - min_y
+	
+	# Size MapRoot to full map width (must be larger than viewport for scrolling)
+	var required_width = map_width
+	var required_height = max(viewport_height, map_height + 100)  # Add padding
+	
+	if map_root:
+		map_root.custom_minimum_size = Vector2(required_width, required_height)
+		map_root.size = Vector2(required_width, required_height)
+		map_root.size_flags_horizontal = Control.SIZE_FILL
+		map_root.size_flags_vertical = Control.SIZE_FILL
+		
+		# Wait for layout to update, then verify scrolling works
+		await get_tree().process_frame
+		if scroll_container:
+			var h_scroll_bar = scroll_container.get_h_scroll_bar()
+			if h_scroll_bar:
+				var max_scroll = h_scroll_bar.max_value
+				if OS.is_debug_build():
+					print("MapScreen: viewport size: ", scroll_container.size)
+					print("MapScreen: map_root min size: ", map_root.custom_minimum_size, " actual: ", map_root.size)
+					print("MapScreen: h_scroll max: ", max_scroll)
+					print("MapScreen: start nodes count: ", RunState.current_map.start_node_ids.size())
+	
+	# Second pass: create widgets with positioned locations
+	for node_id in node_positions_by_id:
+		var raw_pos = node_positions_by_id[node_id]
+		var final_pos = raw_pos + Vector2(offset_x, offset_y)
+		var node = RunState.current_map.get_node(node_id)
+		if node:
+			_create_node_widget(node, final_pos)
+	
+	# Wait for widgets to be ready before building connections
+	await get_tree().process_frame
+	
+	# Build connection data for rendering (stored, will be drawn in _draw_all_connections)
+	# Must be done AFTER widgets are created so we can reference their positions
+	_build_connection_data(offset_x, offset_y, NODE_RADIUS)
+	
+	# Trigger redraw of connections
+	_draw_all_connections()
+	
+	# Update node states
+	_update_node_states()
+
+func _create_node_widget(node: MapNodeData, node_position: Vector2):
+	## Create a node widget at the given position (position is button center)
+	var widget_scene = load("res://Path-of-Embers/Scenes/UI/MapNodeWidget.tscn")
+	var widget = widget_scene.instantiate() as MapNodeWidget
+	map_nodes.add_child(widget)
+	widget.setup(node, false)  # Selectable state will be updated by _update_node_states
+	
+	# Wait for widget to be ready and laid out before positioning
+	await get_tree().process_frame
+	
+	# Position widget so button center is at node_position
+	# Use the button center calculation after widget is laid out
+	if widget.node_button and is_instance_valid(widget.node_button):
+		var button_rect = widget.node_button.get_rect()
+		var button_center_local = button_rect.get_center()
+		widget.position = node_position - button_center_local
 	else:
-		print("Failed to save game")
+		# Fallback: assume button is approximately centered (VBoxContainer centers it)
+		widget.position = node_position - Vector2(27, 27)
+	
+	# Ensure widget can receive mouse input
+	widget.mouse_filter = Control.MOUSE_FILTER_PASS
+	if widget.node_button:
+		widget.node_button.mouse_filter = Control.MOUSE_FILTER_STOP
+		widget.node_button.disabled = false
+		print("MapScreen: Button configured - mouse_filter=", widget.node_button.mouse_filter, ", disabled=", widget.node_button.disabled)  # Debug
+	
+	widget.node_clicked.connect(_on_node_clicked)
+	node_widgets[node.id] = widget
+	
+	print("MapScreen: Created node widget for ", node.id, " at position ", node_position, ", available=", node.id in RunState.available_next_node_ids)  # Debug
 
-func _on_load_pressed():
-	var success = SaveManager.load_game()
-	if success:
-		print("Game loaded successfully!")
+func _build_connection_data(_offset_x: float = 0.0, _offset_y: float = 0.0, _node_radius: float = 25.0):
+	## Build connection data for rendering (stored for _draw_all_connections)
+	connection_data.clear()
+	
+	if not RunState.current_map:
+		return
+	
+	# Build selectable set for fast lookup
+	var selectable_set: Dictionary = {}
+	for node_id in RunState.available_next_node_ids:
+		selectable_set[node_id] = true
+	
+	var current_node_id = RunState.current_node_id
+	
+	# Build connection data for each edge
+	var widgets_found = 0
+	var widgets_missing = 0
+	
+	if OS.is_debug_build():
+		print("MapScreen._build_connection_data: node_widgets.size()=", node_widgets.size(), ", map.nodes.size()=", RunState.current_map.nodes.size())
+	
+	for from_node_id in RunState.current_map.nodes:
+		var from_node = RunState.current_map.nodes[from_node_id]
+		var from_widget = node_widgets.get(from_node_id)
+		
+		if not from_widget or not is_instance_valid(from_widget):
+			widgets_missing += 1
+			if OS.is_debug_build() and widgets_missing <= 3:
+				print("MapScreen._build_connection_data: Missing widget for ", from_node_id)
+			continue
+		
+		widgets_found += 1
+		# Get button center in map_root's local coordinates
+		var from_center_global = from_widget.get_button_center_global()
+		var from_center: Vector2
+		if map_root:
+			var map_root_global_pos = map_root.get_global_rect().position
+			from_center = from_center_global - map_root_global_pos
+		else:
+			from_center = from_widget.position
+		var from_radius = from_widget.get_button_radius()
+		
+		for to_node_id in from_node.connected_to:
+			var to_widget = node_widgets.get(to_node_id)
+			if not to_widget or not is_instance_valid(to_widget):
+				continue
+			
+			# Get button center in map_root's local coordinates
+			var to_center_global = to_widget.get_button_center_global()
+			var to_center: Vector2
+			if map_root:
+				var map_root_global_pos = map_root.get_global_rect().position
+				to_center = to_center_global - map_root_global_pos
+			else:
+				to_center = to_widget.position
+			var to_radius = to_widget.get_button_radius()
+			
+			# Calculate direction and edge points (edge-to-edge connection)
+			var dir = (to_center - from_center).normalized()
+			var start_pos = from_center + dir * from_radius
+			var end_pos = to_center - dir * to_radius
+			
+			# Determine line state for highlighting
+			var is_selectable = to_node_id in selectable_set
+			var is_current_outgoing = from_node_id == current_node_id and is_selectable
+			
+			# Store connection data
+			connection_data.append({
+				"start": start_pos,
+				"end": end_pos,
+				"is_selectable": is_selectable,
+				"is_current_outgoing": is_current_outgoing
+			})
+	
+	# Debug: check if we have connection data
+	if OS.is_debug_build():
+		print("MapScreen: Built ", connection_data.size(), " connections (widgets found: ", widgets_found, ", missing: ", widgets_missing, ")")
+
+func _draw_all_connections():
+	## Trigger redraw of MapConnections (which has its own _draw() method)
+	if not map_connections:
+		if OS.is_debug_build():
+			print("MapScreen: map_connections is null!")  # Debug
+		return
+	
+	# Ensure MapConnections is visible and ready
+	if not map_connections.visible:
+		map_connections.visible = true
+		print("MapScreen: Made MapConnections visible")  # Debug
+	
+	# Update the MapConnections control with connection data
+	if map_connections.has_method("set_connection_data"):
+		map_connections.set_connection_data(connection_data)
+		if OS.is_debug_build():
+			print("MapScreen: Updated MapConnections with ", connection_data.size(), " connections, visible=", map_connections.visible)
 	else:
-		print("Failed to load game")
+		if OS.is_debug_build():
+			print("MapScreen: MapConnections doesn't have set_connection_data method!")
 
-func _on_add_card_pressed():
-	# Add a test card to deck
-	RunState.add_card_to_deck("test_card_" + str(RunState.get_deck_size()))
-	print("Added card to deck. Deck size: ", RunState.get_deck_size())
+func _clear_map():
+	## Clear all node widgets and connections
+	connection_data.clear()
+	
+	for widget in node_widgets.values():
+		if is_instance_valid(widget):
+			widget.queue_free()
+	node_widgets.clear()
+	
+	_draw_all_connections()
 
-func _on_remove_card_pressed():
-	# Remove last card from deck
-	if RunState.get_deck_size() > 0:
-		RunState.remove_card_from_deck(RunState.get_deck_size() - 1)
-		print("Removed card from deck. Deck size: ", RunState.get_deck_size())
+func _on_node_clicked(node_id: String):
+	## Handle node selection
+	print("MapScreen: Node clicked: ", node_id)  # Debug
+	if node_id not in RunState.available_next_node_ids:
+		print("MapScreen: Node not in available_next_node_ids")  # Debug
+		return  # Invalid selection
+	
+	print("MapScreen: Setting current node to: ", node_id)  # Debug
+	# Set current node
+	RunState.set_current_node(node_id)
+	
+	# Transition to appropriate screen based on node type
+	var node = RunState.current_map.get_node(node_id)
+	if not node:
+		return
+	
+	match node.node_type:
+		MapNodeData.NodeType.FIGHT, MapNodeData.NodeType.ELITE, MapNodeData.NodeType.BOSS:
+			SceneRouter.change_scene("combat")
+		MapNodeData.NodeType.SHOP:
+			SceneRouter.change_scene("shop")
+		MapNodeData.NodeType.ENCOUNTER:
+			SceneRouter.change_scene("encounter")
+
+func _on_map_changed():
+	## Handle map change signal
+	_render_map()
+	# Auto-scroll to start (left side)
+	if scroll_container:
+		scroll_container.scroll_horizontal = 0
+
+func _on_current_node_changed(node_id: String):
+	## Handle current node change signal
+	_update_node_states()
+	
+	# Optional: Auto-scroll to current node
+	if node_id != "" and scroll_container and node_widgets.has(node_id):
+		var widget = node_widgets[node_id]
+		if widget:
+			var node_pos_x = widget.position.x + 27  # Button center X
+			var viewport_width = scroll_container.size.x
+			var target_x = node_pos_x - viewport_width * 0.35
+			var max_scroll = max(0, map_root.size.x - viewport_width) if map_root else 0
+			scroll_container.scroll_horizontal = clamp(target_x, 0, max_scroll)
+
+func _on_available_nodes_changed(_node_ids: Array):
+	## Handle available nodes change signal
+	_update_node_states()
+
+
+func _update_debug_info():
+	## Update debug label with current map state
+	if not debug_label:
+		return
+	
+	if OS.is_debug_build() and RunState.current_map:
+		var current_node_info = ""
+		if RunState.current_node_id:
+			var node = RunState.current_map.get_node(RunState.current_node_id)
+			if node:
+				current_node_info = "Node: %s (row %d)" % [RunState.current_node_id, node.row]
+		else:
+			current_node_info = "Node: None"
+		
+		var available_count = RunState.available_next_node_ids.size()
+		debug_label.text = "%s | Available: %d" % [current_node_info, available_count]
+		debug_label.visible = true
 	else:
-		print("Deck is empty, cannot remove card")
-
-func _on_setup_15_card_pressed():
-	# Setup a 15-card deck for testing
-	RunState.deck.clear()
-	for i in range(15):
-		RunState.add_card_to_deck("card_" + str(i))
-	RunState._initialize_deck_piles()
-	print("Setup 15-card deck. Total: ", RunState.get_deck_size())
-
-func _on_draw_5_pressed():
-	# Draw 5 cards
-	RunState.draw_cards(5)
-	print("Drew 5 cards. Hand: %d, Draw: %d, Discard: %d" % [
-		RunState.get_hand_size(),
-		RunState.get_draw_pile_count(),
-		RunState.get_discard_pile_count()
-	])
-
-func _on_discard_hand_pressed():
-	# Discard entire hand
-	RunState.discard_hand()
-	print("Discarded hand. Hand: %d, Draw: %d, Discard: %d" % [
-		RunState.get_hand_size(),
-		RunState.get_draw_pile_count(),
-		RunState.get_discard_pile_count()
-	])
-
-func _on_reset_deck_pressed():
-	# Reset deck piles (shuffle all cards back into draw)
-	RunState._initialize_deck_piles()
-	print("Reset deck piles. Hand: %d, Draw: %d, Discard: %d" % [
-		RunState.get_hand_size(),
-		RunState.get_draw_pile_count(),
-		RunState.get_discard_pile_count()
-	])
-
-func _on_go_to_combat_pressed():
-	# Debug: Go to CombatScreen
-	SceneRouter.change_scene("combat")
+		debug_label.visible = false

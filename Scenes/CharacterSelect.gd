@@ -272,8 +272,13 @@ func _on_confirm_pressed():
 		# Generate starter deck
 		RunState.generate_starter_deck(selected_char_data)
 		
-		# Initialize quests
-		RunState.initialize_quests(selected_char_data)
+	# Initialize quests
+	RunState.initialize_quests(selected_char_data)
+	
+	# Generate initial map
+	var map_gen = MapGenerator.new()
+	var map_data = map_gen.generate_map(RunState.act)
+	RunState.set_map_data(map_data)
 	
 	# Save run
 	if SaveManager:

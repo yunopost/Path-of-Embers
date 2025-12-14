@@ -105,8 +105,13 @@ func _serialize_run_state() -> Dictionary:
 				"cost": card_data.cost
 			})
 	
+	# Serialize map data if present
+	var map_data_serialized = null
+	if RunState.current_map != null:
+		map_data_serialized = RunState.current_map.to_dict()
+	
 	return {
-		"version": 2,
+		"version": 3,  # Bump version for map data
 		"party": RunState.party,
 		"party_ids": RunState.party_ids,
 		"deck": deck_data,
@@ -120,6 +125,9 @@ func _serialize_run_state() -> Dictionary:
 		"act": RunState.act,
 		"map": RunState.map,
 		"node_position": RunState.node_position,
+		"current_map": map_data_serialized,
+		"current_node_id": RunState.current_node_id,
+		"available_next_node_ids": RunState.available_next_node_ids,
 		"quests": quests_data,
 		"reward_card_pool": reward_pool_data,
 		"buffs": RunState.buffs,
@@ -174,6 +182,15 @@ func _deserialize_run_state(save_data: Dictionary):
 	if save_data.has("node_position"):
 		RunState.set_node_position(save_data["node_position"])
 	
+	# Restore map data (version 3+)
+	if save_data.has("current_map") and save_data["current_map"] != null:
+		var map_data = MapData.from_dict(save_data["current_map"])
+		RunState.set_map_data(map_data)
+	if save_data.has("current_node_id"):
+		RunState.current_node_id = save_data["current_node_id"]
+	if save_data.has("available_next_node_ids"):
+		RunState.available_next_node_ids = save_data["available_next_node_ids"]
+	
 	# Restore party_ids (new in version 2)
 	if save_data.has("party_ids"):
 		RunState.party_ids = save_data["party_ids"]
@@ -220,4 +237,3 @@ func _deserialize_run_state(save_data: Dictionary):
 	# Emit signals for UI updates
 	RunState.hp_changed.emit()
 	RunState.energy_changed.emit()
-
