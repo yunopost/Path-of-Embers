@@ -44,45 +44,25 @@ func _setup_scroll_input():
 	## Setup mouse wheel scrolling for map (handled in _gui_input)
 	pass
 
-func _gui_input(event: InputEvent):
-	## Handle input for scrolling and node clicks
+func _gui_input(event: InputEvent) -> void:
 	if not scroll_container:
 		return
-	
-	# Handle mouse button clicks (for node selection)
-	if event is InputEventMouseButton:
-		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			# Check if click is over a node widget using global coordinates
-			var global_mouse_pos = get_global_mouse_position()
-			
-			# Check each node widget
-			for node_id in node_widgets:
-				var widget = node_widgets[node_id]
-				if not is_instance_valid(widget):
-					continue
-				
-				# Get widget's global rect
-				var widget_global_pos = widget.get_global_position()
-				var widget_rect = Rect2(widget_global_pos, widget.size)
-				
-				if widget_rect.has_point(global_mouse_pos):
-					print("MapScreen._gui_input: Click detected over node ", node_id)  # Debug
-					# Trigger node click handler
-					_on_node_clicked(node_id)
-					get_viewport().set_input_as_handled()
-					return
-		
-		# Mouse wheel scrolling (horizontal)
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			# Shift+wheel for horizontal scroll, or just wheel if vertical is disabled
-			if event.shift_pressed or scroll_container.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED:
-				var scroll_delta = -event.factor * 20  # Negative because wheel up should scroll right
-				var new_scroll = scroll_container.scroll_horizontal + scroll_delta
-				var h_scroll_bar = scroll_container.get_h_scroll_bar()
-				var max_scroll = h_scroll_bar.max_value if h_scroll_bar else 0
-				scroll_container.scroll_horizontal = clamp(new_scroll, 0, max_scroll)
-				get_viewport().set_input_as_handled()
 
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+
+		if mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			if mb.shift_pressed or scroll_container.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED:
+				var step: float = 60.0  # tweak feel
+				var dir: float = -1.0 if mb.button_index == MOUSE_BUTTON_WHEEL_UP else 1.0
+
+				var new_scroll: float = scroll_container.scroll_horizontal + (dir * step)
+
+				var h_scroll_bar := scroll_container.get_h_scroll_bar()
+				var max_scroll: float = h_scroll_bar.max_value if h_scroll_bar else 0.0
+
+				scroll_container.scroll_horizontal = clamp(new_scroll, 0.0, max_scroll)
+				get_viewport().set_input_as_handled()
 
 func _setup_debug_ui():
 	## Setup debug buttons (debug builds only)
@@ -336,20 +316,23 @@ func _render_map():
 					print("MapScreen: h_scroll max: ", max_scroll)
 					print("MapScreen: start nodes count: ", RunState.current_map.start_node_ids.size())
 	
-	# Second pass: create widgets with positioned locations
-	for node_id in node_positions_by_id:
-		var raw_pos = node_positions_by_id[node_id]
-		var final_pos = raw_pos + Vector2(offset_x, offset_y)
-		var node = RunState.current_map.get_node(node_id)
-		if node:
-			_create_node_widget(node, final_pos)
-	
-	# Wait for widgets to be ready before building connections
-	await get_tree().process_frame
-	
-	# Build connection data for rendering (stored, will be drawn in _draw_all_connections)
-	# Must be done AFTER widgets are created so we can reference their positions
-	_build_connection_data(offset_x, offset_y, NODE_RADIUS)
+		# Second pass: create widgets with positioned locations
+		for node_id in node_positions_by_id:
+			var raw_pos = node_positions_by_id[node_id]
+			var final_pos = raw_pos + Vector2(offset_x, offset_y)
+			var node = RunState.current_map.get_node(node_id)
+			if node:
+				await _create_node_widget(node, final_pos)
+
+		# After the loop: let layout settle one more frame
+		await get_tree().process_frame
+
+		# Build + draw connections
+		_build_connection_data(offset_x, offset_y, NODE_RADIUS)
+		_draw_all_connections()
+
+		# Update node visuals
+		_update_node_states()
 	
 	# Trigger redraw of connections
 	_draw_all_connections()
@@ -357,37 +340,30 @@ func _render_map():
 	# Update node states
 	_update_node_states()
 
-func _create_node_widget(node: MapNodeData, node_position: Vector2):
-	## Create a node widget at the given position (position is button center)
+func _create_node_widget(node: MapNodeData, node_position: Vector2) -> void:
 	var widget_scene = load("res://Path-of-Embers/Scenes/UI/MapNodeWidget.tscn")
-	var widget = widget_scene.instantiate() as MapNodeWidget
+	var widget := widget_scene.instantiate() as MapNodeWidget
 	map_nodes.add_child(widget)
-	widget.setup(node, false)  # Selectable state will be updated by _update_node_states
-	
-	# Wait for widget to be ready and laid out before positioning
+
+	# store immediately (important)
+	node_widgets[node.id] = widget
+	widget.node_clicked.connect(_on_node_clicked)
+
+	widget.setup(node, false)
+
 	await get_tree().process_frame
-	
-	# Position widget so button center is at node_position
-	# Use the button center calculation after widget is laid out
+	# ...positioning code...
 	if widget.node_button and is_instance_valid(widget.node_button):
-		var button_rect = widget.node_button.get_rect()
-		var button_center_local = button_rect.get_center()
+		var button_rect := widget.node_button.get_rect()
+		var button_center_local := button_rect.get_center()
 		widget.position = node_position - button_center_local
 	else:
-		# Fallback: assume button is approximately centered (VBoxContainer centers it)
 		widget.position = node_position - Vector2(27, 27)
-	
-	# Ensure widget can receive mouse input
+
 	widget.mouse_filter = Control.MOUSE_FILTER_PASS
 	if widget.node_button:
 		widget.node_button.mouse_filter = Control.MOUSE_FILTER_STOP
 		widget.node_button.disabled = false
-		print("MapScreen: Button configured - mouse_filter=", widget.node_button.mouse_filter, ", disabled=", widget.node_button.disabled)  # Debug
-	
-	widget.node_clicked.connect(_on_node_clicked)
-	node_widgets[node.id] = widget
-	
-	print("MapScreen: Created node widget for ", node.id, " at position ", node_position, ", available=", node.id in RunState.available_next_node_ids)  # Debug
 
 func _build_connection_data(_offset_x: float = 0.0, _offset_y: float = 0.0, _node_radius: float = 25.0):
 	## Build connection data for rendering (stored for _draw_all_connections)

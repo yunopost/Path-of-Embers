@@ -1,10 +1,11 @@
 [gd_scene load_steps=2 format=3 uid="uid://oh1v6m5sqs4j"]
 
-[ext_resource type="Script" path="res://Path-of-Embers/Scripts/UI/MapNodeWidget.gd" id="1_mapnode"]
+[ext_resource type="Script" uid="uid://brcg8yyj0jw2w" path="res://Path-of-Embers/Scripts/UI/MapNodeWidget.gd" id="1_mapnode"]
 
 [node name="MapNodeWidget" type="Control"]
-layout_mode = 2
 custom_minimum_size = Vector2(54, 80)
+layout_mode = 3
+anchors_preset = 0
 mouse_filter = 1
 script = ExtResource("1_mapnode")
 
@@ -19,11 +20,10 @@ theme_override_constants/separation = 4
 alignment = 1
 
 [node name="NodeButton" type="Button" parent="VBoxContainer"]
-layout_mode = 2
 custom_minimum_size = Vector2(50, 54)
+layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
-mouse_filter = 0
 
 [node name="IconLabel" type="Label" parent="VBoxContainer/NodeButton"]
 layout_mode = 1
@@ -37,10 +37,9 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="RewardContainer" type="HBoxContainer" parent="VBoxContainer"]
-layout_mode = 2
 custom_minimum_size = Vector2(50, 16)
+layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 0
 theme_override_constants/separation = 4
 alignment = 1
-
