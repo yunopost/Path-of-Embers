@@ -75,6 +75,7 @@ func _create_character_hud_block(character_id: String) -> Control:
 	block.custom_minimum_size = Vector2(200, 190)
 	block.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	block.add_theme_constant_override("separation", 6)
+	block.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	# Inner margin container for padding
 	var inner_margin = MarginContainer.new()
@@ -82,23 +83,27 @@ func _create_character_hud_block(character_id: String) -> Control:
 	inner_margin.add_theme_constant_override("margin_right", 8)
 	inner_margin.add_theme_constant_override("margin_top", 8)
 	inner_margin.add_theme_constant_override("margin_bottom", 8)
+	inner_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	block.add_child(inner_margin)
 	
 	# Content container
 	var container = VBoxContainer.new()
 	container.size_flags_horizontal = Control.SIZE_FILL
 	container.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inner_margin.add_child(container)
 	
 	# Spacer to seperate HP bar above from portraits
 	var spacer = Control.new()
 	spacer.custom_minimum_size.y = 12
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(spacer)
 	
 	# Portrait placeholder panel with enforced size
 	var portrait = Panel.new()
 	portrait.custom_minimum_size = Vector2(170, 95)
 	portrait.size_flags_horizontal = Control.SIZE_FILL
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(portrait)
 	
 	# Character name label centered over portrait
@@ -120,6 +125,7 @@ func _create_character_hud_block(character_id: String) -> Control:
 	# Quest info container with separation
 	var quest_container = VBoxContainer.new()
 	quest_container.add_theme_constant_override("separation", 6)
+	quest_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	# Quest title label
 	var quest_title_label = Label.new()
@@ -127,12 +133,14 @@ func _create_character_hud_block(character_id: String) -> Control:
 	quest_title_label.add_theme_font_size_override("font_size", 11)
 	quest_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	quest_title_label.clip_contents = true
-	quest_title_label.custom_minimum_size.y = 28  # Fixed height to prevent excessive wrapping
+	quest_title_label.custom_minimum_size.y = 28
+	quest_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	# Quest progress label
 	var quest_progress_label = Label.new()
 	quest_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	quest_progress_label.add_theme_font_size_override("font_size", 10)
+	quest_progress_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	# Get quest data from RunState
 	if RunState and RunState.quests.has(character_id):

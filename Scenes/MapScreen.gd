@@ -11,7 +11,6 @@ var connection_data: Array[Dictionary] = []  # Store connection data for _draw()
 @onready var map_root: Control = $MapSafeArea/ScrollContainer/MapRoot
 @onready var map_connections: Control = $MapSafeArea/ScrollContainer/MapRoot/MapConnections
 @onready var map_nodes: Control = $MapSafeArea/ScrollContainer/MapRoot/MapNodes
-@onready var debug_label: Label = $MapSafeArea/DebugLabel
 
 func _ready():
 	# Initialize map generator
@@ -65,23 +64,39 @@ func _gui_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 
 func _setup_debug_ui():
-	## Setup debug buttons (debug builds only)
-	# Add debug buttons if they don't exist
-	if not has_node("MapSafeArea/DebugButtons"):
-		var debug_vbox = VBoxContainer.new()
-		debug_vbox.name = "DebugButtons"
-		debug_vbox.position = Vector2(10, 100)
-		map_safe_area.add_child(debug_vbox)
-		
-		var generate_btn = Button.new()
+	# Setup debug buttons (debug builds only)
+	if not OS.is_debug_build():
+		return
+
+	if not has_node("DebugButtonsBar"):
+		# A wide top bar that centers its contents
+		var bar := HBoxContainer.new()
+		bar.name = "DebugButtonsBar"
+		add_child(bar)
+
+		# Make the bar span the screen width at the top
+		bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
+		bar.offset_left = 0
+		bar.offset_right = 0
+		bar.offset_top = 60
+		bar.offset_bottom = 60 + 40  # height
+		bar.alignment = BoxContainer.ALIGNMENT_CENTER
+
+		# Important: bar should NOT eat clicks over the map
+		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+		# Buttons (these CAN receive clicks)
+		var generate_btn := Button.new()
 		generate_btn.text = "Generate New Map"
 		generate_btn.pressed.connect(_generate_map)
-		debug_vbox.add_child(generate_btn)
-		
-		var reset_btn = Button.new()
+		generate_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+		bar.add_child(generate_btn)
+
+		var reset_btn := Button.new()
 		reset_btn.text = "Reset Progress"
 		reset_btn.pressed.connect(_reset_progress)
-		debug_vbox.add_child(reset_btn)
+		reset_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+		bar.add_child(reset_btn)
 
 func _generate_map():
 	## Generate a new map
@@ -132,8 +147,6 @@ func _update_node_states():
 	
 	# Trigger redraw of connections
 	_draw_all_connections()
-	
-	_update_debug_info()
 
 func _build_connection_data_for_existing_nodes():
 	## Rebuild connection data using existing widget positions (for state updates)
@@ -341,18 +354,14 @@ func _render_map():
 	_update_node_states()
 
 func _create_node_widget(node: MapNodeData, node_position: Vector2) -> void:
-	var widget_scene = load("res://Path-of-Embers/Scenes/UI/MapNodeWidget.tscn")
+	var widget_scene := load("res://Path-of-Embers/Scenes/UI/MapNodeWidget.tscn")
 	var widget := widget_scene.instantiate() as MapNodeWidget
 	map_nodes.add_child(widget)
 
-	# store immediately (important)
-	node_widgets[node.id] = widget
-	widget.node_clicked.connect(_on_node_clicked)
-
 	widget.setup(node, false)
-
 	await get_tree().process_frame
-	# ...positioning code...
+
+	# Positioning (keep yours for now)
 	if widget.node_button and is_instance_valid(widget.node_button):
 		var button_rect := widget.node_button.get_rect()
 		var button_center_local := button_rect.get_center()
@@ -360,10 +369,18 @@ func _create_node_widget(node: MapNodeData, node_position: Vector2) -> void:
 	else:
 		widget.position = node_position - Vector2(27, 27)
 
+	# Make sure the BUTTON receives input
 	widget.mouse_filter = Control.MOUSE_FILTER_PASS
 	if widget.node_button:
 		widget.node_button.mouse_filter = Control.MOUSE_FILTER_STOP
 		widget.node_button.disabled = false
+
+		# ✅ Connect the real click
+		# (Use bind so you don’t depend on widget rect hit testing)
+		if not widget.node_button.pressed.is_connected(_on_node_clicked):
+			widget.node_button.pressed.connect(_on_node_clicked.bind(node.id))
+
+	node_widgets[node.id] = widget
 
 func _build_connection_data(_offset_x: float = 0.0, _offset_y: float = 0.0, _node_radius: float = 25.0):
 	## Build connection data for rendering (stored for _draw_all_connections)
@@ -523,24 +540,3 @@ func _on_current_node_changed(node_id: String):
 func _on_available_nodes_changed(_node_ids: Array):
 	## Handle available nodes change signal
 	_update_node_states()
-
-
-func _update_debug_info():
-	## Update debug label with current map state
-	if not debug_label:
-		return
-	
-	if OS.is_debug_build() and RunState.current_map:
-		var current_node_info = ""
-		if RunState.current_node_id:
-			var node = RunState.current_map.get_node(RunState.current_node_id)
-			if node:
-				current_node_info = "Node: %s (row %d)" % [RunState.current_node_id, node.row]
-		else:
-			current_node_info = "Node: None"
-		
-		var available_count = RunState.available_next_node_ids.size()
-		debug_label.text = "%s | Available: %d" % [current_node_info, available_count]
-		debug_label.visible = true
-	else:
-		debug_label.visible = false

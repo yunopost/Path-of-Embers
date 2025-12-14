@@ -29,6 +29,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 0
@@ -36,6 +37,7 @@ theme_override_constants/margin_bottom = 0
 
 [node name="TopLeftHUD" type="VBoxContainer" parent="TopLeft/TopLeftMargin"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 32
 
 [node name="HPRow" type="Control" parent="TopLeft/TopLeftMargin/TopLeftHUD"]
@@ -115,9 +117,11 @@ offset_right = -20.0
 offset_bottom = 200.0
 grow_horizontal = 0
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="GoldContainer" type="HBoxContainer" parent="TopRight"]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="GoldLabel" type="Label" parent="TopRight/GoldContainer"]
 layout_mode = 2
@@ -129,6 +133,7 @@ text = "100"
 
 [node name="NodeProgressContainer" type="HBoxContainer" parent="TopRight"]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="NodeProgressLabel" type="Label" parent="TopRight/NodeProgressContainer"]
 layout_mode = 2
@@ -140,6 +145,7 @@ text = "0"
 
 [node name="ButtonContainer" type="HBoxContainer" parent="TopRight"]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="MapButton" type="Button" parent="TopRight/ButtonContainer"]
 layout_mode = 2
@@ -167,6 +173,7 @@ offset_right = 200.0
 offset_bottom = 30.0
 grow_horizontal = 0
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="DebugLabel" type="Label" parent="TopCenter"]
 layout_mode = 1

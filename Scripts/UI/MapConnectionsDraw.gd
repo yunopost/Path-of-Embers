@@ -5,7 +5,9 @@ extends Control
 var connection_data: Array[Dictionary] = []
 var map_screen_ref: Node = null
 
-func _ready():
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	focus_mode = Control.FOCUS_NONE
 	# Ensure we can draw
 	queue_redraw()
 	print("MapConnectionsDraw._ready() called")  # Debug
