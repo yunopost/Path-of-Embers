@@ -188,9 +188,13 @@ func end_player_turn():
 	enemy_time_system.force_all_enemies_to_zero()
 	enemy_time_system.resolve_enemy_time_triggers("end_turn")
 	
-	# Start new player turn
-	start_player_turn()
-	turn_ended.emit()
+	# Check if combat should end (enemies may have died during enemy actions)
+	# Note: CombatScreen will handle the actual transition via signal
+	
+	# Only start new player turn if combat is still active
+	if combat_active:
+		start_player_turn()
+		turn_ended.emit()
 
 func get_player_stats() -> EntityStats:
 	return player_stats

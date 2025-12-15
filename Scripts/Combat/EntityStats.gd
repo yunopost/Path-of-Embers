@@ -60,4 +60,3 @@ func get_status(effect_type: String):
 
 func is_alive() -> bool:
 	return current_hp > 0
-

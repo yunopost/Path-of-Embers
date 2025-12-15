@@ -181,6 +181,8 @@ func _set_reward_flags(node: MapNodeData):
 		
 		MapNodeData.NodeType.BOSS:
 			node.reward_flags.clear()
+			node.reward_flags.append(MapNodeData.RewardType.CARD)  # Boss gets 3 card choices
+			node.reward_flags.append(MapNodeData.RewardType.GOLD)  # Boss gets gold
 			node.reward_flags.append(MapNodeData.RewardType.UPGRADE)  # Transcendent upgrade
 			node.reward_flags.append(MapNodeData.RewardType.BOSS_RELIC)
 		

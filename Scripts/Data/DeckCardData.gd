@@ -6,14 +6,17 @@ class_name DeckCardData
 
 var card_id: String = ""
 var owner_character_id: String = ""  # Character who owns this card instance
-var applied_upgrades: Array = []  # Upgrade IDs applied to this card
+var applied_upgrades: Array[String] = []  # Upgrade IDs applied to this card
 var is_transcended: bool = false
 var transcendent_card_id: String = ""  # If transcended, the new card ID
 
-func _init(p_card_id: String = "", p_owner_id: String = "", p_upgrades: Array = [], p_transcended: bool = false, p_transcendent_id: String = ""):
+func _init(p_card_id: String = "", p_owner_id: String = "", p_upgrades: Array[String] = [], p_transcended: bool = false, p_transcendent_id: String = ""):
 	card_id = p_card_id
 	owner_character_id = p_owner_id
-	applied_upgrades = p_upgrades if p_upgrades else []
+	if p_upgrades:
+		applied_upgrades = p_upgrades.duplicate()
+	else:
+		applied_upgrades = []
 	is_transcended = p_transcended
 	transcendent_card_id = p_transcendent_id
 
@@ -27,10 +30,15 @@ func to_dict() -> Dictionary:
 	}
 
 static func from_dict(data: Dictionary) -> DeckCardData:
+	var upgrades_data = data.get("applied_upgrades", [])
+	var upgrades_array: Array[String] = []
+	for item in upgrades_data:
+		if item is String:
+			upgrades_array.append(item)
 	return DeckCardData.new(
 		data.get("card_id", ""),
 		data.get("owner_character_id", ""),
-		data.get("applied_upgrades", []),
+		upgrades_array,
 		data.get("is_transcended", false),
 		data.get("transcendent_card_id", "")
 	)

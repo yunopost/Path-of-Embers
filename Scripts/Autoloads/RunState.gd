@@ -56,6 +56,9 @@ var quests: Dictionary = {}  # Dictionary keyed by character_id or quest_id, val
 # Reward pool
 var reward_card_pool: Array[CardData] = []  # Merged reward card pool from selected characters
 
+# Pending rewards (set by EncounterScreen, consumed by RewardsScreen)
+var pending_rewards: RewardBundle = null
+
 # Buffs list
 var buffs: Array = []  # Will contain buff/debuff data
 
@@ -150,6 +153,31 @@ func set_current_node(node_id: String):
 		current_node_changed.emit(node_id)
 		node_position_changed.emit()
 
+func get_current_node_type() -> int:
+	## Get the current node's type (MapNodeData.NodeType)
+	## Returns FIGHT as fallback if node not found
+	if not current_map or current_node_id.is_empty():
+		return MapNodeData.NodeType.FIGHT
+	
+	var node = current_map.get_node(current_node_id)
+	if node:
+		return node.node_type
+	
+	return MapNodeData.NodeType.FIGHT
+
+func mark_current_node_completed() -> void:
+	## Mark the current node as completed and update available nodes
+	## This is called after combat ends, separate from set_current_node
+	if not current_map or current_node_id.is_empty():
+		return
+	
+	var node = current_map.get_node(current_node_id)
+	if node:
+		node.is_completed = true
+		_update_available_nodes()
+		# Emit map_changed to refresh map display
+		map_changed.emit()
+
 func _update_available_nodes():
 	## Update the list of available next nodes based on current selection
 	var old_available = available_next_node_ids.duplicate()
@@ -181,7 +209,7 @@ func set_map(value: String):
 		map = value
 		map_changed.emit()
 
-func add_card_to_deck(card_id: String, owner_character_id: String = "", upgrades: Array = [], transcended: bool = false, transcendent_card_id: String = ""):
+func add_card_to_deck(card_id: String, owner_character_id: String = "", upgrades: Array[String] = [], transcended: bool = false, transcendent_card_id: String = ""):
 	## Add a card to the deck with optional upgrades and owner
 	var deck_card = DeckCardData.new(card_id, owner_character_id, upgrades, transcended, transcendent_card_id)
 	deck.append(deck_card)
@@ -334,4 +362,113 @@ func initialize_quests(character_data_list: Array[CharacterData]):
 			quests[char_data.id] = quest_state
 	
 	quests_changed.emit()
+
+func set_pending_rewards(bundle: RewardBundle):
+	## Set pending rewards (called by EncounterScreen)
+	pending_rewards = bundle
+
+func clear_pending_rewards():
+	## Clear pending rewards (called by RewardsScreen after completion)
+	pending_rewards = null
+
+func apply_reward_bundle(bundle: RewardBundle):
+	## Apply all rewards from a bundle to RunState
+	## This is called by RewardsScreen after player makes choices
+	if not bundle:
+		return
+	
+	# Apply gold
+	if bundle.gold > 0:
+		set_gold(gold + bundle.gold)
+	
+	# Apply healing
+	if bundle.heal_amount > 0:
+		var new_hp = min(current_hp + bundle.heal_amount, max_hp)
+		set_hp(new_hp, max_hp)
+	
+	# Card rewards are handled separately by RewardsScreen (player chooses which card)
+	# Relic and upgrade rewards are also handled separately by RewardsScreen
+	
+	# Note: We don't apply cards/relics/upgrades here because player must choose
+	# RewardsScreen calls add_card_to_deck/add_relic/etc. individually
+
+func add_card_to_deck_from_reward(card_id: String, owner_character_id: String = ""):
+	## Add a card to deck from reward (wrapper for add_card_to_deck)
+	## Uses "Shared Deck" owner if no owner specified
+	add_card_to_deck(card_id, owner_character_id)
+
+func can_upgrade_card_at(deck_index: int) -> bool:
+	## Check if a card at the given index can be upgraded
+	if deck_index < 0 or deck_index >= deck.size():
+		return false
+	
+	var card_instance = deck[deck_index]
+	if not card_instance is DeckCardData:
+		return false
+	
+	# Check if card has available upgrades
+	var pool = DataRegistry.get_upgrade_pool_for_card(card_instance.card_id)
+	if pool.is_empty():
+		return false
+	
+	# Check if all upgrades are already applied (limit to 1 for now)
+	if card_instance.applied_upgrades.size() >= 1:
+		return false
+	
+	# Check if there are any available upgrades
+	var available = []
+	for upgrade_id in pool:
+		if not card_instance.applied_upgrades.has(upgrade_id):
+			available.append(upgrade_id)
+	
+	return not available.is_empty()
+
+func apply_upgrade_to_card_at(deck_index: int, upgrade_id: String) -> bool:
+	## Apply an upgrade to a card instance at the given deck index
+	if deck_index < 0 or deck_index >= deck.size():
+		return false
+	
+	var card_instance = deck[deck_index]
+	if not card_instance is DeckCardData:
+		return false
+	
+	# Check if upgrade is already applied
+	if card_instance.applied_upgrades.has(upgrade_id):
+		return false
+	
+	# Limit to 1 upgrade per card for now
+	if card_instance.applied_upgrades.size() >= 1:
+		return false
+	
+	# Check if upgrade is valid for this card
+	var pool = DataRegistry.get_upgrade_pool_for_card(card_instance.card_id)
+	if not pool.has(upgrade_id):
+		return false
+	
+	# Apply upgrade
+	card_instance.applied_upgrades.append(upgrade_id)
+	
+	# Update the card in draw/discard/hand piles if it exists
+	_update_card_in_piles(card_instance.card_id, card_instance.owner_character_id, card_instance.applied_upgrades)
+	
+	deck_changed.emit()
+	return true
+
+func _update_card_in_piles(card_id: String, owner_id: String, upgrades: Array[String]):
+	## Update matching cards in draw/discard/hand piles with new upgrades
+	# This ensures consistency across all piles
+	for pile in [draw_pile, hand, discard_pile]:
+		for card in pile:
+			if card is DeckCardData:
+				if card.card_id == card_id and card.owner_character_id == owner_id:
+					# Update upgrades (but preserve other state)
+					card.applied_upgrades = upgrades.duplicate()
+
+func get_upgradeable_deck_indices() -> Array[int]:
+	## Get all deck indices of cards that can be upgraded
+	var indices: Array[int] = []
+	for i in range(deck.size()):
+		if can_upgrade_card_at(i):
+			indices.append(i)
+	return indices
 

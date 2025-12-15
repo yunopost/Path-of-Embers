@@ -17,6 +17,8 @@ var card_ui_instances: Array[CardUI] = []
 var is_updating_hand: bool = false
 
 var enemy_displays: Array[Control] = []
+var alive_enemy_ids: Array[String] = []
+var combat_ending: bool = false
 
 func _ready():
 	# Connect signals
@@ -65,8 +67,16 @@ func _setup_enemies():
 	for child in enemy_slots.get_children():
 		child.queue_free()
 	enemy_displays.clear()
+	alive_enemy_ids.clear()
+	combat_ending = false
 	
 	for enemy in combat_controller.get_enemies():
+		# Track alive enemies
+		alive_enemy_ids.append(enemy.enemy_id)
+		
+		# Connect to died signal
+		enemy.died.connect(_on_enemy_died.bind(enemy.enemy_id))
+		
 		var enemy_display = _create_enemy_display(enemy)
 		enemy_slots.add_child(enemy_display)
 		enemy_displays.append(enemy_display)
@@ -205,6 +215,59 @@ func _on_combat_started():
 
 func _on_turn_ended():
 	_update_player_hp()
+	# Check for combat end after turn (enemies may have died during enemy actions)
+	_check_combat_end()
 
 func _on_end_turn_pressed():
 	combat_controller.end_player_turn()
+	# Check for combat end after turn (in case enemies died during turn resolution)
+	_check_combat_end()
+
+func _on_enemy_died(enemy_id: String):
+	## Handle enemy death
+	if enemy_id in alive_enemy_ids:
+		alive_enemy_ids.erase(enemy_id)
+		print("CombatScreen: Enemy %s died. Alive enemies: %d" % [enemy_id, alive_enemy_ids.size()])
+		_check_combat_end()
+
+func _check_combat_end():
+	## Check if all enemies are dead and end combat if so
+	if combat_ending:
+		return  # Already ending combat, prevent duplicate calls
+	
+	# Check if all enemies are dead
+	if alive_enemy_ids.is_empty():
+		print("CombatScreen: All enemies dead, ending combat")
+		_end_combat_and_transition()
+
+func _end_combat_and_transition():
+	## End combat and transition to rewards screen
+	if combat_ending:
+		return  # Guard against duplicate calls
+	
+	combat_ending = true
+	
+	# Stop combat in controller
+	if combat_controller:
+		combat_controller.combat_active = false
+	
+	# Mark node as completed
+	RunState.mark_current_node_completed()
+	
+	# Compute rewards based on node's reward flags
+	var current_node = RunState.current_map.get_node(RunState.current_node_id) if RunState.current_map else null
+	var bundle = RewardResolver.build_rewards_for_node(current_node)
+	
+	var node_type_str = "Unknown"
+	if current_node:
+		node_type_str = MapNodeData.NodeType.keys()[current_node.node_type]
+	
+	print("Combat ended: all enemies dead. NodeType=%s, Rewards: gold=%d, cards=%d, upgrades=%d, relic=%s" % [
+		node_type_str, bundle.gold, bundle.card_choices.size(), bundle.upgrade_count, bundle.relic_id
+	])
+	
+	# Set pending rewards
+	RunState.set_pending_rewards(bundle)
+	
+	# Transition to rewards screen
+	SceneRouter.change_scene("rewards")

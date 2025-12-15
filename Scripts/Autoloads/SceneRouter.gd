@@ -12,8 +12,9 @@ const SCENE_PATHS = {
 	"character_select": "res://Path-of-Embers/Scenes/CharacterSelect.tscn",
 	"map": "res://Path-of-Embers/Scenes/MapScreen.tscn",
 	"combat": "res://Path-of-Embers/Scenes/CombatScreen.tscn",
-	"encounter": "res://Path-of-Embers/Scenes/EncounterScreen.tscn",
-	"shop": "res://Path-of-Embers/Scenes/ShopScreen.tscn"
+	"encounter": "res://Path-of-Embers/Scenes/Encounter/EncounterScreen.tscn",
+	"shop": "res://Path-of-Embers/Scenes/ShopScreen.tscn",
+	"rewards": "res://Path-of-Embers/Scenes/Rewards/RewardsScreen.tscn"
 }
 
 func _ready():
