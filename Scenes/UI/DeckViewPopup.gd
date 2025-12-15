@@ -60,13 +60,12 @@ func _update_card_grid():
 		push_error("DeckViewPopup: Could not load DeckCardWidget scene")
 		return
 	
-	# Add card widgets for each card in deck (using deck_order for stable ordering)
-	for deck_index in range(RunState.deck_order.size()):
-		var instance_id = RunState.deck_order[deck_index]
-		var deck_card = RunState.deck.get(instance_id)
-		if deck_card:
+	# Add card widgets for each card in deck
+	for deck_index in range(RunState.deck.size()):
+		var deck_card = RunState.deck[deck_index]
+		if deck_card is DeckCardData:
 			var card_widget = card_widget_scene.instantiate()
-			card_widget.setup(deck_card, deck_index, false)  # Not clickable in deck view, deck_index for display only
+			card_widget.setup(deck_card, deck_index, false)  # Not clickable in deck view
 			card_grid.add_child(card_widget)
 
 func _update_counts():
