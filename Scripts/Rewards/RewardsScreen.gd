@@ -289,15 +289,15 @@ func _on_upgrade_card_selected(deck_index: int):
 
 func _on_upgrade_option_selected(upgrade_id: String):
 	## Handle upgrade option selection from UpgradeFlowPanel
-	# Get the selected card index from the panel
-	var selected_index = upgrade_flow_panel.selected_card_index
-	if selected_index < 0:
+	# Get the selected instance_id from the panel
+	var selected_instance_id = upgrade_flow_panel.selected_instance_id
+	if selected_instance_id.is_empty():
 		return
 	
-	# Apply upgrade
-	var success = RunState.apply_upgrade_to_card_at(selected_index, upgrade_id)
+	# Apply upgrade by instance_id
+	var success = RunState.apply_upgrade_to_instance(selected_instance_id, upgrade_id)
 	if not success:
-		push_error("Failed to apply upgrade %s to card at index %d" % [upgrade_id, selected_index])
+		push_error("Failed to apply upgrade %s to instance %s" % [upgrade_id, selected_instance_id])
 		return
 	
 	# Decrement upgrade count

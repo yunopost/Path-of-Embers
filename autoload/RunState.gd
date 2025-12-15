@@ -26,10 +26,11 @@ var party: Array = []  # Will contain character data (legacy, kept for compatibi
 var party_ids: Array[String] = []  # Array of 3 character IDs
 
 # Deck
-var deck: Array = []  # Full deck - all cards owned (DeckCardData instances)
-var draw_pile: Array = []  # Cards available to draw (legacy - use deck_model)
-var hand: Array = []  # Cards currently in hand (legacy - use deck_model)
-var discard_pile: Array = []  # Cards that have been played/discarded (legacy - use deck_model)
+var deck: Dictionary = {}  # instance_id -> DeckCardData (authoritative registry)
+var deck_order: Array[String] = []  # Stable ordering for deck view / upgrades UI
+var draw_pile: Array[String] = []  # instance_ids (legacy - use deck_model)
+var hand: Array[String] = []  # instance_ids (legacy - use deck_model)
+var discard_pile: Array[String] = []  # instance_ids (legacy - use deck_model)
 
 # Models (architecture rule 4.1, 8.1)
 var deck_model: DeckModel = null
@@ -73,7 +74,8 @@ func _ready():
 	# Initialize with empty values (will be set by character selection)
 	party = []
 	party_ids = []
-	deck = []
+	deck = {}
+	deck_order = []
 	_initialize_deck_piles()
 	relics = []
 	gold = 0
@@ -242,56 +244,94 @@ func set_map(value: String):
 
 func add_card_to_deck(card_id: String, owner_character_id: String = "", upgrades: Array[String] = [], transcended: bool = false, transcendent_card_id: String = ""):
 	## Add a card to the deck with optional upgrades and owner
+	## Creates DeckCardData with instance_id and stores in registry
 	var deck_card = DeckCardData.new(card_id, owner_character_id, upgrades, transcended, transcendent_card_id)
-	deck.append(deck_card)
+	var instance_id = deck_card.instance_id
+	
+	# Store in registry
+	deck[instance_id] = deck_card
+	deck_order.append(instance_id)
 	
 	# Update model if available
 	if deck_model:
-		deck_model.deck.append(deck_card)
-		# Add to draw pile in model
-		var deck_index = deck_model.deck.size() - 1
-		deck_model.draw_pile.append(deck_index)
-		deck_model.draw_pile_changed.emit()
-		deck_model.deck_changed.emit()
+		deck_model.add_card_instance(instance_id)
 		_sync_deck_arrays_from_model()
 	else:
 		# Legacy fallback
-		# Also add to draw pile (create a copy)
-		var card_copy = DeckCardData.new(card_id, owner_character_id, upgrades, transcended, transcendent_card_id)
-		draw_pile.append(card_copy)
+		draw_pile.append(instance_id)
 		draw_pile_changed.emit()
-		deck_changed.emit()
+	
+	deck_changed.emit()
 
 func remove_card_from_deck(index: int):
-	## Remove a card from the deck by index
-	if index >= 0 and index < deck.size():
-		deck.remove_at(index)
-		deck_changed.emit()
+	## DEPRECATED: Use remove_card_instance(instance_id) instead
+	## Legacy method - converts index to instance_id and calls remove_card_instance
+	if index >= 0 and index < deck_order.size():
+		var instance_id = deck_order[index]
+		remove_card_instance(instance_id)
+
+func remove_card_instance(instance_id: String) -> void:
+	## Remove a card instance from the deck and all piles
+	if not deck.has(instance_id):
+		return
+	
+	# Remove from registry
+	deck.erase(instance_id)
+	deck_order.erase(instance_id)
+	
+	# Remove from model piles
+	if deck_model:
+		deck_model.remove_instance_from_piles(instance_id)
+		_sync_deck_arrays_from_model()
+	else:
+		# Legacy fallback
+		draw_pile.erase(instance_id)
+		hand.erase(instance_id)
+		discard_pile.erase(instance_id)
+		draw_pile_changed.emit()
+		hand_changed.emit()
+		discard_pile_changed.emit()
+	
+	deck_changed.emit()
+
+func transform_card_instance(instance_id: String, new_card_id: String) -> void:
+	## Transform a card instance to a different card
+	## Clears upgrades (MVP decision)
+	if not deck.has(instance_id):
+		return
+	
+	var card_instance = deck[instance_id]
+	if not card_instance:
+		return
+	
+	# Transform the card
+	card_instance.card_id = new_card_id
+	card_instance.applied_upgrades.clear()  # MVP: clear upgrades on transform
+	card_instance.is_transcended = false
+	card_instance.transcendent_card_id = ""
+	
+	# Emit signals
+	deck_changed.emit()
+	# If card is in hand, emit hand_changed
+	if deck_model and deck_model.hand.has(instance_id):
+		deck_model.hand_changed.emit()
+	elif hand.has(instance_id):
+		hand_changed.emit()
 
 func get_deck_size() -> int:
-	return deck.size()
+	return deck_order.size()
 
 func _initialize_deck_piles():
 	## Initialize draw pile with all cards from deck, clear hand and discard
 	# Use deck_model if available (preferred)
 	if deck_model:
-		var deck_array: Array[DeckCardData] = []
-		for card in deck:
-			if card is DeckCardData:
-				deck_array.append(card)
-		deck_model.initialize(deck_array)
+		# Initialize with instance_ids from deck_order
+		deck_model.initialize(deck_order.duplicate())
 		# Sync legacy arrays for backward compatibility
 		_sync_deck_arrays_from_model()
 	else:
-		# Legacy fallback
-		draw_pile.clear()
-		for card in deck:
-			if card is DeckCardData:
-				# Create a copy of the DeckCardData
-				var card_copy = DeckCardData.new(card.card_id, card.owner_character_id, card.applied_upgrades.duplicate(), card.is_transcended, card.transcendent_card_id)
-				draw_pile.append(card_copy)
-			else:
-				draw_pile.append(card)
+		# Legacy fallback - initialize piles with instance_ids
+		draw_pile = deck_order.duplicate()
 		hand.clear()
 		discard_pile.clear()
 		_shuffle_draw_pile()
@@ -301,22 +341,10 @@ func _sync_deck_arrays_from_model():
 	if not deck_model:
 		return
 	
-	# Sync draw_pile, hand, discard_pile from model indices
-	draw_pile.clear()
-	hand.clear()
-	discard_pile.clear()
-	
-	for index in deck_model.draw_pile:
-		if index >= 0 and index < deck_model.deck.size():
-			draw_pile.append(deck_model.deck[index])
-	
-	for index in deck_model.hand:
-		if index >= 0 and index < deck_model.deck.size():
-			hand.append(deck_model.deck[index])
-	
-	for index in deck_model.discard_pile:
-		if index >= 0 and index < deck_model.deck.size():
-			discard_pile.append(deck_model.deck[index])
+	# Sync draw_pile, hand, discard_pile as instance_id arrays
+	draw_pile = deck_model.draw_pile.duplicate()
+	hand = deck_model.hand.duplicate()
+	discard_pile = deck_model.discard_pile.duplicate()
 
 func _shuffle_draw_pile():
 	## Shuffle the draw pile randomly
@@ -402,6 +430,7 @@ func generate_starter_deck(character_data_list: Array[CharacterData]):
 		return
 	
 	deck.clear()
+	deck_order.clear()
 	reward_card_pool.clear()
 	
 	# Generate deck: 3 generic + 2 unique per character = 15 cards total
@@ -410,13 +439,17 @@ func generate_starter_deck(character_data_list: Array[CharacterData]):
 		var generic_card_ids = RoleStarterSet.get_generic_starters_for_role(char_data.role)
 		for card_id in generic_card_ids:
 			var deck_card = DeckCardData.new(card_id, char_data.id)
-			deck.append(deck_card)
+			var instance_id = deck_card.instance_id
+			deck[instance_id] = deck_card
+			deck_order.append(instance_id)
 		
 		# Add 2 unique cards
 		for unique_card in char_data.starter_unique_cards:
 			if unique_card and unique_card.id:
 				var deck_card = DeckCardData.new(unique_card.id, char_data.id)
-				deck.append(deck_card)
+				var instance_id = deck_card.instance_id
+				deck[instance_id] = deck_card
+				deck_order.append(instance_id)
 		
 		# Merge reward card pool
 		for reward_card in char_data.reward_card_pool:
@@ -488,13 +521,10 @@ func add_card_to_deck_from_reward(card_id: String, owner_character_id: String = 
 	## Uses "Shared Deck" owner if no owner specified
 	add_card_to_deck(card_id, owner_character_id)
 
-func can_upgrade_card_at(deck_index: int) -> bool:
-	## Check if a card at the given index can be upgraded
-	if deck_index < 0 or deck_index >= deck.size():
-		return false
-	
-	var card_instance = deck[deck_index]
-	if not card_instance is DeckCardData:
+func can_upgrade_instance(instance_id: String) -> bool:
+	## Check if a card instance can be upgraded
+	var card_instance = deck.get(instance_id)
+	if not card_instance:
 		return false
 	
 	# Check if card has available upgrades
@@ -514,13 +544,18 @@ func can_upgrade_card_at(deck_index: int) -> bool:
 	
 	return not available.is_empty()
 
-func apply_upgrade_to_card_at(deck_index: int, upgrade_id: String) -> bool:
-	## Apply an upgrade to a card instance at the given deck index
-	if deck_index < 0 or deck_index >= deck.size():
+func can_upgrade_card_at(deck_index: int) -> bool:
+	## DEPRECATED: Use can_upgrade_instance(instance_id) instead
+	## Legacy method - converts index to instance_id
+	if deck_index < 0 or deck_index >= deck_order.size():
 		return false
-	
-	var card_instance = deck[deck_index]
-	if not card_instance is DeckCardData:
+	var instance_id = deck_order[deck_index]
+	return can_upgrade_instance(instance_id)
+
+func apply_upgrade_to_instance(instance_id: String, upgrade_id: String) -> bool:
+	## Apply an upgrade to a card instance by instance_id
+	var card_instance = deck.get(instance_id)
+	if not card_instance:
 		return false
 	
 	# Check if upgrade is already applied
@@ -536,30 +571,40 @@ func apply_upgrade_to_card_at(deck_index: int, upgrade_id: String) -> bool:
 	if not pool.has(upgrade_id):
 		return false
 	
-	# Apply upgrade
+	# Apply upgrade (directly mutates the object in deck registry)
 	card_instance.applied_upgrades.append(upgrade_id)
 	
-	# Update the card in draw/discard/hand piles if it exists
-	_update_card_in_piles(card_instance.card_id, card_instance.owner_character_id, card_instance.applied_upgrades)
-	
+	# Emit signals (no need to sync piles - they reference the same object via instance_id lookup)
 	deck_changed.emit()
+	# If card is in hand, emit hand_changed
+	if deck_model and deck_model.hand.has(instance_id):
+		deck_model.hand_changed.emit()
+	elif hand.has(instance_id):
+		hand_changed.emit()
+	
 	return true
 
-func _update_card_in_piles(card_id: String, owner_id: String, upgrades: Array[String]):
-	## Update matching cards in draw/discard/hand piles with new upgrades
-	# This ensures consistency across all piles
-	for pile in [draw_pile, hand, discard_pile]:
-		for card in pile:
-			if card is DeckCardData:
-				if card.card_id == card_id and card.owner_character_id == owner_id:
-					# Update upgrades (but preserve other state)
-					card.applied_upgrades = upgrades.duplicate()
+func apply_upgrade_to_card_at(deck_index: int, upgrade_id: String) -> bool:
+	## DEPRECATED: Use apply_upgrade_to_instance(instance_id, upgrade_id) instead
+	## Legacy method - converts index to instance_id
+	if deck_index < 0 or deck_index >= deck_order.size():
+		return false
+	var instance_id = deck_order[deck_index]
+	return apply_upgrade_to_instance(instance_id, upgrade_id)
+
+func get_upgradeable_instance_ids() -> Array[String]:
+	## Get all instance_ids of cards that can be upgraded
+	var instance_ids: Array[String] = []
+	for instance_id in deck_order:
+		if can_upgrade_instance(instance_id):
+			instance_ids.append(instance_id)
+	return instance_ids
 
 func get_upgradeable_deck_indices() -> Array[int]:
-	## Get all deck indices of cards that can be upgraded
+	## DEPRECATED: Use get_upgradeable_instance_ids() instead
+	## Legacy method - returns indices of upgradeable cards
 	var indices: Array[int] = []
-	for i in range(deck.size()):
-		if can_upgrade_card_at(i):
+	for i in range(deck_order.size()):
+		if can_upgrade_instance(deck_order[i]):
 			indices.append(i)
 	return indices
-

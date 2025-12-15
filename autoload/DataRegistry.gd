@@ -116,3 +116,32 @@ func get_upgrade_pool_for_card(card_id: String) -> Array[String]:
 func get_upgrade_def(upgrade_id: String) -> Dictionary:
 	## Get upgrade definition by ID
 	return upgrade_definitions.get(upgrade_id, {})
+
+func get_card_display_name(card_id: String) -> String:
+	## Get card display name from registered characters' cards
+	## Returns formatted card_id as fallback
+	# Search through registered characters' cards
+	for character_id in character_cache:
+		var char_data = character_cache[character_id]
+		if not char_data:
+			continue
+		
+		# Check starter cards
+		for card_data in char_data.starter_unique_cards:
+			if card_data and card_data.id == card_id:
+				return card_data.name
+		
+		# Check reward card pool
+		for card_data in char_data.reward_card_pool:
+			if card_data and card_data.id == card_id:
+				return card_data.name
+	
+	# Fallback: format card_id nicely
+	# e.g., "strike_1" -> "Strike", "defend" -> "Defend"
+	var formatted = card_id.replace("_", " ")
+	# Capitalize first letter of each word
+	var parts = formatted.split(" ")
+	for i in range(parts.size()):
+		if parts[i].length() > 0:
+			parts[i] = parts[i][0].to_upper() + parts[i].substr(1)
+	return " ".join(parts)

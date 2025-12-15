@@ -70,20 +70,25 @@ func delete_save_file() -> bool:
 	return dir.remove(SAVE_PATH.get_file()) == OK
 
 func _serialize_run_state() -> Dictionary:
-	# Convert deck to serializable format
-	var deck_data = []
-	for deck_card in RunState.deck:
-		if deck_card is DeckCardData:
-			deck_data.append(deck_card.to_dict())
+	# Convert deck to serializable format (dictionary keyed by instance_id)
+	var deck_dict = {}
+	var deck_order_data = RunState.deck_order.duplicate()
+	
+	# Serialize each card instance by instance_id
+	for instance_id in RunState.deck_order:
+		var deck_card = RunState.deck.get(instance_id)
+		if deck_card and deck_card is DeckCardData:
+			deck_dict[instance_id] = deck_card.to_dict()
 		else:
-			# Fallback for legacy string format
-			deck_data.append({
-				"card_id": str(deck_card),
+			# Fallback for missing/invalid cards
+			deck_dict[instance_id] = {
+				"instance_id": instance_id,
+				"card_id": "",
 				"owner_character_id": "",
 				"applied_upgrades": [],
 				"is_transcended": false,
 				"transcendent_card_id": ""
-			})
+			}
 	
 	# Convert quests to serializable format (now Dictionary)
 	var quests_data = {}
@@ -110,11 +115,17 @@ func _serialize_run_state() -> Dictionary:
 	if RunState.current_map != null:
 		map_data_serialized = RunState.current_map.to_dict()
 	
+	# Serialize pending rewards if present
+	var pending_rewards_serialized = null
+	if RunState.pending_rewards:
+		pending_rewards_serialized = RunState.pending_rewards.to_dict()
+	
 	return {
-		"version": 3,  # Bump version for map data
+		"version": 4,  # Bump version for instance_id deck structure
 		"party": RunState.party,
 		"party_ids": RunState.party_ids,
-		"deck": deck_data,
+		"deck": deck_dict,  # Dictionary keyed by instance_id
+		"deck_order": deck_order_data,  # Stable ordering array
 		"relics": RunState.relics,
 		"gold": RunState.gold,
 		"current_hp": RunState.current_hp,
@@ -131,7 +142,8 @@ func _serialize_run_state() -> Dictionary:
 		"quests": quests_data,
 		"reward_card_pool": reward_pool_data,
 		"buffs": RunState.buffs,
-		"tap_to_play": RunState.tap_to_play
+		"tap_to_play": RunState.tap_to_play,
+		"pending_rewards": pending_rewards_serialized
 	}
 
 func _deserialize_run_state(save_data: Dictionary):
@@ -139,18 +151,52 @@ func _deserialize_run_state(save_data: Dictionary):
 	if save_data.has("party"):
 		RunState.party = save_data["party"]
 	
-	# Restore deck with DeckCardData
+	# Restore deck with DeckCardData (new instance_id-based structure)
 	if save_data.has("deck"):
 		RunState.deck.clear()
-		for card_data in save_data["deck"]:
-			if card_data is Dictionary:
-				# Handle legacy saves that might not have owner_character_id
-				if not card_data.has("owner_character_id"):
-					card_data["owner_character_id"] = ""
-				RunState.deck.append(DeckCardData.from_dict(card_data))
+		RunState.deck_order.clear()
+		
+		# Check for new structure (Dictionary) or legacy structure (Array)
+		var deck_data = save_data["deck"]
+		
+		if deck_data is Dictionary:
+			# New structure: Dictionary keyed by instance_id
+			for instance_id in deck_data:
+				var card_data = deck_data[instance_id]
+				if card_data is Dictionary:
+					# Ensure instance_id matches key
+					card_data["instance_id"] = instance_id
+					var deck_card = DeckCardData.from_dict(card_data)
+					RunState.deck[instance_id] = deck_card
+			
+			# Restore deck_order
+			if save_data.has("deck_order"):
+				RunState.deck_order = save_data["deck_order"].duplicate()
 			else:
-				# Legacy string format
-				RunState.deck.append(DeckCardData.new(str(card_data), ""))
+				# Fallback: use dictionary keys as order
+				RunState.deck_order = deck_data.keys()
+		
+		elif deck_data is Array:
+			# Legacy structure: Array of DeckCardData dicts
+			for card_data in deck_data:
+				if card_data is Dictionary:
+					# Handle legacy saves that might not have owner_character_id or instance_id
+					if not card_data.has("owner_character_id"):
+						card_data["owner_character_id"] = ""
+					if not card_data.has("instance_id"):
+						# Generate new instance_id for legacy cards
+						var legacy_card = DeckCardData.from_dict(card_data)
+						card_data["instance_id"] = legacy_card.instance_id
+					
+					var deck_card = DeckCardData.from_dict(card_data)
+					RunState.deck[deck_card.instance_id] = deck_card
+					RunState.deck_order.append(deck_card.instance_id)
+				else:
+					# Legacy string format
+					var legacy_card = DeckCardData.new(str(card_data), "")
+					RunState.deck[legacy_card.instance_id] = legacy_card
+					RunState.deck_order.append(legacy_card.instance_id)
+		
 		# Reinitialize deck piles from loaded deck
 		RunState._initialize_deck_piles()
 		RunState.deck_changed.emit()
