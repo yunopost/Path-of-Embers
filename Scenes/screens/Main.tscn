@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8x7k2nav1n4p"]
+
+[ext_resource type="Script" uid="uid://bad7vlim2dclq" path="res://Path-of-Embers/scenes/screens/Main.gd" id="1_main"]
+
+[node name="Main" type="Node"]
+script = ExtResource("1_main")

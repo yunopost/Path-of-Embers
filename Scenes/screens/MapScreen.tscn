@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://dtlkiu85gbylv"]
+[gd_scene load_steps=3 format=3 uid="uid://5me12rsevuf0"]
 
 [ext_resource type="Script" uid="uid://by5q1cbcwp65n" path="res://Path-of-Embers/scenes/screens/MapScreen.gd" id="1_mapscreen"]
 [ext_resource type="Script" uid="uid://beyda7lmt5jh1" path="res://Path-of-Embers/scenes/ui/MapConnectionsDraw.gd" id="2_mapconn"]

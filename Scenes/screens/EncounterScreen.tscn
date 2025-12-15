@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://encounterscreen1"]
 
-[ext_resource type="Script" path="res://Path-of-Embers/Scripts/Encounter/EncounterScreen.gd" id="1_encounter"]
+[ext_resource type="Script" path="res://Path-of-Embers/scenes/screens/EncounterScreen.gd" id="1_encounter"]
 
 [node name="EncounterScreen" type="Control"]
 layout_mode = 3

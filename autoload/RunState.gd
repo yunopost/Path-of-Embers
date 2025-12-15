@@ -27,9 +27,13 @@ var party_ids: Array[String] = []  # Array of 3 character IDs
 
 # Deck
 var deck: Array = []  # Full deck - all cards owned (DeckCardData instances)
-var draw_pile: Array = []  # Cards available to draw
-var hand: Array = []  # Cards currently in hand
-var discard_pile: Array = []  # Cards that have been played/discarded
+var draw_pile: Array = []  # Cards available to draw (legacy - use deck_model)
+var hand: Array = []  # Cards currently in hand (legacy - use deck_model)
+var discard_pile: Array = []  # Cards that have been played/discarded (legacy - use deck_model)
+
+# Models (architecture rule 4.1, 8.1)
+var deck_model: DeckModel = null
+var combat_model: CombatModel = null
 
 # Relics
 var relics: Array = []  # Will contain relic data
@@ -87,6 +91,33 @@ func _ready():
 	quests = {}
 	reward_card_pool = []
 	buffs = []
+	
+	# Initialize models
+	deck_model = DeckModel.new()
+	combat_model = CombatModel.new()
+	
+	# Connect model signals to RunState signals for backward compatibility
+	if deck_model:
+		deck_model.deck_changed.connect(func(): deck_changed.emit())
+		deck_model.draw_pile_changed.connect(func(): draw_pile_changed.emit())
+		deck_model.hand_changed.connect(func(): hand_changed.emit())
+		deck_model.discard_pile_changed.connect(func(): discard_pile_changed.emit())
+	
+	if combat_model:
+		combat_model.player_hp_changed.connect(func(new_hp, max_hp): 
+			current_hp = new_hp
+			self.max_hp = max_hp
+			hp_changed.emit()
+		)
+		combat_model.player_block_changed.connect(func(new_block): 
+			block = new_block
+			block_changed.emit()
+		)
+		combat_model.player_energy_changed.connect(func(new_energy, max_energy): 
+			energy = new_energy
+			self.max_energy = max_energy
+			energy_changed.emit()
+		)
 
 func set_gold(value: int):
 	if gold != value:
@@ -213,11 +244,23 @@ func add_card_to_deck(card_id: String, owner_character_id: String = "", upgrades
 	## Add a card to the deck with optional upgrades and owner
 	var deck_card = DeckCardData.new(card_id, owner_character_id, upgrades, transcended, transcendent_card_id)
 	deck.append(deck_card)
-	# Also add to draw pile (create a copy)
-	var card_copy = DeckCardData.new(card_id, owner_character_id, upgrades, transcended, transcendent_card_id)
-	draw_pile.append(card_copy)
-	draw_pile_changed.emit()
-	deck_changed.emit()
+	
+	# Update model if available
+	if deck_model:
+		deck_model.deck.append(deck_card)
+		# Add to draw pile in model
+		var deck_index = deck_model.deck.size() - 1
+		deck_model.draw_pile.append(deck_index)
+		deck_model.draw_pile_changed.emit()
+		deck_model.deck_changed.emit()
+		_sync_deck_arrays_from_model()
+	else:
+		# Legacy fallback
+		# Also add to draw pile (create a copy)
+		var card_copy = DeckCardData.new(card_id, owner_character_id, upgrades, transcended, transcendent_card_id)
+		draw_pile.append(card_copy)
+		draw_pile_changed.emit()
+		deck_changed.emit()
 
 func remove_card_from_deck(index: int):
 	## Remove a card from the deck by index
@@ -230,18 +273,50 @@ func get_deck_size() -> int:
 
 func _initialize_deck_piles():
 	## Initialize draw pile with all cards from deck, clear hand and discard
-	# Create deep copies of deck cards for draw pile
+	# Use deck_model if available (preferred)
+	if deck_model:
+		var deck_array: Array[DeckCardData] = []
+		for card in deck:
+			if card is DeckCardData:
+				deck_array.append(card)
+		deck_model.initialize(deck_array)
+		# Sync legacy arrays for backward compatibility
+		_sync_deck_arrays_from_model()
+	else:
+		# Legacy fallback
+		draw_pile.clear()
+		for card in deck:
+			if card is DeckCardData:
+				# Create a copy of the DeckCardData
+				var card_copy = DeckCardData.new(card.card_id, card.owner_character_id, card.applied_upgrades.duplicate(), card.is_transcended, card.transcendent_card_id)
+				draw_pile.append(card_copy)
+			else:
+				draw_pile.append(card)
+		hand.clear()
+		discard_pile.clear()
+		_shuffle_draw_pile()
+
+func _sync_deck_arrays_from_model():
+	## Sync legacy arrays from deck_model (for backward compatibility)
+	if not deck_model:
+		return
+	
+	# Sync draw_pile, hand, discard_pile from model indices
 	draw_pile.clear()
-	for card in deck:
-		if card is DeckCardData:
-			# Create a copy of the DeckCardData
-			var card_copy = DeckCardData.new(card.card_id, card.owner_character_id, card.applied_upgrades.duplicate(), card.is_transcended, card.transcendent_card_id)
-			draw_pile.append(card_copy)
-		else:
-			draw_pile.append(card)
 	hand.clear()
 	discard_pile.clear()
-	_shuffle_draw_pile()
+	
+	for index in deck_model.draw_pile:
+		if index >= 0 and index < deck_model.deck.size():
+			draw_pile.append(deck_model.deck[index])
+	
+	for index in deck_model.hand:
+		if index >= 0 and index < deck_model.deck.size():
+			hand.append(deck_model.deck[index])
+	
+	for index in deck_model.discard_pile:
+		if index >= 0 and index < deck_model.deck.size():
+			discard_pile.append(deck_model.deck[index])
 
 func _shuffle_draw_pile():
 	## Shuffle the draw pile randomly
@@ -261,34 +336,50 @@ func shuffle_discard_into_draw():
 func draw_cards(count: int = 5):
 	## Draw cards from draw pile into hand
 	## If draw pile is empty, shuffle discard into draw first
-	for i in range(count):
-		if draw_pile.size() == 0:
-			shuffle_discard_into_draw()
-			# If still empty after shuffle, can't draw
+	if deck_model:
+		# Use model (preferred)
+		deck_model.draw_cards(count)
+		_sync_deck_arrays_from_model()
+	else:
+		# Legacy fallback
+		for i in range(count):
 			if draw_pile.size() == 0:
-				break
+				shuffle_discard_into_draw()
+				# If still empty after shuffle, can't draw
+				if draw_pile.size() == 0:
+					break
+			
+			if draw_pile.size() > 0:
+				var card = draw_pile.pop_front()
+				hand.append(card)
 		
-		if draw_pile.size() > 0:
-			var card = draw_pile.pop_front()
-			hand.append(card)
-	
-	if hand.size() > 0:
-		hand_changed.emit()
-	if draw_pile.size() >= 0:  # Always emit if we modified draw pile
-		draw_pile_changed.emit()
+		if hand.size() > 0:
+			hand_changed.emit()
+		if draw_pile.size() >= 0:  # Always emit if we modified draw pile
+			draw_pile_changed.emit()
 
 func discard_hand():
 	## Move all cards from hand to discard pile
-	for card in hand:
-		discard_pile.append(card)
-	hand.clear()
-	hand_changed.emit()
-	discard_pile_changed.emit()
+	if deck_model:
+		# Use model (preferred)
+		deck_model.discard_hand()
+		_sync_deck_arrays_from_model()
+	else:
+		# Legacy fallback
+		for card in hand:
+			discard_pile.append(card)
+		hand.clear()
+		hand_changed.emit()
+		discard_pile_changed.emit()
 
 func get_draw_pile_count() -> int:
+	if deck_model:
+		return deck_model.get_draw_pile_count()
 	return draw_pile.size()
 
 func get_discard_pile_count() -> int:
+	if deck_model:
+		return deck_model.get_discard_pile_count()
 	return discard_pile.size()
 
 func get_hand_size() -> int:

@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://dgq52rncv40gh"]
+[gd_scene load_steps=3 format=3 uid="uid://b5u423stfwvg1"]
 
-[ext_resource type="Script" uid="uid://571q3qracesn" path="res://Path-of-Embers/Scenes/CombatScreen.gd" id="1_combatscreen"]
+[ext_resource type="Script" uid="uid://571q3qracesn" path="res://Path-of-Embers/scenes/screens/CombatScreen.gd" id="1_combatscreen"]
+[ext_resource type="Script" uid="uid://7tie5fmscalt" path="res://Path-of-Embers/core/combat/CombatController.gd" id="2_combatcontroller"]
 
 [node name="CombatScreen" type="Control"]
 layout_mode = 3
@@ -13,6 +14,7 @@ mouse_filter = 2
 script = ExtResource("1_combatscreen")
 
 [node name="CombatController" type="Node" parent="."]
+script = ExtResource("2_combatcontroller")
 
 [node name="CombatArea" type="Control" parent="."]
 layout_mode = 1

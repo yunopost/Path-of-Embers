@@ -8,13 +8,13 @@ var ui_root: Control = null
 var current_scene: Node = null
 
 const SCENE_PATHS = {
-	"main": "res://Path-of-Embers/Scenes/Main.tscn",
-	"character_select": "res://Path-of-Embers/Scenes/CharacterSelect.tscn",
-	"map": "res://Path-of-Embers/Scenes/MapScreen.tscn",
-	"combat": "res://Path-of-Embers/Scenes/CombatScreen.tscn",
-	"encounter": "res://Path-of-Embers/Scenes/Encounter/EncounterScreen.tscn",
-	"shop": "res://Path-of-Embers/Scenes/ShopScreen.tscn",
-	"rewards": "res://Path-of-Embers/Scenes/Rewards/RewardsScreen.tscn"
+	"main": "res://Path-of-Embers/scenes/screens/Main.tscn",
+	"character_select": "res://Path-of-Embers/scenes/screens/CharacterSelect.tscn",
+	"map": "res://Path-of-Embers/scenes/screens/MapScreen.tscn",
+	"combat": "res://Path-of-Embers/scenes/screens/CombatScreen.tscn",
+	"encounter": "res://Path-of-Embers/scenes/screens/EncounterScreen.tscn",
+	"shop": "res://Path-of-Embers/scenes/screens/ShopScreen.tscn",
+	"rewards": "res://Path-of-Embers/scenes/screens/RewardsScreen.tscn"
 }
 
 func _ready():
@@ -22,7 +22,7 @@ func _ready():
 	await get_tree().process_frame
 	
 	# Load and add UIRoot to scene tree
-	var ui_root_scene = load("res://Path-of-Embers/Scenes/UI/UIRoot.tscn")
+	var ui_root_scene = load("res://Path-of-Embers/scenes/ui/UIRoot.tscn")
 	ui_root = ui_root_scene.instantiate()
 	get_tree().root.add_child(ui_root)
 	ui_root.set_anchors_preset(Control.PRESET_FULL_RECT)

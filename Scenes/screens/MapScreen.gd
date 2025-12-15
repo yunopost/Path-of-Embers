@@ -364,7 +364,7 @@ func _render_map():
 	_update_node_states()
 
 func _create_node_widget(node: MapNodeData, node_position: Vector2) -> void:
-	var widget_scene := load("res://Path-of-Embers/Scenes/UI/MapNodeWidget.tscn")
+	var widget_scene := load("res://Path-of-Embers/scenes/ui/MapNodeWidget.tscn")
 	var widget := widget_scene.instantiate() as MapNodeWidget
 	map_nodes.add_child(widget)
 

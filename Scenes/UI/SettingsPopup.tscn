@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://i4d3q8s5b7t0v"]
 
-[ext_resource type="Script" path="res://Path-of-Embers/Scenes/UI/SettingsPopup.gd" id="1_settingspopup"]
+[ext_resource type="Script" path="res://Path-of-Embers/scenes/ui/SettingsPopup.gd" id="1_settingspopup"]
 
 [node name="SettingsPopup" type="Control"]
 layout_mode = 3

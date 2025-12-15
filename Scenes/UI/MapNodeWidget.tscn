@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://oh1v6m5sqs4j"]
 
-[ext_resource type="Script" uid="uid://brcg8yyj0jw2w" path="res://Path-of-Embers/Scripts/UI/MapNodeWidget.gd" id="1_mapnode"]
+[ext_resource type="Script" uid="uid://brcg8yyj0jw2w" path="res://Path-of-Embers/scenes/ui/MapNodeWidget.gd" id="1_mapnode"]
 
 [node name="MapNodeWidget" type="Control"]
 custom_minimum_size = Vector2(54, 80)

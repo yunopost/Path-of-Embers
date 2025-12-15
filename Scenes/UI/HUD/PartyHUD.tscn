@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://b8x7k2nav1n4q"]
 
-[ext_resource type="Script" uid="uid://bqvdejo3jjwyk" path="res://Path-of-Embers/Scenes/UI/HUD/PartyHUD.gd" id="1_partyhud"]
+[ext_resource type="Script" uid="uid://bqvdejo3jjwyk" path="res://Path-of-Embers/scenes/ui/HUD/PartyHUD.gd" id="1_partyhud"]
 
 [node name="PartyHUD" type="Control"]
 layout_mode = 3

@@ -54,56 +54,19 @@ func _update_card_grid():
 	for child in card_grid.get_children():
 		child.queue_free()
 	
-	# Add card visuals for each card in deck
-	for deck_card in RunState.deck:
+	# Load card widget scene
+	var card_widget_scene = load("res://Path-of-Embers/scenes/ui/cards/DeckCardWidget.tscn")
+	if not card_widget_scene:
+		push_error("DeckViewPopup: Could not load DeckCardWidget scene")
+		return
+	
+	# Add card widgets for each card in deck
+	for deck_index in range(RunState.deck.size()):
+		var deck_card = RunState.deck[deck_index]
 		if deck_card is DeckCardData:
-			var card_visual = _create_card_visual(deck_card)
-			card_grid.add_child(card_visual)
-
-func _create_card_visual(deck_card: DeckCardData) -> Control:
-	# Create a placeholder card visual
-	var card_panel = Panel.new()
-	card_panel.custom_minimum_size = Vector2(120, 160)
-	
-	var vbox = VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 5
-	vbox.offset_top = 5
-	vbox.offset_right = -5
-	vbox.offset_bottom = -5
-	card_panel.add_child(vbox)
-	
-	# Card name
-	var name_label = Label.new()
-	name_label.text = deck_card.card_id
-	name_label.clip_contents = true
-	name_label.add_theme_font_size_override("font_size", 12)
-	vbox.add_child(name_label)
-	
-	# Owner info
-	if deck_card.owner_character_id:
-		var owner_label = Label.new()
-		owner_label.text = "Owner: " + DataRegistry.get_character_display_name(deck_card.owner_character_id)
-		owner_label.add_theme_font_size_override("font_size", 10)
-		owner_label.add_theme_color_override("font_color", Color(0.8, 0.8, 1.0))
-		vbox.add_child(owner_label)
-	
-	# Upgrades info
-	if deck_card.applied_upgrades.size() > 0:
-		var upgrades_label = Label.new()
-		upgrades_label.text = "Upgrades: " + str(deck_card.applied_upgrades.size())
-		upgrades_label.add_theme_font_size_override("font_size", 10)
-		vbox.add_child(upgrades_label)
-	
-	# Transcend indicator
-	if deck_card.is_transcended:
-		var trans_label = Label.new()
-		trans_label.text = "Transcended!"
-		trans_label.add_theme_color_override("font_color", Color.GOLD)
-		trans_label.add_theme_font_size_override("font_size", 10)
-		vbox.add_child(trans_label)
-	
-	return card_panel
+			var card_widget = card_widget_scene.instantiate()
+			card_widget.setup(deck_card, deck_index, false)  # Not clickable in deck view
+			card_grid.add_child(card_widget)
 
 func _update_counts():
 	if not total_cards_label or not counts_label:

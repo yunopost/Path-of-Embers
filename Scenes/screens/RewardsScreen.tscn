@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://rewardsscreen1"]
 
-[ext_resource type="Script" path="res://Path-of-Embers/Scripts/Rewards/RewardsScreen.gd" id="1_rewards"]
+[ext_resource type="Script" path="res://Path-of-Embers/scenes/screens/RewardsScreen.gd" id="1_rewards"]
 
 [node name="RewardsScreen" type="Control"]
 layout_mode = 3
