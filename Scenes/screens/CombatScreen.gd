@@ -172,8 +172,11 @@ func _update_hand():
 	await get_tree().process_frame
 	await get_tree().process_frame
 	
-	# Create card UIs for each card in hand
-	for deck_card in RunState.hand:
+	# Create card UIs for each card in hand (hand contains instance_ids)
+	for instance_id in RunState.hand:
+		var deck_card = RunState.deck.get(instance_id)
+		if not deck_card:
+			continue
 		var card_ui = CardUI.new()
 		hand_container.add_child(card_ui)
 		card_ui.setup_card(deck_card)

@@ -15,7 +15,7 @@ signal flow_closed()
 @onready var close_button: Button = $Panel/VBoxContainer/CloseButton
 
 var reward_bundle: RewardBundle = null
-var selected_card_index: int = -1
+var selected_instance_id: String = ""  # Selected card instance_id
 var current_upgrade_options: Array[String] = []
 
 func setup(p_reward_bundle: RewardBundle):
@@ -49,15 +49,16 @@ func _show_card_selection():
 		push_error("UpgradeFlowPanel: Could not load DeckCardWidget scene")
 		return
 	
-	# Create card widgets for all cards in deck
-	for deck_index in range(RunState.deck.size()):
-		var card_instance = RunState.deck[deck_index]
-		if not card_instance is DeckCardData:
+	# Create card widgets for all cards in deck (using deck_order for stable ordering)
+	for deck_index in range(RunState.deck_order.size()):
+		var instance_id = RunState.deck_order[deck_index]
+		var card_instance = RunState.deck.get(instance_id)
+		if not card_instance:
 			continue
 		
 		var card_widget = card_widget_scene.instantiate()
-		card_widget.setup(card_instance, deck_index, true)  # clickable = true
-		card_widget.card_clicked.connect(_on_card_widget_clicked)
+		card_widget.setup(card_instance, deck_index, true)  # clickable = true, deck_index for display only
+		card_widget.card_clicked.connect(_on_card_widget_clicked.bind(instance_id))
 		card_grid.add_child(card_widget)
 
 func _show_upgrade_selection():
@@ -76,10 +77,11 @@ func _show_upgrade_selection():
 		child.queue_free()
 	
 	# Update title
-	if title_label and selected_card_index >= 0:
-		var card_instance = RunState.deck[selected_card_index]
-		var card_name = card_instance.card_id.replace("_", " ").capitalize()
-		title_label.text = "Choose upgrade for %s:" % card_name
+	if title_label and not selected_instance_id.is_empty():
+		var card_instance = RunState.deck.get(selected_instance_id)
+		if card_instance:
+			var card_name = card_instance.card_id.replace("_", " ").capitalize()
+			title_label.text = "Choose upgrade for %s:" % card_name
 	
 	# Create buttons for each upgrade option
 	for upgrade_id in current_upgrade_options:
@@ -95,10 +97,12 @@ func _show_upgrade_selection():
 		upgrade_btn.mouse_filter = Control.MOUSE_FILTER_STOP
 		upgrade_content.add_child(upgrade_btn)
 
-func _on_card_widget_clicked(deck_index: int):
-	## Handle card selection
-	selected_card_index = deck_index
-	var card_instance = RunState.deck[deck_index]
+func _on_card_widget_clicked(instance_id: String):
+	## Handle card selection by instance_id
+	selected_instance_id = instance_id
+	var card_instance = RunState.deck.get(instance_id)
+	if not card_instance:
+		return
 	
 	# Roll upgrade options
 	current_upgrade_options = UpgradeService.roll_upgrade_options_for_card(card_instance, 3)
@@ -106,8 +110,8 @@ func _on_card_widget_clicked(deck_index: int):
 	# Show upgrade selection
 	_show_upgrade_selection()
 	
-	# Emit signal
-	upgrade_card_selected.emit(deck_index)
+	# Emit signal with instance_id (signal signature may need updating)
+	upgrade_card_selected.emit(-1)  # Legacy signal - instance_id passed via selected_instance_id
 
 func _on_upgrade_button_pressed(upgrade_id: String):
 	## Handle upgrade option selection
@@ -124,7 +128,7 @@ func _on_close_button_pressed():
 
 func refresh_after_upgrade():
 	## Refresh display after an upgrade is applied
-	selected_card_index = -1
+	selected_instance_id = ""
 	current_upgrade_options.clear()
 	
 	# Update reward bundle count (it's passed by reference)

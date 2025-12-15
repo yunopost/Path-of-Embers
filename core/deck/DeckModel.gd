@@ -3,40 +3,39 @@ class_name DeckModel
 
 ## Deck state model - authoritative source for deck state (architecture rule 4.1)
 ## No rendering, just data + rules
+## Piles store instance_id strings, look up cards via RunState.deck registry
 
-var deck: Array[DeckCardData] = []  # Full deck
-var draw_pile: Array[int] = []  # Indices into deck
-var hand: Array[int] = []  # Indices into deck
-var discard_pile: Array[int] = []  # Indices into deck
+var draw_pile: Array[String] = []  # instance_ids
+var hand: Array[String] = []  # instance_ids
+var discard_pile: Array[String] = []  # instance_ids
 
 signal deck_changed()
 signal draw_pile_changed()
 signal hand_changed()
 signal discard_pile_changed()
 
-func initialize(p_deck: Array[DeckCardData]):
-	## Initialize deck model with a deck
-	deck = p_deck.duplicate()
-	draw_pile.clear()
+func initialize(p_instance_ids: Array[String]):
+	## Initialize deck model with instance_ids
+	draw_pile = p_instance_ids.duplicate()
 	hand.clear()
 	discard_pile.clear()
 	
-	# Add all cards to draw pile
-	for i in range(deck.size()):
-		draw_pile.append(i)
-	
 	deck_changed.emit()
 	draw_pile_changed.emit()
+
+func get_card(instance_id: String) -> DeckCardData:
+	## Get card instance from RunState registry
+	return RunState.deck.get(instance_id)
 
 func shuffle_draw_pile():
 	## Shuffle the draw pile
 	draw_pile.shuffle()
 	draw_pile_changed.emit()
 
-func draw_cards(count: int) -> Array[int]:
+func draw_cards(count: int) -> Array[String]:
 	## Draw cards from draw pile
-	## Returns array of deck indices that were drawn
-	var drawn: Array[int] = []
+	## Returns array of instance_ids that were drawn
+	var drawn: Array[String] = []
 	
 	for i in range(count):
 		if draw_pile.is_empty():
@@ -48,9 +47,9 @@ func draw_cards(count: int) -> Array[int]:
 			shuffle_draw_pile()
 		
 		if not draw_pile.is_empty():
-			var card_index = draw_pile.pop_front()
-			hand.append(card_index)
-			drawn.append(card_index)
+			var instance_id = draw_pile.pop_front()
+			hand.append(instance_id)
+			drawn.append(instance_id)
 	
 	if drawn.size() > 0:
 		hand_changed.emit()
@@ -65,9 +64,6 @@ func discard_hand():
 	hand_changed.emit()
 	discard_pile_changed.emit()
 
-func get_deck_size() -> int:
-	return deck.size()
-
 func get_draw_pile_count() -> int:
 	return draw_pile.size()
 
@@ -78,10 +74,26 @@ func get_discard_pile_count() -> int:
 	return discard_pile.size()
 
 func get_hand_cards() -> Array[DeckCardData]:
-	## Get actual card instances in hand
+	## Get actual card instances in hand by looking up instance_ids in RunState registry
 	var cards: Array[DeckCardData] = []
-	for index in hand:
-		if index >= 0 and index < deck.size():
-			cards.append(deck[index])
+	for instance_id in hand:
+		var card = get_card(instance_id)
+		if card:
+			cards.append(card)
 	return cards
 
+func add_card_instance(instance_id: String):
+	## Add a card instance_id to the draw pile
+	draw_pile.append(instance_id)
+	draw_pile_changed.emit()
+	deck_changed.emit()
+
+func remove_instance_from_piles(instance_id: String):
+	## Remove instance_id from all piles (used when card is removed from deck)
+	draw_pile.erase(instance_id)
+	hand.erase(instance_id)
+	discard_pile.erase(instance_id)
+	draw_pile_changed.emit()
+	hand_changed.emit()
+	discard_pile_changed.emit()
+	deck_changed.emit()
