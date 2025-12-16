@@ -172,10 +172,30 @@ func _update_hand():
 	await get_tree().process_frame
 	await get_tree().process_frame
 	
-	# Create card UIs for each card in hand (hand contains instance_ids)
-	for instance_id in RunState.hand:
-		var deck_card = RunState.deck.get(instance_id)
-		if not deck_card:
+	# Create card UIs for each card in hand
+	# Use deck_model.get_hand_cards() which handles instance_id lookup
+	var hand_cards: Array[DeckCardData] = []
+	if RunState.deck_model:
+		hand_cards = RunState.deck_model.get_hand_cards()
+	else:
+		# Legacy fallback: lookup cards from instance_ids in RunState.hand
+		for item in RunState.hand:
+			# item might be instance_id (String) or DeckCardData (legacy)
+			var deck_card: DeckCardData = null
+			if item is String:
+				# It's an instance_id, look it up
+				deck_card = RunState.deck.get(item)
+			elif item is DeckCardData:
+				# Legacy: it's already a DeckCardData object
+				deck_card = item
+			
+			if deck_card:
+				hand_cards.append(deck_card)
+	
+	for deck_card in hand_cards:
+		# Double-check type before calling setup_card
+		if not deck_card is DeckCardData:
+			push_error("CombatScreen: Expected DeckCardData but got %s" % typeof(deck_card))
 			continue
 		var card_ui = CardUI.new()
 		hand_container.add_child(card_ui)
@@ -277,7 +297,13 @@ func _end_combat_and_transition():
 	if combat_controller:
 		combat_controller.combat_active = false
 	
-	# Mark node as completed
+	# Emit COMBAT_VICTORY event for quest system (before marking node completed)
+	RunState.emit_game_event("COMBAT_VICTORY", {
+		"node_id": RunState.current_node_id,
+		"node_type": RunState.get_current_node_type()
+	})
+	
+	# Mark node as completed (this also emits NODE_COMPLETED event)
 	RunState.mark_current_node_completed()
 	
 	# Compute rewards based on node's reward flags

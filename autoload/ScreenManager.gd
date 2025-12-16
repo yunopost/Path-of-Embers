@@ -28,6 +28,16 @@ func go_to_map():
 
 func go_to_combat(encounter_data: Dictionary = {}):
 	## Navigate to combat screen with encounter data
+	## Second-line defense: check boss gate if current node is boss
+	if RunState.current_map and not RunState.current_node_id.is_empty():
+		var node = RunState.current_map.get_node(RunState.current_node_id)
+		if node and node.node_type == MapNodeData.NodeType.BOSS:
+			if not RunState.are_all_party_quests_complete():
+				push_warning("ScreenManager: Boss gate blocked - quests incomplete")
+				# Return to map (MapScreen will show popup if clicked there)
+				go_to_map()
+				return
+	
 	_change_screen("combat", encounter_data)
 
 func go_to_rewards(reward_bundle: RewardBundle = null):

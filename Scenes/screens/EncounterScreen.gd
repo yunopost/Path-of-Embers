@@ -73,6 +73,12 @@ func _setup_choices():
 
 func _on_help_chosen():
 	## Generate rewards for "Help" choice
+	# Emit ENCOUNTER_CHOICE event for quest system
+	RunState.emit_game_event("ENCOUNTER_CHOICE", {
+		"encounter_id": "encounter_placeholder_01",
+		"choice_id": "help"
+	})
+	
 	var bundle = RewardBundle.new()
 	bundle.gold = 20
 	bundle.card_choices = _generate_card_choices(3)
@@ -83,6 +89,12 @@ func _on_help_chosen():
 
 func _on_threaten_chosen():
 	## Generate rewards for "Threaten" choice
+	# Emit ENCOUNTER_CHOICE event for quest system
+	RunState.emit_game_event("ENCOUNTER_CHOICE", {
+		"encounter_id": "encounter_placeholder_01",
+		"choice_id": "threaten"
+	})
+	
 	var bundle = RewardBundle.new()
 	bundle.gold = 35
 	bundle.card_choices = _generate_card_choices(3)
@@ -94,6 +106,12 @@ func _on_threaten_chosen():
 
 func _on_leave_chosen():
 	## Generate rewards for "Leave" choice
+	# Emit ENCOUNTER_CHOICE event for quest system
+	RunState.emit_game_event("ENCOUNTER_CHOICE", {
+		"encounter_id": "encounter_placeholder_01",
+		"choice_id": "leave"
+	})
+	
 	var bundle = RewardBundle.new()
 	bundle.heal_amount = 5
 	bundle.card_choices = _generate_card_choices(3)

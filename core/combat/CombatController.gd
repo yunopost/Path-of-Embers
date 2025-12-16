@@ -111,7 +111,7 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 		var hand_index = RunState.hand.find(instance_id)
 		if hand_index >= 0:
 			RunState.hand.remove_at(hand_index)
-			RunState.hand_changed.emit()
+		RunState.hand_changed.emit()
 	
 	# Spend energy
 	current_energy -= card_cost
@@ -148,7 +148,7 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 			var discard_index = RunState.discard_pile.find(discard_instance_id)
 			if discard_index < 0:  # Not found, add it
 				RunState.discard_pile.append(discard_instance_id)
-				RunState.discard_pile_changed.emit()
+	RunState.discard_pile_changed.emit()
 	
 	return true
 

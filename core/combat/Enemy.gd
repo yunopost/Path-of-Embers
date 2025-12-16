@@ -59,4 +59,3 @@ func perform_intent(combat_controller: CombatController):
 		
 		_:
 			push_warning("Unknown intent type: " + intent.intent_type)
-

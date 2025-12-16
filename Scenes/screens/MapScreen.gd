@@ -509,15 +509,22 @@ func _on_node_clicked(node_id: String):
 		print("MapScreen: Node not in available_next_node_ids")  # Debug
 		return  # Invalid selection
 	
+	# Get node data
+	var node = RunState.current_map.get_node(node_id)
+	if not node:
+		return
+	
+	# Boss gate: check if all quests are complete before allowing boss entry
+	if node.node_type == MapNodeData.NodeType.BOSS:
+		if not RunState.are_all_party_quests_complete():
+			_show_boss_gate_popup()
+			return  # Block entry
+	
 	print("MapScreen: Setting current node to: ", node_id)  # Debug
 	# Set current node
 	RunState.set_current_node(node_id)
 	
 	# Transition to appropriate screen based on node type
-	var node = RunState.current_map.get_node(node_id)
-	if not node:
-		return
-	
 	match node.node_type:
 		MapNodeData.NodeType.FIGHT, MapNodeData.NodeType.ELITE, MapNodeData.NodeType.BOSS:
 			ScreenManager.go_to_combat({})
@@ -525,6 +532,16 @@ func _on_node_clicked(node_id: String):
 			ScreenManager.go_to_shop({})
 		MapNodeData.NodeType.ENCOUNTER:
 			ScreenManager.go_to_encounter({})
+
+func _show_boss_gate_popup():
+	## Show popup blocking boss entry when quests are incomplete
+	var popup = AcceptDialog.new()
+	popup.dialog_text = "Complete all three quests to challenge the final boss."
+	popup.title = "Quest Incomplete"
+	popup.unresizable = true
+	add_child(popup)
+	popup.popup_centered()
+	popup.confirmed.connect(func(): popup.queue_free())
 
 func _on_map_changed():
 	## Handle map change signal

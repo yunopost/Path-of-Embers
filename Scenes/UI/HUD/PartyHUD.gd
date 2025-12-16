@@ -122,45 +122,46 @@ func _create_character_hud_block(character_id: String) -> Control:
 	name_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
-	# Quest info container with separation
-	var quest_container = VBoxContainer.new()
-	quest_container.add_theme_constant_override("separation", 6)
-	quest_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
-	# Quest title label
+	# Quest title label under portrait
 	var quest_title_label = Label.new()
+	quest_title_label.name = "QuestTitleLabel_" + character_id
 	quest_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	quest_title_label.add_theme_font_size_override("font_size", 11)
 	quest_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	quest_title_label.clip_contents = true
-	quest_title_label.custom_minimum_size.y = 28
+	quest_title_label.custom_minimum_size.y = 20
 	quest_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
-	# Quest progress label
+	# Quest info container with separation (for progress display)
+	var quest_container = VBoxContainer.new()
+	quest_container.add_theme_constant_override("separation", 6)
+	quest_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	# Quest progress label (separate from title - shows progress only)
 	var quest_progress_label = Label.new()
 	quest_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	quest_progress_label.add_theme_font_size_override("font_size", 10)
 	quest_progress_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
-	# Get quest data from RunState
-	if RunState and RunState.quests.has(character_id):
-		var quest_state = RunState.quests[character_id]
-		var is_complete = quest_state.get("is_complete", false)
-		var progress = quest_state.get("progress", 0)
-		var progress_max = quest_state.get("progress_max", 0)
-		var title = quest_state.get("title", "Quest: —")
+	# Get quest data from RunState (now QuestState objects) - used for both title and progress
+	var quest_state = RunState.get_quest(character_id)
+	if quest_state and quest_state is QuestState:
+		# Set quest title
+		quest_title_label.text = quest_state.title
+		var is_complete = quest_state.is_complete
+		var progress = quest_state.progress
+		var progress_max = quest_state.progress_max
 		
-		quest_title_label.text = ("[✓] " if is_complete else "[ ] ") + title
 		if is_complete:
 			quest_progress_label.text = "Complete"
 			quest_progress_label.add_theme_color_override("font_color", Color(0.5, 1.0, 0.5))
 		else:
 			quest_progress_label.text = "Progress: %d/%d" % [progress, progress_max]
 	else:
-		quest_title_label.text = "[ ] Quest: —"
+		quest_title_label.text = ""
 		quest_progress_label.text = "Progress: —"
 	
-	quest_container.add_child(quest_title_label)
+	container.add_child(quest_title_label)
 	quest_container.add_child(quest_progress_label)
 	container.add_child(quest_container)
 	

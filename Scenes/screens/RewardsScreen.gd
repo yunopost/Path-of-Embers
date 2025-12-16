@@ -227,13 +227,24 @@ func _on_skip_cards():
 	_refresh_reward_sections()
 
 func _on_claim_relic(relic_id: String):
-	## Claim relic reward (placeholder)
+	## Claim relic reward
 	if relic_claimed:
 		return
 	
-	# TODO: Implement relic adding to RunState
-	# RunState.add_relic(relic_id)
-	print("Relic claimed: ", relic_id)  # Placeholder
+	# Determine if this is a boss relic (check if current node is boss)
+	var is_boss = false
+	if RunState.current_map and not RunState.current_node_id.is_empty():
+		var node = RunState.current_map.get_node(RunState.current_node_id)
+		if node and node.node_type == MapNodeData.NodeType.BOSS:
+			is_boss = true
+	
+	# Add relic to RunState (emits RELIC_GAINED event for quest system)
+	RunState.add_relic(relic_id, is_boss)
+	
+	# Clear relic from bundle
+	if reward_bundle:
+		reward_bundle.relic_id = ""
+	
 	relic_claimed = true
 	_update_continue_button()
 	_refresh_reward_sections()

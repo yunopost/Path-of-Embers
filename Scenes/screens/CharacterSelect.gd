@@ -9,7 +9,7 @@ var party_summary_label: Label = null
 
 var available_characters: Array[CharacterData] = []
 var selected_character_ids: Array[String] = []
-var character_buttons: Dictionary = {}  # Maps character_id to Button
+var character_entries: Dictionary = {}  # Maps character_id to { "button": Button, "root": Control, "quest_title": Label, "quest_desc": Label }
 
 func _ready():
 	# Wait one frame to ensure nodes are ready
@@ -99,9 +99,9 @@ func _create_placeholder_characters():
 		var quest = QuestData.new()
 		quest.id = "quest_warrior_%d" % (i + 1)
 		quest.title = "Warrior Quest %d" % (i + 1)
-		quest.description = "Complete warrior quest %d" % (i + 1)
+		quest.description = "Complete %d nodes" % (10)
 		quest.progress_max = 10
-		quest.tracking_type = "kill_count"
+		quest.tracking_type = "complete_nodes"
 		char_data.quest = quest
 		
 		available_characters.append(char_data)
@@ -129,9 +129,9 @@ func _create_placeholder_characters():
 		var quest = QuestData.new()
 		quest.id = "quest_healer_%d" % (i + 1)
 		quest.title = "Healer Quest %d" % (i + 1)
-		quest.description = "Complete healer quest %d" % (i + 1)
+		quest.description = "Gain %d relics" % (5)
 		quest.progress_max = 5
-		quest.tracking_type = "heal_amount"
+		quest.tracking_type = "gain_relics"
 		char_data.quest = quest
 		
 		available_characters.append(char_data)
@@ -159,9 +159,9 @@ func _create_placeholder_characters():
 		var quest = QuestData.new()
 		quest.id = "quest_defender_%d" % (i + 1)
 		quest.title = "Defender Quest %d" % (i + 1)
-		quest.description = "Complete defender quest %d" % (i + 1)
-		quest.progress_max = 20
-		quest.tracking_type = "block_amount"
+		quest.description = "Defeat %d elite enemies" % (3)
+		quest.progress_max = 3
+		quest.tracking_type = "win_elites"
 		char_data.quest = quest
 		
 		available_characters.append(char_data)
@@ -170,7 +170,7 @@ func _create_placeholder_characters():
 			DataRegistry.register_character(char_data)
 
 func _populate_character_grid():
-	## Create buttons for each available character
+	## Create character entry cards for each available character
 	if not is_instance_valid(character_grid):
 		push_error("CharacterSelect: character_grid is null!")
 		return
@@ -179,21 +179,77 @@ func _populate_character_grid():
 		if not char_data:
 			push_warning("CharacterSelect: null char_data in available_characters")
 			continue
-			
-		var button = Button.new()
-		button.name = "Button_" + char_data.id
-		button.text = "%s\n(%s)" % [char_data.display_name, char_data.role]
-		button.custom_minimum_size = Vector2(200, 150)
-		button.size = Vector2(200, 150)
-		button.pressed.connect(_on_character_selected.bind(char_data.id))
-		button.mouse_filter = Control.MOUSE_FILTER_STOP
-		button.visible = true
 		
-		character_grid.add_child(button)
-		character_buttons[char_data.id] = button
+		# Create character entry card
+		var entry = _create_character_entry(char_data)
+		character_grid.add_child(entry["root"])
+		character_entries[char_data.id] = entry
 		
-		# Force button to be in tree and visible
-		button.set_owner(character_grid)
+		# Force entry to be in tree and visible
+		entry["root"].set_owner(character_grid)
+
+func _create_character_entry(char_data: CharacterData) -> Dictionary:
+	## Create a character entry card with quest info
+	## Returns dictionary with references to UI elements
+	
+	# Root container (VBoxContainer)
+	var root = VBoxContainer.new()
+	root.name = "Entry_" + char_data.id
+	root.custom_minimum_size = Vector2(200, 200)
+	root.size = Vector2(200, 200)
+	root.add_theme_constant_override("separation", 4)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	# Select button (handles selection click)
+	var button = Button.new()
+	button.name = "SelectButton_" + char_data.id
+	button.text = "%s\n(%s)" % [char_data.display_name, char_data.role]
+	button.custom_minimum_size = Vector2(200, 60)
+	button.size = Vector2(200, 60)
+	button.pressed.connect(_on_character_selected.bind(char_data.id))
+	button.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(button)
+	
+	# Quest title label
+	var quest_title = Label.new()
+	quest_title.name = "QuestTitle_" + char_data.id
+	quest_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	quest_title.add_theme_font_size_override("font_size", 12)
+	quest_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	quest_title.clip_contents = true
+	quest_title.custom_minimum_size.y = 20
+	quest_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	# Quest description label
+	var quest_desc = Label.new()
+	quest_desc.name = "QuestDesc_" + char_data.id
+	quest_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	quest_desc.add_theme_font_size_override("font_size", 10)
+	quest_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	quest_desc.clip_contents = true
+	quest_desc.custom_minimum_size.y = 40
+	quest_desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	# Set quest info
+	if char_data.quest:
+		quest_title.text = char_data.quest.title
+		quest_desc.text = char_data.quest.description
+		# Optional: show progress_max as "Goal: X"
+		if char_data.quest.progress_max > 0:
+			quest_desc.text += "\nGoal: %d" % char_data.quest.progress_max
+	else:
+		quest_title.text = "No Quest"
+		quest_desc.text = "(This character has no quest assigned.)"
+	
+	root.add_child(quest_title)
+	root.add_child(quest_desc)
+	
+	return {
+		"button": button,
+		"root": root,
+		"quest_title": quest_title,
+		"quest_desc": quest_desc
+	}
 
 func _on_character_selected(character_id: String):
 	## Handle character selection/deselection
@@ -216,17 +272,27 @@ func _update_ui():
 	if is_instance_valid(selection_count_label):
 		selection_count_label.text = "Selected: %d / 3" % selected_character_ids.size()
 	
-	# Update button states
-	for char_id in character_buttons:
-		var button = character_buttons[char_id]
+	# Update entry states (tint button and optionally root)
+	for char_id in character_entries:
+		var entry = character_entries[char_id]
+		if not entry or not entry.has("button"):
+			continue
+		
+		var button = entry["button"]
 		if not is_instance_valid(button):
 			continue
+		
 		var is_selected = char_id in selected_character_ids
 		
 		if is_selected:
 			button.modulate = Color(0.7, 1.0, 0.7)  # Green tint
+			# Optionally tint root container as well
+			if entry.has("root") and is_instance_valid(entry["root"]):
+				entry["root"].modulate = Color(0.9, 1.0, 0.9)  # Light green tint
 		else:
 			button.modulate = Color.WHITE
+			if entry.has("root") and is_instance_valid(entry["root"]):
+				entry["root"].modulate = Color.WHITE
 	
 	# Update party summary
 	_update_party_summary()

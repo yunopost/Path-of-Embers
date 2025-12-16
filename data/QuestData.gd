@@ -13,4 +13,3 @@ class_name QuestData
 
 func _init():
 	params = {}
-

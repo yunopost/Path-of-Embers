@@ -56,7 +56,7 @@ var current_node_id: String = ""  # ID of currently selected node
 var available_next_node_ids: Array[String] = []  # IDs of nodes that can be selected next
 
 # Quests
-var quests: Dictionary = {}  # Dictionary keyed by character_id or quest_id, value includes progress and completed
+var quests: Dictionary = {}  # Dictionary keyed by character_id, value is QuestState
 
 # Reward pool
 var reward_card_pool: Array[CardData] = []  # Merged reward card pool from selected characters
@@ -201,6 +201,7 @@ func get_current_node_type() -> int:
 func mark_current_node_completed() -> void:
 	## Mark the current node as completed and update available nodes
 	## This is called after combat ends, separate from set_current_node
+	## Emits NODE_COMPLETED event for quest system
 	if not current_map or current_node_id.is_empty():
 		return
 	
@@ -210,6 +211,13 @@ func mark_current_node_completed() -> void:
 		_update_available_nodes()
 		# Emit map_changed to refresh map display
 		map_changed.emit()
+		
+		# Emit NODE_COMPLETED event for quest system
+		emit_game_event("NODE_COMPLETED", {
+			"node_id": current_node_id,
+			"node_type": node.node_type,
+			"row": node.row
+		})
 
 func _update_available_nodes():
 	## Update the list of available next nodes based on current selection
@@ -259,7 +267,7 @@ func add_card_to_deck(card_id: String, owner_character_id: String = "", upgrades
 	else:
 		# Legacy fallback
 		draw_pile.append(instance_id)
-		draw_pile_changed.emit()
+	draw_pile_changed.emit()
 	
 	deck_changed.emit()
 
@@ -292,7 +300,7 @@ func remove_card_instance(instance_id: String) -> void:
 		hand_changed.emit()
 		discard_pile_changed.emit()
 	
-	deck_changed.emit()
+		deck_changed.emit()
 
 func transform_card_instance(instance_id: String, new_card_id: String) -> void:
 	## Transform a card instance to a different card
@@ -332,9 +340,9 @@ func _initialize_deck_piles():
 	else:
 		# Legacy fallback - initialize piles with instance_ids
 		draw_pile = deck_order.duplicate()
-		hand.clear()
-		discard_pile.clear()
-		_shuffle_draw_pile()
+	hand.clear()
+	discard_pile.clear()
+	_shuffle_draw_pile()
 
 func _sync_deck_arrays_from_model():
 	## Sync legacy arrays from deck_model (for backward compatibility)
@@ -380,11 +388,11 @@ func draw_cards(count: int = 5):
 			if draw_pile.size() > 0:
 				var card = draw_pile.pop_front()
 				hand.append(card)
-		
-		if hand.size() > 0:
-			hand_changed.emit()
-		if draw_pile.size() >= 0:  # Always emit if we modified draw pile
-			draw_pile_changed.emit()
+	
+	if hand.size() > 0:
+		hand_changed.emit()
+	if draw_pile.size() >= 0:  # Always emit if we modified draw pile
+		draw_pile_changed.emit()
 
 func discard_hand():
 	## Move all cards from hand to discard pile
@@ -396,9 +404,9 @@ func discard_hand():
 		# Legacy fallback
 		for card in hand:
 			discard_pile.append(card)
-		hand.clear()
-		hand_changed.emit()
-		discard_pile_changed.emit()
+	hand.clear()
+	hand_changed.emit()
+	discard_pile_changed.emit()
 
 func get_draw_pile_count() -> int:
 	if deck_model:
@@ -463,6 +471,7 @@ func generate_starter_deck(character_data_list: Array[CharacterData]):
 func initialize_quests(character_data_list: Array[CharacterData]):
 	## Initialize quest state for selected characters
 	## character_data_list must be exactly 3 CharacterData resources
+	## Creates QuestState objects from QuestData templates
 	if character_data_list.size() != 3:
 		push_error("initialize_quests requires exactly 3 characters, got %d" % character_data_list.size())
 		return
@@ -471,21 +480,52 @@ func initialize_quests(character_data_list: Array[CharacterData]):
 	
 	for char_data in character_data_list:
 		if char_data.quest:
-			var quest_state = {
-				"quest_id": char_data.quest.id,
-				"character_id": char_data.id,
-				"title": char_data.quest.title,
-				"description": char_data.quest.description,
-				"progress": 0,
-				"progress_max": char_data.quest.progress_max,
-				"tracking_type": char_data.quest.tracking_type,
-				"params": char_data.quest.params.duplicate(),
-				"is_complete": false
-			}
+			# Create QuestState from QuestData (immutable template)
+			var quest_state = QuestState.new(
+				char_data.quest.id,
+				char_data.id,
+				char_data.quest.title,
+				char_data.quest.description,
+				char_data.quest.progress_max,
+				char_data.quest.tracking_type,
+				char_data.quest.params.duplicate()
+			)
 			# Use character_id as key for easy lookup
 			quests[char_data.id] = quest_state
 	
 	quests_changed.emit()
+
+func get_quest(character_id: String) -> QuestState:
+	## Get quest state for a character
+	return quests.get(character_id, null)
+
+func are_all_party_quests_complete() -> bool:
+	## Check if all party member quests are complete
+	if quests.is_empty():
+		return false
+	
+	# Check all 3 party members have complete quests
+	for character_id in party_ids:
+		var quest = quests.get(character_id)
+		if not quest or not quest.is_complete:
+			return false
+	
+	return true
+
+func emit_game_event(event_type: String, payload: Dictionary = {}) -> void:
+	## Emit a game event and evaluate all quests
+	## This is the single entry point for quest updates
+	var any_changed = false
+	
+	for character_id in quests:
+		var quest = quests[character_id]
+		if quest and quest is QuestState:
+			var changed = QuestSystem.evaluate(quest, event_type, payload)
+			if changed:
+				any_changed = true
+	
+	if any_changed:
+		quests_changed.emit()
 
 func set_pending_rewards(bundle: RewardBundle):
 	## Set pending rewards (called by EncounterScreen)
@@ -608,3 +648,15 @@ func get_upgradeable_deck_indices() -> Array[int]:
 		if can_upgrade_instance(deck_order[i]):
 			indices.append(i)
 	return indices
+
+func add_relic(relic_id: String, is_boss: bool = false) -> void:
+	## Add a relic to the player's collection
+	## Emits RELIC_GAINED event for quest system
+	if relic_id.is_empty():
+		return
+	
+	relics.append({ "id": relic_id, "is_boss": is_boss })
+	relics_changed.emit()
+	
+	# Emit RELIC_GAINED event for quest system
+	emit_game_event("RELIC_GAINED", { "relic_id": relic_id, "is_boss": is_boss })

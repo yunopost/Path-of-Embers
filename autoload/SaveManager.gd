@@ -90,15 +90,18 @@ func _serialize_run_state() -> Dictionary:
 				"transcendent_card_id": ""
 			}
 	
-	# Convert quests to serializable format (now Dictionary)
+	# Convert quests to serializable format (QuestState objects)
 	var quests_data = {}
-	for key in RunState.quests:
-		var quest_state = RunState.quests[key]
-		if quest_state is Dictionary:
-			quests_data[key] = quest_state
+	for character_id in RunState.quests:
+		var quest_state = RunState.quests[character_id]
+		if quest_state and quest_state is QuestState:
+			quests_data[character_id] = quest_state.to_dict()
+		elif quest_state is Dictionary:
+			# Legacy format - keep as-is for backward compatibility
+			quests_data[character_id] = quest_state
 		else:
 			# Fallback
-			quests_data[key] = {"id": str(quest_state)}
+			quests_data[character_id] = {"id": str(quest_state)}
 	
 	# Convert reward_card_pool to serializable format
 	var reward_pool_data = []
@@ -246,17 +249,28 @@ func _deserialize_run_state(save_data: Dictionary):
 			RunState.party_ids = save_data["party"].duplicate()
 		RunState.party_changed.emit()
 	
-	# Restore quests (now Dictionary)
+	# Restore quests (convert dictionaries to QuestState objects)
 	if save_data.has("quests"):
+		RunState.quests.clear()
 		if save_data["quests"] is Dictionary:
-			RunState.quests = save_data["quests"]
-		else:
-			# Legacy: convert Array to Dictionary
-			RunState.quests = {}
+			# New format: Dictionary keyed by character_id
+			for character_id in save_data["quests"]:
+				var quest_data = save_data["quests"][character_id]
+				if quest_data is Dictionary:
+					# Convert dictionary to QuestState (handles both new and legacy formats)
+					var quest_state = QuestState.from_dict(quest_data)
+					RunState.quests[character_id] = quest_state
+				elif quest_data is QuestState:
+					# Already a QuestState (shouldn't happen in saves, but handle it)
+					RunState.quests[character_id] = quest_data
+		elif save_data["quests"] is Array:
+			# Legacy: convert Array to Dictionary of QuestState objects
 			for quest in save_data["quests"]:
-				if quest is Dictionary and quest.has("id"):
-					var key = quest.get("character_id", quest.get("id", ""))
-					RunState.quests[key] = quest
+				if quest is Dictionary:
+					var character_id = quest.get("character_id", quest.get("id", ""))
+					if not character_id.is_empty():
+						var quest_state = QuestState.from_dict(quest)
+						RunState.quests[character_id] = quest_state
 		RunState.quests_changed.emit()
 	
 	# Restore reward_card_pool (new in version 2)
