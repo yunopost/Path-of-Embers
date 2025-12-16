@@ -88,11 +88,30 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	if not can_play_card(card_cost):
 		return false
 	
-	# Remove card from hand
-	var card_index = RunState.hand.find(deck_card)
-	if card_index >= 0:
-		RunState.hand.remove_at(card_index)
-		RunState.hand_changed.emit()
+	# Remove card from hand using instance_id
+	if not deck_card:
+		push_error("CombatController.play_card: deck_card is null")
+		return false
+	
+	# Get instance_id - convert to String explicitly to ensure type safety
+	var instance_id: String = str(deck_card.instance_id)
+	if instance_id.is_empty():
+		push_error("CombatController.play_card: deck_card has empty instance_id")
+		return false
+	
+	if RunState.deck_model:
+		# Use deck_model (preferred)
+		var hand_index = RunState.deck_model.hand.find(instance_id)
+		if hand_index >= 0:
+			RunState.deck_model.hand.remove_at(hand_index)
+			RunState.deck_model.hand_changed.emit()
+			RunState._sync_deck_arrays_from_model()
+	else:
+		# Legacy fallback: remove from RunState.hand directly
+		var hand_index = RunState.hand.find(instance_id)
+		if hand_index >= 0:
+			RunState.hand.remove_at(hand_index)
+			RunState.hand_changed.emit()
 	
 	# Spend energy
 	current_energy -= card_cost
@@ -111,9 +130,25 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	# Resolve any enemies that hit 0
 	enemy_time_system.resolve_enemy_time_triggers("card_played")
 	
-	# Move card to discard
-	RunState.discard_pile.append(deck_card)
-	RunState.discard_pile_changed.emit()
+	# Move card to discard pile using instance_id
+	# Re-fetch instance_id with explicit String conversion to ensure type safety
+	var discard_instance_id: String = str(deck_card.instance_id)
+	if discard_instance_id.is_empty():
+		push_warning("CombatController.play_card: instance_id is empty, cannot add to discard")
+	else:
+		if RunState.deck_model:
+			# Use deck_model (preferred)
+			var discard_index = RunState.deck_model.discard_pile.find(discard_instance_id)
+			if discard_index < 0:  # Not found, add it
+				RunState.deck_model.discard_pile.append(discard_instance_id)
+				RunState.deck_model.discard_pile_changed.emit()
+				RunState._sync_deck_arrays_from_model()
+		else:
+			# Legacy fallback: add to RunState.discard_pile directly
+			var discard_index = RunState.discard_pile.find(discard_instance_id)
+			if discard_index < 0:  # Not found, add it
+				RunState.discard_pile.append(discard_instance_id)
+				RunState.discard_pile_changed.emit()
 	
 	return true
 

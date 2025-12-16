@@ -58,7 +58,7 @@ func _show_card_selection():
 		
 		var card_widget = card_widget_scene.instantiate()
 		card_widget.setup(card_instance, deck_index, true)  # clickable = true, deck_index for display only
-		card_widget.card_clicked.connect(_on_card_widget_clicked.bind(instance_id))
+		card_widget.card_clicked.connect(_on_card_widget_clicked)  # Signal now emits instance_id directly
 		card_grid.add_child(card_widget)
 
 func _show_upgrade_selection():

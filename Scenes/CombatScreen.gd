@@ -173,7 +173,13 @@ func _update_hand():
 	await get_tree().process_frame
 	
 	# Create card UIs for each card in hand
-	for deck_card in RunState.hand:
+	for instance_id in RunState.hand:
+		# Look up DeckCardData from deck registry using instance_id
+		var deck_card = RunState.deck.get(instance_id)
+		if not deck_card:
+			push_error("CombatScreen: Could not find DeckCardData for instance_id: " + str(instance_id))
+			continue
+		
 		var card_ui = CardUI.new()
 		hand_container.add_child(card_ui)
 		card_ui.setup_card(deck_card)

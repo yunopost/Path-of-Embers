@@ -4,7 +4,7 @@ extends Control
 ## Scene-based widget - instantiate via scene, not class_name
 ## Follows architecture: scene-based, uses setup() method
 
-signal card_clicked(deck_index: int)
+signal card_clicked(instance_id: String)
 
 @onready var card_panel: Panel = $CardPanel
 @onready var name_label: Label = $CardPanel/VBoxContainer/NameLabel
@@ -127,5 +127,6 @@ func _get_card_panel() -> Panel:
 func _on_card_clicked(event: InputEvent):
 	if is_clickable and event is InputEventMouseButton:
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			card_clicked.emit(deck_index)
+			if card_instance:
+				card_clicked.emit(card_instance.instance_id)
 			get_viewport().set_input_as_handled()
