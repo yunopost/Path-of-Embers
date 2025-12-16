@@ -9,6 +9,7 @@ var current_scene: Node = null
 
 const SCENE_PATHS = {
 	"main": "res://Path-of-Embers/scenes/screens/Main.tscn",
+	"main_menu": "res://Path-of-Embers/scenes/screens/Main.tscn",  # Alias for main
 	"character_select": "res://Path-of-Embers/scenes/screens/CharacterSelect.tscn",
 	"map": "res://Path-of-Embers/scenes/screens/MapScreen.tscn",
 	"combat": "res://Path-of-Embers/scenes/screens/CombatScreen.tscn",

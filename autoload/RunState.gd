@@ -660,3 +660,65 @@ func add_relic(relic_id: String, is_boss: bool = false) -> void:
 	
 	# Emit RELIC_GAINED event for quest system
 	emit_game_event("RELIC_GAINED", { "relic_id": relic_id, "is_boss": is_boss })
+
+func reset_run() -> void:
+	## Reset all run state to initial values (for New Game)
+	## Clears party, deck, quests, map, and all resources
+	
+	# Clear party
+	party.clear()
+	party_ids.clear()
+	party_changed.emit()
+	
+	# Clear deck
+	deck.clear()
+	deck_order.clear()
+	draw_pile.clear()
+	hand.clear()
+	discard_pile.clear()
+	if deck_model:
+		deck_model.draw_pile.clear()
+		deck_model.hand.clear()
+		deck_model.discard_pile.clear()
+	deck_changed.emit()
+	draw_pile_changed.emit()
+	hand_changed.emit()
+	discard_pile_changed.emit()
+	
+	# Clear quests
+	quests.clear()
+	quests_changed.emit()
+	
+	# Clear relics
+	relics.clear()
+	relics_changed.emit()
+	
+	# Reset resources
+	set_gold(0)
+	set_hp(50, 50)
+	set_block(0)
+	set_energy(3, 3)
+	
+	# Reset map/progress
+	set_act(1)
+	set_map("Act1")
+	set_node_position(0)
+	current_map = null
+	current_node_id = ""
+	available_next_node_ids.clear()
+	map_changed.emit()
+	current_node_changed.emit("")
+	available_next_node_ids_changed.emit([])
+	
+	# Clear pending rewards
+	pending_rewards = null
+	
+	# Clear reward pool
+	reward_card_pool.clear()
+	
+	# Clear buffs
+	buffs.clear()
+	buffs_changed.emit()
+	
+	# Reset settings
+	tap_to_play = false

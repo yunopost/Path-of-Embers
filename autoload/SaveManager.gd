@@ -59,6 +59,10 @@ func load_game() -> bool:
 func has_save_file() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
 
+func has_save() -> bool:
+	## Alias for has_save_file() for consistency
+	return has_save_file()
+
 func delete_save_file() -> bool:
 	if not has_save_file():
 		return true

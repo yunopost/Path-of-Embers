@@ -56,6 +56,10 @@ func go_to_character_select():
 	## Navigate to character selection screen
 	_change_screen("character_select", {})
 
+func go_to_main_menu():
+	## Navigate to main menu screen
+	_change_screen("main_menu", {})
+
 func _change_screen(screen_name: String, data: Dictionary):
 	## Internal method to change screens
 	if not screen_scenes.has(screen_name):
