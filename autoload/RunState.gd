@@ -28,13 +28,10 @@ var party_ids: Array[String] = []  # Array of 3 character IDs
 # Deck
 var deck: Dictionary = {}  # instance_id -> DeckCardData (authoritative registry)
 var deck_order: Array[String] = []  # Stable ordering for deck view / upgrades UI
-var draw_pile: Array[String] = []  # instance_ids (legacy - use deck_model)
-var hand: Array[String] = []  # instance_ids (legacy - use deck_model)
-var discard_pile: Array[String] = []  # instance_ids (legacy - use deck_model)
+# Note: draw_pile, hand, discard_pile are now managed by deck_model only
 
 # Models (architecture rule 4.1, 8.1)
 var deck_model: DeckModel = null
-var combat_model: CombatModel = null
 
 # Relics
 var relics: Array = []  # Will contain relic data
@@ -61,6 +58,9 @@ var quests: Dictionary = {}  # Dictionary keyed by character_id, value is QuestS
 # Reward pool
 var reward_card_pool: Array[CardData] = []  # Merged reward card pool from selected characters
 
+# Rare pity system
+var rare_pity_counter: int = -2  # Base chance starts at -2%, increases by +1 for each Common shown
+
 # Pending rewards (set by EncounterScreen, consumed by RewardsScreen)
 var pending_rewards: RewardBundle = null
 
@@ -76,7 +76,6 @@ func _ready():
 	party_ids = []
 	deck = {}
 	deck_order = []
-	_initialize_deck_piles()
 	relics = []
 	gold = 0
 	current_hp = 50
@@ -92,34 +91,19 @@ func _ready():
 	available_next_node_ids = []
 	quests = {}
 	reward_card_pool = []
+	rare_pity_counter = -2
 	buffs = []
 	
 	# Initialize models
 	deck_model = DeckModel.new()
-	combat_model = CombatModel.new()
 	
 	# Connect model signals to RunState signals for backward compatibility
-	if deck_model:
-		deck_model.deck_changed.connect(func(): deck_changed.emit())
-		deck_model.draw_pile_changed.connect(func(): draw_pile_changed.emit())
-		deck_model.hand_changed.connect(func(): hand_changed.emit())
-		deck_model.discard_pile_changed.connect(func(): discard_pile_changed.emit())
+	deck_model.deck_changed.connect(func(): deck_changed.emit())
+	deck_model.draw_pile_changed.connect(func(): draw_pile_changed.emit())
+	deck_model.hand_changed.connect(func(): hand_changed.emit())
+	deck_model.discard_pile_changed.connect(func(): discard_pile_changed.emit())
 	
-	if combat_model:
-		combat_model.player_hp_changed.connect(func(new_hp, max_hp): 
-			current_hp = new_hp
-			self.max_hp = max_hp
-			hp_changed.emit()
-		)
-		combat_model.player_block_changed.connect(func(new_block): 
-			block = new_block
-			block_changed.emit()
-		)
-		combat_model.player_energy_changed.connect(func(new_energy, max_energy): 
-			energy = new_energy
-			self.max_energy = max_energy
-			energy_changed.emit()
-		)
+	# Note: CombatModel removed - CombatController manages combat state directly
 
 func set_gold(value: int):
 	if gold != value:
@@ -168,12 +152,9 @@ func set_map_data(map_data: MapData):
 
 func set_current_node(node_id: String):
 	## Set the currently selected node
+	## Note: Does NOT mark node as completed - use mark_current_node_completed() after encounter finishes
 	if current_node_id != node_id:
 		current_node_id = node_id
-		
-		# Mark node as completed
-		if current_map and current_map.nodes.has(current_node_id):
-			current_map.nodes[current_node_id].is_completed = true
 		
 		# Update available next nodes
 		_update_available_nodes()
@@ -257,20 +238,31 @@ func set_map(value: String):
 func add_card_to_deck(card_id: String, owner_character_id: String = "", upgrades: Array[String] = [], transcended: bool = false, transcendent_card_id: String = ""):
 	## Add a card to the deck with optional upgrades and owner
 	## Creates DeckCardData with instance_id and stores in registry
+	# Validate card_id is non-empty
+	if card_id.is_empty():
+		push_error("RunState.add_card_to_deck: card_id is empty. owner=%s" % owner_character_id)
+		return
+	
+	# Validate CardData exists
+	var card_data = DataRegistry.get_card_data(card_id)
+	if not card_data:
+		push_error("RunState.add_card_to_deck: CardData not found for card_id='%s'. owner=%s" % [card_id, owner_character_id])
+		return
+	
 	var deck_card = DeckCardData.new(card_id, owner_character_id, upgrades, transcended, transcendent_card_id)
+	
+	# Validate the created card instance
+	if not CardValidation.validate_and_log_creation(deck_card, "add_card_to_deck"):
+		return
+	
 	var instance_id = deck_card.instance_id
 	
 	# Store in registry
 	deck[instance_id] = deck_card
 	deck_order.append(instance_id)
 	
-	# Update model if available
-	if deck_model:
-		deck_model.add_card_instance(instance_id)
-		_sync_deck_arrays_from_model()
-	else:
-		# Legacy fallback
-		draw_pile.append(instance_id)
+	# Update model
+	deck_model.add_card_instance(instance_id)
 	draw_pile_changed.emit()
 	
 	deck_changed.emit()
@@ -292,19 +284,9 @@ func remove_card_instance(instance_id: String) -> void:
 	deck_order.erase(instance_id)
 	
 	# Remove from model piles
-	if deck_model:
-		deck_model.remove_instance_from_piles(instance_id)
-		_sync_deck_arrays_from_model()
-	else:
-		# Legacy fallback
-		draw_pile.erase(instance_id)
-		hand.erase(instance_id)
-		discard_pile.erase(instance_id)
-		draw_pile_changed.emit()
-		hand_changed.emit()
-		discard_pile_changed.emit()
-	
-		deck_changed.emit()
+	deck_model.remove_instance_from_piles(instance_id)
+	# Signals are emitted by deck_model.remove_instance_from_piles()
+	deck_changed.emit()
 
 func transform_card_instance(instance_id: String, new_card_id: String) -> void:
 	## Transform a card instance to a different card
@@ -316,114 +298,67 @@ func transform_card_instance(instance_id: String, new_card_id: String) -> void:
 	if not card_instance:
 		return
 	
+	# Validate new_card_id exists
+	if new_card_id.is_empty():
+		push_error("transform_card_instance: new_card_id is empty. instance_id=%s" % instance_id)
+		return
+	
+	var new_card_data = DataRegistry.get_card_data(new_card_id)
+	if not new_card_data:
+		push_error("transform_card_instance: CardData not found for new_card_id='%s'. instance_id=%s" % [new_card_id, instance_id])
+		return
+	
 	# Transform the card
 	card_instance.card_id = new_card_id
 	card_instance.applied_upgrades.clear()  # MVP: clear upgrades on transform
 	card_instance.is_transcended = false
 	card_instance.transcendent_card_id = ""
 	
+	# Validate the transformed card
+	if not CardValidation.validate_card_instance(card_instance, "transform_card_instance"):
+		push_error("transform_card_instance: Transformed card is invalid. instance_id=%s" % instance_id)
+	
 	# Emit signals
 	deck_changed.emit()
 	# If card is in hand, emit hand_changed
 	if deck_model and deck_model.hand.has(instance_id):
 		deck_model.hand_changed.emit()
-	elif hand.has(instance_id):
-		hand_changed.emit()
 
 func get_deck_size() -> int:
 	return deck_order.size()
 
 func _initialize_deck_piles():
 	## Initialize draw pile with all cards from deck, clear hand and discard
-	# Use deck_model if available (preferred)
-	if deck_model:
-		# Initialize with instance_ids from deck_order
-		deck_model.initialize(deck_order.duplicate())
-		# Sync legacy arrays for backward compatibility
-		_sync_deck_arrays_from_model()
-	else:
-		# Legacy fallback - initialize piles with instance_ids
-		draw_pile = deck_order.duplicate()
-	hand.clear()
-	discard_pile.clear()
-	_shuffle_draw_pile()
+	deck_model.initialize(deck_order.duplicate())
 
-func _sync_deck_arrays_from_model():
-	## Sync legacy arrays from deck_model (for backward compatibility)
-	if not deck_model:
-		return
-	
-	# Sync draw_pile, hand, discard_pile as instance_id arrays
-	draw_pile = deck_model.draw_pile.duplicate()
-	hand = deck_model.hand.duplicate()
-	discard_pile = deck_model.discard_pile.duplicate()
-
-func _shuffle_draw_pile():
-	## Shuffle the draw pile randomly
-	draw_pile.shuffle()
-	draw_pile_changed.emit()
 
 func shuffle_discard_into_draw():
 	## Shuffle discard pile into draw pile (when draw is empty)
-	if discard_pile.size() > 0:
-		# Move all discard to draw
-		for card in discard_pile:
-			draw_pile.append(card)
-		discard_pile.clear()
-		_shuffle_draw_pile()
-		discard_pile_changed.emit()
+	## Note: This is handled automatically by deck_model.draw_cards() when draw pile is empty
+	deck_model.draw_pile = deck_model.discard_pile.duplicate()
+	deck_model.discard_pile.clear()
+	deck_model.shuffle_draw_pile()
+	deck_model.discard_pile_changed.emit()
 
 func draw_cards(count: int = 5):
 	## Draw cards from draw pile into hand
 	## If draw pile is empty, shuffle discard into draw first
-	if deck_model:
-		# Use model (preferred)
-		deck_model.draw_cards(count)
-		_sync_deck_arrays_from_model()
-	else:
-		# Legacy fallback
-		for i in range(count):
-			if draw_pile.size() == 0:
-				shuffle_discard_into_draw()
-				# If still empty after shuffle, can't draw
-				if draw_pile.size() == 0:
-					break
-			
-			if draw_pile.size() > 0:
-				var card = draw_pile.pop_front()
-				hand.append(card)
-	
-	if hand.size() > 0:
-		hand_changed.emit()
-	if draw_pile.size() >= 0:  # Always emit if we modified draw pile
-		draw_pile_changed.emit()
+	deck_model.draw_cards(count)
+	# Signals are emitted by deck_model
 
 func discard_hand():
 	## Move all cards from hand to discard pile
-	if deck_model:
-		# Use model (preferred)
-		deck_model.discard_hand()
-		_sync_deck_arrays_from_model()
-	else:
-		# Legacy fallback
-		for card in hand:
-			discard_pile.append(card)
-	hand.clear()
-	hand_changed.emit()
-	discard_pile_changed.emit()
+	deck_model.discard_hand()
+	# Signals are emitted by deck_model
 
 func get_draw_pile_count() -> int:
-	if deck_model:
-		return deck_model.get_draw_pile_count()
-	return draw_pile.size()
+	return deck_model.get_draw_pile_count()
 
 func get_discard_pile_count() -> int:
-	if deck_model:
-		return deck_model.get_discard_pile_count()
-	return discard_pile.size()
+	return deck_model.get_discard_pile_count()
 
 func get_hand_size() -> int:
-	return hand.size()
+	return deck_model.get_hand_size()
 
 func set_party(character_ids: Array[String]):
 	## Set the party to the given character IDs (must be exactly 3)
@@ -450,20 +385,40 @@ func generate_starter_deck(character_data_list: Array[CharacterData]):
 		# Add 3 generic cards based on role
 		var generic_card_ids = RoleStarterSet.get_generic_starters_for_role(char_data.role)
 		for card_id in generic_card_ids:
+			# Validate card_id exists before creating
+			if card_id.is_empty():
+				push_error("generate_starter_deck: Empty card_id for generic starter. character=%s" % char_data.id)
+				continue
+			var card_data = DataRegistry.get_card_data(card_id)
+			if not card_data:
+				push_error("generate_starter_deck: CardData not found for generic card_id='%s'. character=%s" % [card_id, char_data.id])
+				continue
+			
 			var deck_card = DeckCardData.new(card_id, char_data.id)
+			if not CardValidation.validate_and_log_creation(deck_card, "generate_starter_deck (generic)"):
+				continue
 			var instance_id = deck_card.instance_id
 			deck[instance_id] = deck_card
 			deck_order.append(instance_id)
 		
 		# Add 2 unique cards
 		for unique_card in char_data.starter_unique_cards:
-			if unique_card and unique_card.id:
-				var deck_card = DeckCardData.new(unique_card.id, char_data.id)
-				var instance_id = deck_card.instance_id
-				deck[instance_id] = deck_card
-				deck_order.append(instance_id)
+			if not unique_card or not unique_card.id:
+				push_error("generate_starter_deck: Invalid unique_card. character=%s" % char_data.id)
+				continue
+			var card_id = unique_card.id
+			if card_id.is_empty():
+				push_error("generate_starter_deck: Empty card_id for unique card. character=%s" % char_data.id)
+				continue
+			
+			var deck_card = DeckCardData.new(card_id, char_data.id)
+			if not CardValidation.validate_and_log_creation(deck_card, "generate_starter_deck (unique)"):
+				continue
+			var instance_id = deck_card.instance_id
+			deck[instance_id] = deck_card
+			deck_order.append(instance_id)
 		
-		# Merge reward card pool
+		# Merge reward card pool (22 cards per character = 66 total)
 		for reward_card in char_data.reward_card_pool:
 			if reward_card:
 				reward_card_pool.append(reward_card)
@@ -471,6 +426,9 @@ func generate_starter_deck(character_data_list: Array[CharacterData]):
 	# Initialize deck piles
 	_initialize_deck_piles()
 	deck_changed.emit()
+	
+	# Initialize rare pity counter (starts at -2%)
+	rare_pity_counter = -2
 
 func initialize_quests(character_data_list: Array[CharacterData]):
 	## Initialize quest state for selected characters
@@ -619,8 +577,6 @@ func apply_upgrade_to_instance(instance_id: String, upgrade_id: String) -> bool:
 	# If card is in hand, emit hand_changed
 	if deck_model and deck_model.hand.has(instance_id):
 		deck_model.hand_changed.emit()
-	elif hand.has(instance_id):
-		hand_changed.emit()
 	
 	# Autosave after upgrade
 	if AutoSaveManager:
@@ -654,52 +610,17 @@ func get_upgradeable_deck_indices() -> Array[int]:
 	return indices
 
 func get_effective_cost(instance_id: String) -> int:
-	## Get the effective cost of a card after upgrades
+	## Get the effective cost of a card after upgrades (delegates to CardRules)
 	## Returns the base cost minus cost reduction upgrades (min 0)
 	var card_instance = deck.get(instance_id)
 	if not card_instance:
 		return 1  # Default fallback
 	
-	# Get base cost from CardData
-	var base_cost = 1  # Default fallback
-	var card_id = card_instance.card_id
+	var card_data = DataRegistry.get_card_data(card_instance.card_id)
+	if not card_data:
+		return 1  # Default fallback
 	
-	# Try to find CardData in registered characters
-	if DataRegistry:
-		for character_id in DataRegistry.character_cache:
-			var char_data = DataRegistry.character_cache[character_id]
-			if not char_data:
-				continue
-			
-			# Check starter cards
-			for card_data in char_data.starter_unique_cards:
-				if card_data and card_data.id == card_id:
-					base_cost = card_data.cost
-					break
-			
-			if base_cost != 1:  # Found it
-				break
-			
-			# Check reward card pool
-			for card_data in char_data.reward_card_pool:
-				if card_data and card_data.id == card_id:
-					base_cost = card_data.cost
-					break
-			
-			if base_cost != 1:  # Found it
-				break
-		
-		# Check transcendent cards
-		if base_cost == 1:
-			var trans_card = DataRegistry.get_transcendent_card(card_id)
-			if trans_card:
-				base_cost = trans_card.cost
-	
-	# Apply cost reduction upgrades
-	if card_instance.applied_upgrades.has("upgrade_cost_minus_1"):
-		base_cost = max(0, base_cost - 1)
-	
-	return base_cost
+	return CardRules.get_effective_cost(card_data, card_instance)
 
 func has_upgrade(instance_id: String, upgrade_id: String) -> bool:
 	## Check if a card instance has a specific upgrade
@@ -718,10 +639,18 @@ func transcend_card(instance_id: String, new_card_id: String) -> bool:
 	## Transform a card instance into a transcendent card
 	## Replaces the card_id and marks as transcended
 	if instance_id.is_empty() or new_card_id.is_empty():
+		push_error("transcend_card: instance_id or new_card_id is empty")
 		return false
 	
 	var card_instance = deck.get(instance_id)
 	if not card_instance:
+		push_error("transcend_card: Card instance not found. instance_id=%s" % instance_id)
+		return false
+	
+	# Validate new_card_id exists
+	var new_card_data = DataRegistry.get_card_data(new_card_id)
+	if not new_card_data:
+		push_error("transcend_card: CardData not found for new_card_id='%s'. instance_id=%s" % [new_card_id, instance_id])
 		return false
 	
 	# Update card instance
@@ -729,12 +658,15 @@ func transcend_card(instance_id: String, new_card_id: String) -> bool:
 	card_instance.is_transcended = true
 	card_instance.transcendent_card_id = new_card_id
 	
+	# Validate the transcended card
+	if not CardValidation.validate_card_instance(card_instance, "transcend_card"):
+		push_error("transcend_card: Transcended card is invalid. instance_id=%s" % instance_id)
+		return false
+	
 	# Emit signals (instance_id remains the same, so piles don't need updating)
 	deck_changed.emit()
 	if deck_model and deck_model.hand.has(instance_id):
 		deck_model.hand_changed.emit()
-	elif hand.has(instance_id):
-		hand_changed.emit()
 	
 	# Autosave after transcendence
 	if AutoSaveManager:
@@ -745,6 +677,9 @@ func transcend_card(instance_id: String, new_card_id: String) -> bool:
 func add_relic(relic_id: String, is_boss: bool = false) -> void:
 	## Add a relic to the player's collection
 	## Emits RELIC_GAINED event for quest system
+	## 
+	## PLACEHOLDER FOR FUTURE WORK: Relic storage exists for testing game loop,
+	## but relic effects are not implemented. Relics are stored but have no gameplay impact.
 	if relic_id.is_empty():
 		return
 	
@@ -753,6 +688,56 @@ func add_relic(relic_id: String, is_boss: bool = false) -> void:
 	
 	# Emit RELIC_GAINED event for quest system
 	emit_game_event("RELIC_GAINED", { "relic_id": relic_id, "is_boss": is_boss })
+
+func get_rare_chance(node_type: MapNodeData.NodeType) -> float:
+	## Calculate current Rare chance including Elite bonus
+	## Deck penalty is applied per-card during selection, not to overall Rare chance
+	var base_chance = rare_pity_counter / 100.0  # Convert counter to percentage
+	
+	# Apply Elite bonus (+10% for Elite nodes)
+	var elite_bonus = 0.0
+	if node_type == MapNodeData.NodeType.ELITE:
+		elite_bonus = 0.10
+	
+	var final_chance = base_chance + elite_bonus
+	return clamp(final_chance, 0.0, 1.0)  # Clamp between 0% and 100%
+
+func get_rare_cards_in_deck() -> Array[String]:
+	## Get array of card_ids for Rare cards currently in deck
+	var rare_card_ids: Array[String] = []
+	for instance_id in deck_order:
+		var card_instance = deck.get(instance_id)
+		if card_instance:
+			var card_data = DataRegistry.get_card_data(card_instance.card_id)
+			if card_data and card_data.rarity == CardData.Rarity.RARE:
+				if not rare_card_ids.has(card_instance.card_id):
+					rare_card_ids.append(card_instance.card_id)
+	return rare_card_ids
+
+func update_rare_pity_from_rewards(card_choices: Array[String]) -> void:
+	## Update pity counter based on cards shown in rewards
+	## Each Common increases counter by +1, Rare resets to -2
+	var had_rare = false
+	var common_count = 0
+	
+	for card_id in card_choices:
+		var card_data = DataRegistry.get_card_data(card_id)
+		if card_data:
+			if card_data.rarity == CardData.Rarity.RARE:
+				had_rare = true
+			elif card_data.rarity == CardData.Rarity.COMMON:
+				common_count += 1
+	
+	if had_rare:
+		# Reset to -2 when Rare appears
+		rare_pity_counter = -2
+	else:
+		# Increase by 1 for each Common shown
+		rare_pity_counter += common_count
+
+func reset_rare_pity() -> void:
+	## Reset pity counter to -2
+	rare_pity_counter = -2
 
 func reset_run() -> void:
 	## Reset all run state to initial values (for New Game)
@@ -766,9 +751,6 @@ func reset_run() -> void:
 	# Clear deck
 	deck.clear()
 	deck_order.clear()
-	draw_pile.clear()
-	hand.clear()
-	discard_pile.clear()
 	if deck_model:
 		deck_model.draw_pile.clear()
 		deck_model.hand.clear()
@@ -808,6 +790,9 @@ func reset_run() -> void:
 	
 	# Clear reward pool
 	reward_card_pool.clear()
+	
+	# Reset rare pity counter
+	rare_pity_counter = -2
 	
 	# Clear buffs
 	buffs.clear()

@@ -16,9 +16,18 @@ signal discard_pile_changed()
 
 func initialize(p_instance_ids: Array[String]):
 	## Initialize deck model with instance_ids
-	draw_pile = p_instance_ids.duplicate()
+	## Validates all cards before adding to draw pile
+	draw_pile.clear()
 	hand.clear()
 	discard_pile.clear()
+	
+	# Validate each instance_id references a valid card
+	for instance_id in p_instance_ids:
+		var card = get_card(instance_id)
+		if card and CardValidation.validate_card_instance(card, "DeckModel.initialize"):
+			draw_pile.append(instance_id)
+		else:
+			push_error("DeckModel.initialize: Skipping invalid card instance_id=%s" % instance_id)
 	
 	deck_changed.emit()
 	draw_pile_changed.emit()
@@ -75,11 +84,14 @@ func get_discard_pile_count() -> int:
 
 func get_hand_cards() -> Array[DeckCardData]:
 	## Get actual card instances in hand by looking up instance_ids in RunState registry
+	## Only returns valid cards (validates each card)
 	var cards: Array[DeckCardData] = []
 	for instance_id in hand:
 		var card = get_card(instance_id)
-		if card:
+		if card and CardValidation.validate_card_instance(card, "DeckModel.get_hand_cards"):
 			cards.append(card)
+		else:
+			push_error("DeckModel.get_hand_cards: Invalid card in hand instance_id=%s" % instance_id)
 	return cards
 
 func add_card_instance(instance_id: String):

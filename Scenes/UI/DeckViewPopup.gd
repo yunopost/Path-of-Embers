@@ -11,6 +11,7 @@ extends Control
 func _ready():
 	close_button.pressed.connect(_on_close_pressed)
 	close_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	close_button.z_index = 20  # Ensure close button is above backdrop
 	
 	# Connect to RunState signals
 	RunState.deck_changed.connect(_update_display)
@@ -25,12 +26,24 @@ func _setup_popup():
 	# Make it a modal-like popup
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	
-	# Add background panel
+	# Add darker backdrop for better readability
 	var bg = ColorRect.new()
-	bg.color = Color(0, 0, 0, 0.7)
+	bg.color = Color(0, 0, 0, 0.85)  # Darker backdrop
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(bg)
 	move_child(bg, 0)
+	
+	# Add panel behind content for better contrast
+	var content_bg = Panel.new()
+	content_bg.set_anchors_preset(Control.PRESET_CENTER)
+	content_bg.offset_left = -450
+	content_bg.offset_top = -350
+	content_bg.offset_right = 450
+	content_bg.offset_bottom = 350
+	content_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(content_bg)
+	move_child(content_bg, 1)
 	
 	# Center the content with more space
 	var content = $VBoxContainer
@@ -39,6 +52,7 @@ func _setup_popup():
 	content.offset_top = -300
 	content.offset_right = 400
 	content.offset_bottom = 300
+	content.z_index = 10  # Ensure content is above backdrop
 	
 	# Setup grid
 	card_grid.columns = 3

@@ -85,6 +85,7 @@ func _display_rewards():
 	# Card choices section
 	if reward_bundle.card_choices.size() > 0:
 		_create_card_choices_section(reward_bundle.card_choices)
+		# Note: Pity counter is updated by RewardResolver when rewards are generated
 	
 	# Relic section
 	if not reward_bundle.relic_id.is_empty():
@@ -248,6 +249,8 @@ func _on_skip_cards():
 
 func _on_claim_relic(relic_id: String):
 	## Claim relic reward
+	## PLACEHOLDER FOR FUTURE WORK: Relic storage works, but relic effects are not implemented.
+	## Relics are added to RunState.relics but have no gameplay impact.
 	if relic_claimed:
 		return
 	

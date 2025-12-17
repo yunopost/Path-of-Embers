@@ -1,6 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://dgq52rncv40gh"]
-
-[ext_resource type="Script" uid="uid://571q3qracesn" path="res://Path-of-Embers/Scenes/CombatScreen.gd" id="1_combatscreen"]
+[gd_scene format=3 uid="uid://p142if8q10u6"]
 
 [node name="CombatScreen" type="Control"]
 layout_mode = 3
@@ -10,7 +8,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-script = ExtResource("1_combatscreen")
 
 [node name="CombatController" type="Node" parent="."]
 

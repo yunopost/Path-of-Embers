@@ -82,9 +82,11 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	if not combat_active:
 		return false
 	
-	# Get effective card cost (including upgrades)
-	var instance_id_str: String = str(deck_card.instance_id)
-	var card_cost = RunState.get_effective_cost(instance_id_str)
+	# Get effective card cost (including upgrades) using CardRules
+	var card_data = DataRegistry.get_card_data(deck_card.card_id)
+	if not card_data:
+		return false
+	var card_cost = CardRules.get_effective_cost(card_data, deck_card)
 	
 	if not can_play_card(card_cost):
 		return false
@@ -100,19 +102,11 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 		push_error("CombatController.play_card: deck_card has empty instance_id")
 		return false
 	
-	if RunState.deck_model:
-		# Use deck_model (preferred)
-		var hand_index = RunState.deck_model.hand.find(instance_id)
-		if hand_index >= 0:
-			RunState.deck_model.hand.remove_at(hand_index)
-			RunState.deck_model.hand_changed.emit()
-			RunState._sync_deck_arrays_from_model()
-	else:
-		# Legacy fallback: remove from RunState.hand directly
-		var hand_index = RunState.hand.find(instance_id)
-		if hand_index >= 0:
-			RunState.hand.remove_at(hand_index)
-		RunState.hand_changed.emit()
+	# Remove from deck_model hand
+	var hand_index = RunState.deck_model.hand.find(instance_id)
+	if hand_index >= 0:
+		RunState.deck_model.hand.remove_at(hand_index)
+		RunState.deck_model.hand_changed.emit()
 	
 	# Spend energy
 	current_energy -= card_cost
@@ -137,26 +131,17 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	if discard_instance_id.is_empty():
 		push_warning("CombatController.play_card: instance_id is empty, cannot add to discard")
 	else:
-		if RunState.deck_model:
-			# Use deck_model (preferred)
-			var discard_index = RunState.deck_model.discard_pile.find(discard_instance_id)
-			if discard_index < 0:  # Not found, add it
-				RunState.deck_model.discard_pile.append(discard_instance_id)
-				RunState.deck_model.discard_pile_changed.emit()
-				RunState._sync_deck_arrays_from_model()
-		else:
-			# Legacy fallback: add to RunState.discard_pile directly
-			var discard_index = RunState.discard_pile.find(discard_instance_id)
-			if discard_index < 0:  # Not found, add it
-				RunState.discard_pile.append(discard_instance_id)
-	RunState.discard_pile_changed.emit()
+		# Add to deck_model discard pile
+		var discard_index = RunState.deck_model.discard_pile.find(discard_instance_id)
+		if discard_index < 0:  # Not found, add it
+			RunState.deck_model.discard_pile.append(discard_instance_id)
+			RunState.deck_model.discard_pile_changed.emit()
 	
 	return true
 
 func _resolve_card_effects(deck_card: DeckCardData, target: Node = null):
 	## Resolve the effects of a played card
-	# TODO: Load actual CardData and get base_effects
-	# For now, create placeholder effects based on card_id
+	## Loads CardData and applies base_effects with upgrade modifications
 	var effects = _get_card_effects(deck_card)
 	
 	var target_stats: EntityStats = null
@@ -188,19 +173,59 @@ func _resolve_card_effects(deck_card: DeckCardData, target: Node = null):
 		RunState.draw_cards(draw_count)
 
 func _get_card_effects(deck_card: DeckCardData) -> Array:
-	## Get effects for a card (placeholder - should load from CardData)
+	## Get effects for a card from CardData, with upgrade modifications applied
 	var effects: Array = []
 	
-	# Simple placeholder logic based on card_id
-	if "strike" in deck_card.card_id:
-		var damage_effect = EffectData.new("DealDamage", {"amount": 40})
-		effects.append(damage_effect)
-	elif "attack" in deck_card.card_id:
-		var damage_effect = EffectData.new("DealDamage", {"amount": 6})
-		effects.append(damage_effect)
-	elif "defend" in deck_card.card_id or "block" in deck_card.card_id:
-		var block_effect = EffectData.new("GainBlock", {"amount": 5})
-		effects.append(block_effect)
+	# Load CardData from DataRegistry
+	var card_data = DataRegistry.get_card_data(deck_card.card_id)
+	if not card_data:
+		push_warning("CombatController._get_card_effects: Could not find CardData for card_id: " + deck_card.card_id)
+		return effects
+	
+	# Start with base effects from CardData
+	for base_effect in card_data.base_effects:
+		if base_effect is EffectData:
+			# Create a copy of the effect to avoid modifying the original
+			var effect_copy = EffectData.new(base_effect.effect_type, base_effect.params.duplicate())
+			effects.append(effect_copy)
+	
+	# Apply upgrade modifications to effects
+	for upgrade_id in deck_card.applied_upgrades:
+		var upgrade_def = DataRegistry.get_upgrade_def(upgrade_id)
+		if not upgrade_def.has("effects"):
+			continue
+		
+		var upgrade_effects = upgrade_def["effects"]
+		
+		# Apply damage modifications
+		if upgrade_effects.has("damage_delta"):
+			var damage_delta = upgrade_effects["damage_delta"]
+			# Find damage effects and modify them
+			for effect in effects:
+				if effect is EffectData and effect.effect_type == "damage":
+					var current_amount = effect.params.get("amount", 0)
+					effect.params["amount"] = current_amount + damage_delta
+		
+		# Apply block modifications
+		if upgrade_effects.has("block_delta"):
+			var block_delta = upgrade_effects["block_delta"]
+			# Find block effects and modify them
+			for effect in effects:
+				if effect is EffectData and effect.effect_type == "block":
+					var current_amount = effect.params.get("amount", 0)
+					effect.params["amount"] = current_amount + block_delta
+		
+		# Apply heal modifications
+		if upgrade_effects.has("heal_delta"):
+			var heal_delta = upgrade_effects["heal_delta"]
+			# Find heal effects and modify them
+			for effect in effects:
+				if effect is EffectData and effect.effect_type == "heal":
+					var current_amount = effect.params.get("amount", 0)
+					effect.params["amount"] = current_amount + heal_delta
+		
+		# Add new effects from upgrades (e.g., "draw card" upgrade)
+		# This can be extended for upgrades that add new effects
 	
 	return effects
 

@@ -13,6 +13,9 @@ var card_upgrade_pools: Dictionary = {}  # Maps card_id -> Array[upgrade_id]
 # Transcendent placeholder cards cache
 var transcendent_card_cache: Dictionary = {}  # Maps card_id -> CardData for transcendent placeholders
 
+# Generic card cache (for cards like strike_1, defend_1, heal_1)
+var generic_card_cache: Dictionary = {}  # Maps card_id -> CardData for generic cards
+
 func register_character(char_data: CharacterData):
 	## Register a CharacterData resource
 	if char_data and char_data.id:
@@ -37,6 +40,7 @@ func _ready():
 	## Initialize upgrade pools and definitions
 	_initialize_upgrade_content()
 	_initialize_transcendent_cards()
+	_initialize_generic_cards()
 
 func _initialize_upgrade_content():
 	## Initialize hardcoded upgrade content for testing
@@ -51,12 +55,27 @@ func _initialize_upgrade_content():
 	upgrade_definitions["upgrade_cost_minus_1"] = {
 		"id": "upgrade_cost_minus_1",
 		"title": "-1 Cost",
-		"description": "Costs 1 less (min 0)."
+		"description": "Costs 1 less (minimum 0).",
+		"effects": {
+			"cost_delta": -1
+		},
+		"rules": {
+			"max_stacks": 1,
+			"group": "cost"
+		}
 	}
 	upgrade_definitions["upgrade_haste"] = {
 		"id": "upgrade_haste",
 		"title": "Haste",
-		"description": "Does not tick the enemy timer when played."
+		"description": "Playing this card does not advance the enemy turn.",
+		"keyword": "Haste",
+		"effects": {
+			"timer_tick_override": 0
+		},
+		"rules": {
+			"max_stacks": 1,
+			"group": "tempo"
+		}
 	}
 	
 	# Strike upgrades
@@ -146,14 +165,24 @@ func get_upgrade_def(upgrade_id: String) -> Dictionary:
 	## Get upgrade definition by ID
 	return upgrade_definitions.get(upgrade_id, {})
 
-func get_card_display_name(card_id: String) -> String:
-	## Get card display name from registered characters' cards
-	## Returns formatted card_id as fallback
-	# Check transcendent card cache first
+func get_all_upgrade_definitions() -> Dictionary:
+	## Get all upgrade definitions (for keyword tooltip lookup)
+	return upgrade_definitions.duplicate()
+
+func get_card_data(card_id: String) -> CardData:
+	## Get CardData by card_id
+	## Returns null if not found
+	# Check generic card cache first (most common)
+	if generic_card_cache.has(card_id):
+		var card_data = generic_card_cache[card_id]
+		if card_data and card_data is CardData:
+			return card_data
+	
+	# Check transcendent card cache
 	if transcendent_card_cache.has(card_id):
 		var card_data = transcendent_card_cache[card_id]
 		if card_data and card_data is CardData:
-			return card_data.name
+			return card_data
 	
 	# Search through registered characters' cards
 	for character_id in character_cache:
@@ -164,12 +193,21 @@ func get_card_display_name(card_id: String) -> String:
 		# Check starter cards
 		for card_data in char_data.starter_unique_cards:
 			if card_data and card_data.id == card_id:
-				return card_data.name
+				return card_data
 		
 		# Check reward card pool
 		for card_data in char_data.reward_card_pool:
 			if card_data and card_data.id == card_id:
-				return card_data.name
+				return card_data
+	
+	return null
+
+func get_card_display_name(card_id: String) -> String:
+	## Get card display name from registered characters' cards
+	## Returns formatted card_id as fallback
+	var card_data = get_card_data(card_id)
+	if card_data:
+		return card_data.name
 	
 	# Fallback: format card_id nicely
 	# e.g., "strike_1" -> "Strike", "defend" -> "Defend"
@@ -183,7 +221,9 @@ func get_card_display_name(card_id: String) -> String:
 
 func _initialize_transcendent_cards():
 	## Initialize 4 placeholder transcendent cards
-	# These are simple placeholder cards that can be used for transcendence upgrades
+	## PLACEHOLDER FOR FUTURE WORK: These cards exist for testing game loop,
+	## but transcendence upgrade logic is not implemented. The upgrade flow
+	## does not use these cards even when is_transcendence_upgrade flag is set.
 	for i in range(1, 5):
 		var card_id = "transcend_placeholder_%d" % i
 		var card_data = CardData.new()
@@ -201,3 +241,40 @@ func get_transcendent_card_ids() -> Array[String]:
 func get_transcendent_card(card_id: String) -> CardData:
 	## Get a transcendent card by ID
 	return transcendent_card_cache.get(card_id, null)
+
+func _initialize_generic_cards():
+	## Initialize generic cards (strike_1, defend_1, heal_1)
+	## These are basic cards available to all characters
+	
+	# Strike 1 - Basic attack card
+	var strike_1 = CardData.new()
+	strike_1.id = "strike_1"
+	strike_1.name = "Strike"
+	strike_1.cost = 1
+	strike_1.card_type = CardData.CardType.ATTACK
+	strike_1.targeting_mode = CardData.TargetingMode.ENEMY
+	var strike_damage = EffectData.new("damage", {"amount": 6})
+	strike_1.base_effects.append(strike_damage)
+	generic_card_cache["strike_1"] = strike_1
+	
+	# Defend 1 - Basic block card
+	var defend_1 = CardData.new()
+	defend_1.id = "defend_1"
+	defend_1.name = "Defend"
+	defend_1.cost = 1
+	defend_1.card_type = CardData.CardType.SKILL
+	defend_1.targeting_mode = CardData.TargetingMode.SELF
+	var defend_block = EffectData.new("block", {"amount": 5})
+	defend_1.base_effects.append(defend_block)
+	generic_card_cache["defend_1"] = defend_1
+	
+	# Heal 1 - Basic heal card
+	var heal_1 = CardData.new()
+	heal_1.id = "heal_1"
+	heal_1.name = "Heal"
+	heal_1.cost = 1
+	heal_1.card_type = CardData.CardType.SKILL
+	heal_1.targeting_mode = CardData.TargetingMode.SELF
+	var heal_effect = EffectData.new("heal", {"amount": 4})
+	heal_1.base_effects.append(heal_effect)
+	generic_card_cache["heal_1"] = heal_1

@@ -163,6 +163,8 @@ func _show_upgrade_selection():
 
 func _show_transcendence_options():
 	## Show transcendence card selection (3 options from 4 placeholders)
+	## PLACEHOLDER FOR FUTURE WORK: This method exists but is not called by the upgrade flow.
+	## Transcendence upgrade logic is not implemented - upgrade flow treats all upgrades the same.
 	if not upgrade_content:
 		return
 	

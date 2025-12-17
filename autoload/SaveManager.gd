@@ -79,20 +79,18 @@ func _serialize_run_state() -> Dictionary:
 	var deck_order_data = RunState.deck_order.duplicate()
 	
 	# Serialize each card instance by instance_id
+	# Only serialize valid cards - reject invalid ones
 	for instance_id in RunState.deck_order:
 		var deck_card = RunState.deck.get(instance_id)
 		if deck_card and deck_card is DeckCardData:
-			deck_dict[instance_id] = deck_card.to_dict()
+			# Validate before serializing
+			if CardValidation.validate_card_instance(deck_card, "SaveManager.save"):
+				deck_dict[instance_id] = deck_card.to_dict()
+			else:
+				push_error("SaveManager: Skipping invalid card during save. instance_id=%s" % instance_id)
 		else:
-			# Fallback for missing/invalid cards
-			deck_dict[instance_id] = {
-				"instance_id": instance_id,
-				"card_id": "",
-				"owner_character_id": "",
-				"applied_upgrades": [],
-				"is_transcended": false,
-				"transcendent_card_id": ""
-			}
+			# Missing/invalid card - log error and skip (don't create empty card)
+			push_error("SaveManager: Missing or invalid DeckCardData for instance_id=%s. Skipping save." % instance_id)
 	
 	# Convert quests to serializable format (QuestState objects)
 	var quests_data = {}
@@ -114,7 +112,8 @@ func _serialize_run_state() -> Dictionary:
 			reward_pool_data.append({
 				"id": card_data.id,
 				"name": card_data.name,
-				"cost": card_data.cost
+				"cost": card_data.cost,
+				"rarity": card_data.rarity
 			})
 	
 	# Serialize map data if present
@@ -128,7 +127,7 @@ func _serialize_run_state() -> Dictionary:
 		pending_rewards_serialized = RunState.pending_rewards.to_dict()
 	
 	return {
-		"version": 4,  # Bump version for instance_id deck structure
+		"version": 5,  # Bump version for rare_pity_counter and rarity in reward_card_pool
 		"party": RunState.party,
 		"party_ids": RunState.party_ids,
 		"deck": deck_dict,  # Dictionary keyed by instance_id
@@ -148,6 +147,7 @@ func _serialize_run_state() -> Dictionary:
 		"available_next_node_ids": RunState.available_next_node_ids,
 		"quests": quests_data,
 		"reward_card_pool": reward_pool_data,
+		"rare_pity_counter": RunState.rare_pity_counter,
 		"buffs": RunState.buffs,
 		"tap_to_play": RunState.tap_to_play,
 		"pending_rewards": pending_rewards_serialized
@@ -174,7 +174,11 @@ func _deserialize_run_state(save_data: Dictionary):
 					# Ensure instance_id matches key
 					card_data["instance_id"] = instance_id
 					var deck_card = DeckCardData.from_dict(card_data)
-					RunState.deck[instance_id] = deck_card
+					# Validate before adding to deck
+					if CardValidation.validate_card_instance(deck_card, "SaveManager.load (Dictionary)"):
+						RunState.deck[instance_id] = deck_card
+					else:
+						push_error("SaveManager: Skipping invalid card instance_id=%s" % instance_id)
 			
 			# Restore deck_order (convert to typed array)
 			if save_data.has("deck_order"):
@@ -201,13 +205,15 @@ func _deserialize_run_state(save_data: Dictionary):
 						card_data["instance_id"] = legacy_card.instance_id
 					
 					var deck_card = DeckCardData.from_dict(card_data)
-					RunState.deck[deck_card.instance_id] = deck_card
-					RunState.deck_order.append(deck_card.instance_id)
+					# Validate before adding to deck
+					if CardValidation.validate_card_instance(deck_card, "SaveManager.load (Array/Dictionary)"):
+						RunState.deck[deck_card.instance_id] = deck_card
+						RunState.deck_order.append(deck_card.instance_id)
+					else:
+						push_error("SaveManager: Skipping invalid card instance_id=%s" % deck_card.instance_id)
 				else:
-					# Legacy string format
-					var legacy_card = DeckCardData.new(str(card_data), "")
-					RunState.deck[legacy_card.instance_id] = legacy_card
-					RunState.deck_order.append(legacy_card.instance_id)
+					# Legacy string format - REJECT instead of creating invalid card
+					push_error("SaveManager: Rejecting legacy string format card_data. Cannot determine valid card_id. data=%s" % str(card_data))
 		
 		# Reinitialize deck piles from loaded deck
 		RunState._initialize_deck_piles()
@@ -301,7 +307,19 @@ func _deserialize_run_state(save_data: Dictionary):
 				card.id = card_data.get("id", "")
 				card.name = card_data.get("name", "")
 				card.cost = card_data.get("cost", 1)
+				# Restore rarity if present, default to COMMON for legacy saves
+				if card_data.has("rarity"):
+					card.rarity = card_data.get("rarity", CardData.Rarity.COMMON)
+				else:
+					card.rarity = CardData.Rarity.COMMON
 				RunState.reward_card_pool.append(card)
+	
+	# Restore rare_pity_counter (new in version 5)
+	if save_data.has("rare_pity_counter"):
+		RunState.rare_pity_counter = int(save_data["rare_pity_counter"])
+	else:
+		# Legacy: initialize to -2 if not present
+		RunState.rare_pity_counter = -2
 	
 	# Restore buffs
 	if save_data.has("buffs"):

@@ -36,9 +36,9 @@ func _ready():
 		RunState.draw_pile_changed.connect(func(): request_save("piles_changed"))
 		RunState.discard_pile_changed.connect(func(): request_save("piles_changed"))
 	
-	# Connect SceneRouter for force-save on scene transitions
-	if SceneRouter:
-		SceneRouter.scene_changed.connect(_on_scene_changed)
+	# Connect ScreenManager for force-save on screen transitions
+	if ScreenManager:
+		ScreenManager.screen_changed.connect(_on_scene_changed)
 
 func request_save(reason: String):
 	## Mark dirty and (re)start debounce timer

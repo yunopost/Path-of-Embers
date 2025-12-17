@@ -11,6 +11,8 @@ var upgrade_count: int = 0  # Number of upgrades available
 var heal_amount: int = 0  # Amount of HP to heal
 var skip_allowed: bool = true  # Whether player can skip rewards
 var is_transcendence_upgrade: bool = false  # If true, upgrade options are transcendence instead of normal
+# PLACEHOLDER FOR FUTURE WORK: Transcendence upgrade flow is not implemented.
+# This flag is set for boss nodes but the upgrade flow does not check it.
 
 func _init(p_gold: int = 0, p_card_choices: Array[String] = [], p_relic_id: String = "", p_upgrade_count: int = 0, p_heal_amount: int = 0, p_skip_allowed: bool = true, p_is_transcendence: bool = false):
 	gold = p_gold

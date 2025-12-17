@@ -1,7 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://dtlkiu85gbylv"]
+[gd_scene load_steps=3 format=3 uid="uid://ddlxwtt30wj6t"]
 
-[ext_resource type="Script" uid="uid://by5q1cbcwp65n" path="res://Path-of-Embers/scenes/screens/MapScreen.gd" id="1_mapscreen"]
-[ext_resource type="Script" uid="uid://beyda7lmt5jh1" path="res://Path-of-Embers/scenes/ui/MapConnectionsDraw.gd" id="2_mapconn"]
+[ext_resource type="Script" path="res://Path-of-Embers/Scenes/MapScreen.gd" id="1_mapscreen"]
+[ext_resource type="Script" uid="uid://beyda7lmt5jh1" path="res://Path-of-Embers/Scenes/UI/MapConnectionsDraw.gd" id="2_mapconn"]
 
 [node name="MapScreen" type="Control"]
 layout_mode = 3

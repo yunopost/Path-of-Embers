@@ -62,16 +62,27 @@ func _update_display():
 		else:
 			owner_lbl.visible = false
 	
-	# Upgrades info
+	# Upgrades info - show keywords if any, otherwise show upgrade titles
 	if upgrades_lbl:
-		if card_instance.applied_upgrades.size() > 0:
+		var card_data = DataRegistry.get_card_data(card_instance.card_id)
+		var keywords: Array[String] = []
+		if card_data:
+			keywords = CardRules.get_card_keywords(card_instance)
+		
+		if keywords.size() > 0:
+			# Show keywords (preferred)
+			upgrades_lbl.text = "Keywords: " + ", ".join(keywords)
+			upgrades_lbl.visible = true
+			upgrades_lbl.modulate = Color(1.0, 0.84, 0.0, 1.0)  # Gold color
+		elif card_instance.applied_upgrades.size() > 0:
+			# Fallback: show upgrade titles for non-keyword upgrades
 			var upgrade_text = ""
 			for upgrade_id in card_instance.applied_upgrades:
 				var upgrade_def = DataRegistry.get_upgrade_def(upgrade_id)
 				if upgrade_text != "":
 					upgrade_text += ", "
 				upgrade_text += upgrade_def.get("title", upgrade_id)
-			upgrades_lbl.text = "★ Upgrades: " + upgrade_text
+			upgrades_lbl.text = "Upgrades: " + upgrade_text
 			upgrades_lbl.visible = true
 			upgrades_lbl.modulate = Color.GOLD
 		else:

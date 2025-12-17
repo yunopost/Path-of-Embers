@@ -95,6 +95,9 @@ func _create_placeholder_characters():
 		char_data.starter_unique_cards.append(unique1)
 		char_data.starter_unique_cards.append(unique2)
 		
+		# Create 22 reward pool cards (7 Common, 12 Uncommon, 3 Rare)
+		_generate_reward_pool_cards(char_data)
+		
 		# Create quest
 		var quest = QuestData.new()
 		quest.id = "quest_warrior_%d" % (i + 1)
@@ -126,6 +129,9 @@ func _create_placeholder_characters():
 		char_data.starter_unique_cards.append(unique1)
 		char_data.starter_unique_cards.append(unique2)
 		
+		# Create 22 reward pool cards (7 Common, 12 Uncommon, 3 Rare)
+		_generate_reward_pool_cards(char_data)
+		
 		var quest = QuestData.new()
 		quest.id = "quest_healer_%d" % (i + 1)
 		quest.title = "Healer Quest %d" % (i + 1)
@@ -156,6 +162,9 @@ func _create_placeholder_characters():
 		char_data.starter_unique_cards.append(unique1)
 		char_data.starter_unique_cards.append(unique2)
 		
+		# Create 22 reward pool cards (7 Common, 12 Uncommon, 3 Rare)
+		_generate_reward_pool_cards(char_data)
+		
 		var quest = QuestData.new()
 		quest.id = "quest_defender_%d" % (i + 1)
 		quest.title = "Defender Quest %d" % (i + 1)
@@ -168,6 +177,38 @@ func _create_placeholder_characters():
 		# Register with DataRegistry
 		if DataRegistry:
 			DataRegistry.register_character(char_data)
+
+func _generate_reward_pool_cards(char_data: CharacterData):
+	## Generate 22 placeholder reward pool cards for a character
+	## 7 Common, 12 Uncommon, 3 Rare
+	var char_id = char_data.id
+	
+	# Generate 7 Common cards
+	for i in range(1, 8):
+		var card = CardData.new()
+		card.id = "%s_common_%d" % [char_id, i]
+		card.name = "%s Common %d" % [char_data.display_name, i]
+		card.rarity = CardData.Rarity.COMMON
+		card.cost = 1
+		char_data.reward_card_pool.append(card)
+	
+	# Generate 12 Uncommon cards
+	for i in range(1, 13):
+		var card = CardData.new()
+		card.id = "%s_uncommon_%d" % [char_id, i]
+		card.name = "%s Uncommon %d" % [char_data.display_name, i]
+		card.rarity = CardData.Rarity.UNCOMMON
+		card.cost = 1
+		char_data.reward_card_pool.append(card)
+	
+	# Generate 3 Rare cards
+	for i in range(1, 4):
+		var card = CardData.new()
+		card.id = "%s_rare_%d" % [char_id, i]
+		card.name = "%s Rare %d" % [char_data.display_name, i]
+		card.rarity = CardData.Rarity.RARE
+		card.cost = 2
+		char_data.reward_card_pool.append(card)
 
 func _populate_character_grid():
 	## Create character entry cards for each available character
@@ -361,7 +402,4 @@ func _on_confirm_pressed():
 		AutoSaveManager.force_save("new_run_started")
 	
 	# Navigate to map screen
-	if SceneRouter:
-		ScreenManager.go_to_map()
-	else:
-		push_error("SceneRouter not available!")
+	ScreenManager.go_to_map()

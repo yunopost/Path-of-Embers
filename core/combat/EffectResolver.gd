@@ -10,17 +10,17 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 		return
 	
 	match effect.effect_type:
-		"DealDamage":
+		"damage":  # Standardized effect type name
 			var damage = effect.params.get("amount", 0)
 			if target:
 				target.take_damage(damage)
 		
-		"GainBlock":
+		"block":  # Standardized effect type name
 			var block = effect.params.get("amount", 0)
 			if source:
 				source.add_block(block)
 		
-		"Heal":
+		"heal":  # Standardized effect type name
 			var heal_amount = effect.params.get("amount", 0)
 			if source:
 				source.heal(heal_amount)
@@ -35,7 +35,7 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 			# Placeholder for future implementation
 			pass
 		
-		"DrawCards":
+		"draw":  # Standardized effect type name (was "DrawCards")
 			# Draw cards handled separately in CombatController
 			var draw_count = effect.params.get("amount", 1)
 			# Signal will be handled by CombatController
@@ -49,7 +49,7 @@ static func resolve_effects(effects: Array, source: EntityStats, target: EntityS
 	var draw_cards = 0
 	for effect in effects:
 		if effect is EffectData:
-			if effect.effect_type == "DrawCards":
+			if effect.effect_type == "draw":  # Standardized effect type name
 				var result = resolve_effect(effect, source, target)
 				if result is int:
 					draw_cards += result

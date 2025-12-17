@@ -19,86 +19,44 @@ const SCENE_PATHS = {
 }
 
 func _ready():
-	# Wait for tree to be ready
-	await get_tree().process_frame
-	
-	# Load and add UIRoot to scene tree
-	var ui_root_scene = load("res://Path-of-Embers/scenes/ui/UIRoot.tscn")
-	ui_root = ui_root_scene.instantiate()
-	get_tree().root.add_child(ui_root)
-	ui_root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	ui_root.visible = false  # Start hidden, will show on Map/Combat/etc.
-	
-	# Main scene will handle initial transition
+	## SceneRouter is now deprecated - ScreenManager handles scene transitions
+	## UIRoot is managed by ScreenManager
+	pass
 
 func _input(event):
-	# Debug hotkey: F3 to go to CombatScreen
+	# Debug hotkey: F3 to go to CombatScreen (delegates to ScreenManager)
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_F3:
-			change_scene("combat")
+			if ScreenManager:
+				ScreenManager.go_to_combat({})
 
 func change_scene(scene_name: String):
-	if not SCENE_PATHS.has(scene_name):
-		push_error("Scene not found: " + scene_name)
-		return
+	## Deprecated: Use ScreenManager.go_to_*() methods instead
+	## Kept for backward compatibility - delegates to ScreenManager
+	push_warning("SceneRouter.change_scene() is deprecated. Use ScreenManager.go_to_*() methods instead.")
 	
-	var scene_path = SCENE_PATHS[scene_name]
-	print("SceneRouter: Loading scene: ", scene_name, " from path: ", scene_path)
-	
-	var scene_resource = load(scene_path)
-	if not scene_resource:
-		push_error("Failed to load scene resource: " + scene_path)
-		return
-	
-	var new_scene = scene_resource.instantiate()
-	if not new_scene:
-		push_error("Failed to instantiate scene: " + scene_name)
-		return
-	
-	# Remove old scene - use call_deferred to ensure it happens after this frame
-	if current_scene:
-		current_scene.queue_free()
+	# Delegate to ScreenManager
+	if ScreenManager:
+		# Map scene names to ScreenManager methods
+		match scene_name:
+			"main", "main_menu":
+				ScreenManager.go_to_main_menu()
+			"character_select":
+				ScreenManager.go_to_character_select()
+			"map":
+				ScreenManager.go_to_map()
+			"combat":
+				ScreenManager.go_to_combat({})
+			"rewards":
+				ScreenManager.go_to_rewards(null)
+			"encounter":
+				ScreenManager.go_to_encounter({})
+			"shop":
+				ScreenManager.go_to_shop({})
+			_:
+				push_error("SceneRouter: Unknown scene name: " + scene_name)
 	else:
-		# If no current_scene tracked, find and remove the main scene node
-		# This handles the initial transition from Main.tscn
-		var tree_root = get_tree().root
-		var children = tree_root.get_children()
-		var main_scene = null
-		for child in children:
-			# Skip UIRoot and the new scene we're about to add
-			if child != ui_root and child != new_scene:
-				# This should be the initial Main scene
-				print("SceneRouter: Found initial scene node: ", child.name)
-				main_scene = child
-		
-		if main_scene:
-			# Remove immediately instead of queue_free for initial scene
-			main_scene.queue_free()
-	
-	# Add new scene
-	get_tree().root.add_child(new_scene)
-	current_scene = new_scene
-	
-	# Ensure new scene is visible if it's a Control
-	if new_scene is Control:
-		new_scene.visible = true
-		new_scene.set_process_mode(Node.PROCESS_MODE_INHERIT)
-	print("SceneRouter: Successfully loaded scene: ", scene_name)
-	
-	# Show/hide UI based on scene
-	if ui_root:
-		get_tree().root.move_child(ui_root, get_tree().root.get_child_count() - 1)
-		# Hide UI on Main and CharacterSelect screens
-		if scene_name == "main" or scene_name == "character_select":
-			ui_root.visible = false
-		else:
-			ui_root.visible = true
-	
-	# Ensure the scene is processing
-	new_scene.set_process_mode(Node.PROCESS_MODE_INHERIT)
-	new_scene.set_process(true)
-	
-	scene_changed.emit(scene_name)
+		push_error("SceneRouter: ScreenManager not available")
 
 func open_popup(popup_name: String):
 	# Popups are handled by UIRoot

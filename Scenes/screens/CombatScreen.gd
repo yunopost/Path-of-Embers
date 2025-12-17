@@ -174,23 +174,7 @@ func _update_hand():
 	
 	# Create card UIs for each card in hand
 	# Use deck_model.get_hand_cards() which handles instance_id lookup
-	var hand_cards: Array[DeckCardData] = []
-	if RunState.deck_model:
-		hand_cards = RunState.deck_model.get_hand_cards()
-	else:
-		# Legacy fallback: lookup cards from instance_ids in RunState.hand
-		for item in RunState.hand:
-			# item might be instance_id (String) or DeckCardData (legacy)
-			var deck_card: DeckCardData = null
-			if item is String:
-				# It's an instance_id, look it up
-				deck_card = RunState.deck.get(item)
-			elif item is DeckCardData:
-				# Legacy: it's already a DeckCardData object
-				deck_card = item
-			
-			if deck_card:
-				hand_cards.append(deck_card)
+	var hand_cards: Array[DeckCardData] = RunState.deck_model.get_hand_cards()
 	
 	for deck_card in hand_cards:
 		# Double-check type before calling setup_card

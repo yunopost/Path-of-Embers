@@ -7,8 +7,12 @@ extends Node
 signal screen_changed(screen_name: String)
 
 var current_screen: String = ""
+var current_scene: Node = null
+var ui_root: Control = null
+
 var screen_scenes: Dictionary = {
-	"main_menu": "res://Path-of-Embers/scenes/screens/Main.tscn",
+	"main": "res://Path-of-Embers/scenes/screens/Main.tscn",
+	"main_menu": "res://Path-of-Embers/scenes/screens/Main.tscn",  # Alias for main
 	"character_select": "res://Path-of-Embers/scenes/screens/CharacterSelect.tscn",
 	"map": "res://Path-of-Embers/scenes/screens/MapScreen.tscn",
 	"combat": "res://Path-of-Embers/scenes/screens/CombatScreen.tscn",
@@ -18,9 +22,15 @@ var screen_scenes: Dictionary = {
 }
 
 func _ready():
-	# Connect to SceneRouter for backward compatibility during transition
-	# Eventually SceneRouter will delegate to ScreenManager
-	pass
+	# Wait for tree to be ready
+	await get_tree().process_frame
+	
+	# Load and add UIRoot to scene tree
+	var ui_root_scene = load("res://Path-of-Embers/scenes/ui/UIRoot.tscn")
+	ui_root = ui_root_scene.instantiate()
+	get_tree().root.add_child(ui_root)
+	ui_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ui_root.visible = false  # Start hidden, will show on Map/Combat/etc.
 
 func go_to_map():
 	## Navigate to map screen
@@ -67,20 +77,63 @@ func _change_screen(screen_name: String, data: Dictionary):
 		return
 	
 	var scene_path = screen_scenes[screen_name]
-	var scene = load(scene_path)
-	if not scene:
-		push_error("ScreenManager: Could not load scene: %s" % scene_path)
+	print("ScreenManager: Loading scene: ", screen_name, " from path: ", scene_path)
+	
+	var scene_resource = load(scene_path)
+	if not scene_resource:
+		push_error("Failed to load scene resource: " + scene_path)
 		return
 	
-	# Use SceneRouter for now (will be replaced later)
+	var new_scene = scene_resource.instantiate()
+	if not new_scene:
+		push_error("Failed to instantiate scene: " + screen_name)
+		return
+	
 	# Store data in RunState or pass via setup() method
 	if screen_name == "rewards" and data.has("reward_bundle"):
 		RunState.set_pending_rewards(data["reward_bundle"])
 	
-	# Transition via SceneRouter (temporary during refactor)
-	SceneRouter.change_scene(screen_name)
+	# Remove old scene
+	if current_scene:
+		current_scene.queue_free()
+	else:
+		# If no current_scene tracked, find and remove the main scene node
+		# This handles the initial transition from Main.tscn
+		var tree_root = get_tree().root
+		var children = tree_root.get_children()
+		var main_scene = null
+		for child in children:
+			# Skip UIRoot and the new scene we're about to add
+			if child != ui_root and child != new_scene:
+				# This should be the initial Main scene
+				print("ScreenManager: Found initial scene node: ", child.name)
+				main_scene = child
+		
+		if main_scene:
+			main_scene.queue_free()
+	
+	# Add new scene
+	get_tree().root.add_child(new_scene)
+	current_scene = new_scene
+	
+	# Ensure new scene is visible if it's a Control
+	if new_scene is Control:
+		new_scene.visible = true
+		new_scene.set_process_mode(Node.PROCESS_MODE_INHERIT)
+	
+	# Show/hide UI based on scene
+	if ui_root:
+		get_tree().root.move_child(ui_root, get_tree().root.get_child_count() - 1)
+		# Hide UI on Main and CharacterSelect screens
+		if screen_name == "main" or screen_name == "main_menu" or screen_name == "character_select":
+			ui_root.visible = false
+		else:
+			ui_root.visible = true
+	
+	# Ensure the scene is processing
+	new_scene.set_process_mode(Node.PROCESS_MODE_INHERIT)
+	new_scene.set_process(true)
+	
 	current_screen = screen_name
 	screen_changed.emit(screen_name)
-	
-	# Log transition
-	print("ScreenManager: Transitioned to %s" % screen_name)
+	print("ScreenManager: Successfully loaded scene: ", screen_name)

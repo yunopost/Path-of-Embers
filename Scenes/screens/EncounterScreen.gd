@@ -121,30 +121,9 @@ func _on_leave_chosen():
 	ScreenManager.go_to_rewards(bundle)
 
 func _generate_card_choices(count: int) -> Array[String]:
-	## Generate card choices (placeholder - uses hardcoded card IDs)
-	## Later can pull from RunState.reward_card_pool or DataRegistry
-	
-	# Hardcoded placeholder card IDs that should exist in the game
-	var placeholder_cards = [
-		"strike_1",
-		"defend_1",
-		"bash_1",
-		"heal_1",
-		"hasten_1"
-	]
-	
-	var choices: Array[String] = []
-	var available = placeholder_cards.duplicate()
-	
-	# Pick random cards (no duplicates)
-	for i in range(min(count, available.size())):
-		if available.is_empty():
-			break
-		var idx = randi() % available.size()
-		choices.append(available[idx])
-		available.remove_at(idx)
-	
-	return choices
+	## Generate card choices from reward pool using pity system
+	## Delegates to RewardResolver for consistency
+	return RewardResolver._generate_card_choices(count, MapNodeData.NodeType.ENCOUNTER)
 
 func _runstate_set_pending_rewards(bundle: RewardBundle):
 	## Helper to set pending rewards in RunState
