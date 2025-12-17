@@ -580,11 +580,7 @@ func can_upgrade_instance(instance_id: String) -> bool:
 	if pool.is_empty():
 		return false
 	
-	# Check if all upgrades are already applied (limit to 1 for now)
-	if card_instance.applied_upgrades.size() >= 1:
-		return false
-	
-	# Check if there are any available upgrades
+	# Check if there are any available upgrades (not already applied)
 	var available = []
 	for upgrade_id in pool:
 		if not card_instance.applied_upgrades.has(upgrade_id):
@@ -606,12 +602,8 @@ func apply_upgrade_to_instance(instance_id: String, upgrade_id: String) -> bool:
 	if not card_instance:
 		return false
 	
-	# Check if upgrade is already applied
+	# Check if upgrade is already applied (no duplicates)
 	if card_instance.applied_upgrades.has(upgrade_id):
-		return false
-	
-	# Limit to 1 upgrade per card for now
-	if card_instance.applied_upgrades.size() >= 1:
 		return false
 	
 	# Check if upgrade is valid for this card
@@ -629,6 +621,10 @@ func apply_upgrade_to_instance(instance_id: String, upgrade_id: String) -> bool:
 		deck_model.hand_changed.emit()
 	elif hand.has(instance_id):
 		hand_changed.emit()
+	
+	# Autosave after upgrade
+	if AutoSaveManager:
+		AutoSaveManager.force_save("card_upgraded")
 	
 	return true
 
@@ -656,6 +652,95 @@ func get_upgradeable_deck_indices() -> Array[int]:
 		if can_upgrade_instance(deck_order[i]):
 			indices.append(i)
 	return indices
+
+func get_effective_cost(instance_id: String) -> int:
+	## Get the effective cost of a card after upgrades
+	## Returns the base cost minus cost reduction upgrades (min 0)
+	var card_instance = deck.get(instance_id)
+	if not card_instance:
+		return 1  # Default fallback
+	
+	# Get base cost from CardData
+	var base_cost = 1  # Default fallback
+	var card_id = card_instance.card_id
+	
+	# Try to find CardData in registered characters
+	if DataRegistry:
+		for character_id in DataRegistry.character_cache:
+			var char_data = DataRegistry.character_cache[character_id]
+			if not char_data:
+				continue
+			
+			# Check starter cards
+			for card_data in char_data.starter_unique_cards:
+				if card_data and card_data.id == card_id:
+					base_cost = card_data.cost
+					break
+			
+			if base_cost != 1:  # Found it
+				break
+			
+			# Check reward card pool
+			for card_data in char_data.reward_card_pool:
+				if card_data and card_data.id == card_id:
+					base_cost = card_data.cost
+					break
+			
+			if base_cost != 1:  # Found it
+				break
+		
+		# Check transcendent cards
+		if base_cost == 1:
+			var trans_card = DataRegistry.get_transcendent_card(card_id)
+			if trans_card:
+				base_cost = trans_card.cost
+	
+	# Apply cost reduction upgrades
+	if card_instance.applied_upgrades.has("upgrade_cost_minus_1"):
+		base_cost = max(0, base_cost - 1)
+	
+	return base_cost
+
+func has_upgrade(instance_id: String, upgrade_id: String) -> bool:
+	## Check if a card instance has a specific upgrade
+	var card_instance = deck.get(instance_id)
+	if not card_instance:
+		return false
+	return card_instance.applied_upgrades.has(upgrade_id)
+
+func get_timer_tick_amount_for_card(instance_id: String) -> int:
+	## Get the timer tick amount for a card (0 if has Haste, 1 otherwise)
+	if has_upgrade(instance_id, "upgrade_haste"):
+		return 0
+	return 1
+
+func transcend_card(instance_id: String, new_card_id: String) -> bool:
+	## Transform a card instance into a transcendent card
+	## Replaces the card_id and marks as transcended
+	if instance_id.is_empty() or new_card_id.is_empty():
+		return false
+	
+	var card_instance = deck.get(instance_id)
+	if not card_instance:
+		return false
+	
+	# Update card instance
+	card_instance.card_id = new_card_id
+	card_instance.is_transcended = true
+	card_instance.transcendent_card_id = new_card_id
+	
+	# Emit signals (instance_id remains the same, so piles don't need updating)
+	deck_changed.emit()
+	if deck_model and deck_model.hand.has(instance_id):
+		deck_model.hand_changed.emit()
+	elif hand.has(instance_id):
+		hand_changed.emit()
+	
+	# Autosave after transcendence
+	if AutoSaveManager:
+		AutoSaveManager.force_save("card_transcended")
+	
+	return true
 
 func add_relic(relic_id: String, is_boss: bool = false) -> void:
 	## Add a relic to the player's collection

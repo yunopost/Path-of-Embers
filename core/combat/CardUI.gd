@@ -16,6 +16,7 @@ var card_panel: Panel
 var name_label: Label
 var cost_label: Label
 var owner_label: Label
+var upgrade_indicator: Label = null  # Visual indicator for upgraded cards
 var targeting_line_visible: bool = false
 var targeting_line_end: Vector2 = Vector2.ZERO
 
@@ -71,6 +72,18 @@ func _setup_ui():
 	owner_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(owner_label)
 	
+	# Upgrade indicator (badge in top-left corner, positioned relative to card_panel)
+	upgrade_indicator = Label.new()
+	upgrade_indicator.text = "★"
+	upgrade_indicator.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	upgrade_indicator.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	upgrade_indicator.add_theme_font_size_override("font_size", 18)
+	upgrade_indicator.modulate = Color.GOLD
+	upgrade_indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	upgrade_indicator.visible = false
+	upgrade_indicator.custom_minimum_size = Vector2(24, 24)
+	card_panel.add_child(upgrade_indicator)
+	
 	# Create targeting line using a custom control (simpler for UI)
 	# Will be drawn manually in _draw() if needed
 	
@@ -91,12 +104,22 @@ func _update_display():
 	if not deck_card_data:
 		return
 	
+	# Get card display name
 	if name_label:
-		name_label.text = deck_card_data.card_id
+		var display_name = DataRegistry.get_card_display_name(deck_card_data.card_id)
+		name_label.text = display_name
 	
-	# TODO: Load actual CardData and show cost
-	if cost_label:
-		cost_label.text = "1"  # Placeholder
+	# Show effective cost (using get_effective_cost for upgrades)
+	if cost_label and deck_card_data.instance_id:
+		var effective_cost = RunState.get_effective_cost(deck_card_data.instance_id)
+		cost_label.text = str(effective_cost)
+		# Color cost differently if it's reduced (0 or less than base)
+		if effective_cost == 0:
+			cost_label.modulate = Color.GREEN
+		elif deck_card_data.applied_upgrades.has("upgrade_cost_minus_1"):
+			cost_label.modulate = Color.LIGHT_BLUE
+		else:
+			cost_label.modulate = Color.WHITE
 	
 	# Show owner
 	if owner_label:
@@ -105,11 +128,32 @@ func _update_display():
 			owner_label.text = owner_name
 		else:
 			owner_label.text = ""
+	
+	# Show upgrade indicator and add visual styling
+	if upgrade_indicator:
+		var has_upgrades = deck_card_data.applied_upgrades.size() > 0
+		upgrade_indicator.visible = has_upgrades
+		if has_upgrades:
+			# Position badge in top-left corner of card_panel
+			upgrade_indicator.position = Vector2(2, 2)
+			upgrade_indicator.text = "★"
+			upgrade_indicator.modulate = Color.GOLD
+		
+		# Add glow effect to the card panel for upgraded cards
+		if card_panel:
+			if has_upgrades:
+				# Add a subtle golden tint to upgraded cards
+				card_panel.modulate = Color(1.1, 1.05, 0.95, 1.0)
+			else:
+				# Reset to normal for non-upgraded cards
+				card_panel.modulate = Color.WHITE
 
 func _can_play() -> bool:
-	# Check if player has enough energy
-	var cost = 1  # Placeholder - should get from card_data
-	return RunState.energy >= cost
+	# Check if player has enough energy using effective cost
+	if not deck_card_data or not deck_card_data.instance_id:
+		return false
+	var effective_cost = RunState.get_effective_cost(deck_card_data.instance_id)
+	return RunState.energy >= effective_cost
 
 func _is_targeting_card() -> bool:
 	# For now, assume cards with "attack" or "strike" in name need targets

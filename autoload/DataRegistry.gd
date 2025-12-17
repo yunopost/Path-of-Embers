@@ -10,6 +10,9 @@ var character_cache: Dictionary = {}  # Maps character_id -> CharacterData
 var upgrade_definitions: Dictionary = {}  # Maps upgrade_id -> Dictionary with title, description, etc.
 var card_upgrade_pools: Dictionary = {}  # Maps card_id -> Array[upgrade_id]
 
+# Transcendent placeholder cards cache
+var transcendent_card_cache: Dictionary = {}  # Maps card_id -> CardData for transcendent placeholders
+
 func register_character(char_data: CharacterData):
 	## Register a CharacterData resource
 	if char_data and char_data.id:
@@ -33,9 +36,29 @@ func clear_cache():
 func _ready():
 	## Initialize upgrade pools and definitions
 	_initialize_upgrade_content()
+	_initialize_transcendent_cards()
 
 func _initialize_upgrade_content():
 	## Initialize hardcoded upgrade content for testing
+	
+	# Universal upgrades (available to all cards)
+	var universal_upgrades: Array[String] = [
+		"upgrade_cost_minus_1",
+		"upgrade_haste"
+	]
+	
+	# Upgrade definitions - Universal upgrades
+	upgrade_definitions["upgrade_cost_minus_1"] = {
+		"id": "upgrade_cost_minus_1",
+		"title": "-1 Cost",
+		"description": "Costs 1 less (min 0)."
+	}
+	upgrade_definitions["upgrade_haste"] = {
+		"id": "upgrade_haste",
+		"title": "Haste",
+		"description": "Does not tick the enemy timer when played."
+	}
+	
 	# Strike upgrades
 	var strike_upgrades: Array[String] = [
 		"strike_damage_plus",
@@ -56,7 +79,7 @@ func _initialize_upgrade_content():
 	card_upgrade_pools["defend_1"] = defend_upgrades
 	card_upgrade_pools["defend"] = defend_upgrades  # Alias
 	
-	# Upgrade definitions
+	# Upgrade definitions - Card-specific upgrades
 	upgrade_definitions["strike_damage_plus"] = {
 		"id": "strike_damage_plus",
 		"title": "Damage+",
@@ -100,18 +123,24 @@ func _initialize_upgrade_content():
 
 func get_upgrade_pool_for_card(card_id: String) -> Array[String]:
 	## Get the upgrade pool for a card ID
-	var pool = card_upgrade_pools.get(card_id, null)
-	if pool == null:
-		return [] as Array[String]
-	# Ensure we return Array[String]
-	if pool is Array[String]:
-		return pool
-	# Convert plain Array to Array[String] (fallback for safety)
-	var typed_pool: Array[String] = []
-	for item in pool:
-		if item is String:
-			typed_pool.append(item)
-	return typed_pool
+	## Always includes universal upgrades (upgrade_cost_minus_1, upgrade_haste)
+	var card_specific_pool = card_upgrade_pools.get(card_id, null)
+	var result_pool: Array[String] = []
+	
+	# Add card-specific upgrades if they exist
+	if card_specific_pool != null:
+		for upgrade_id in card_specific_pool:
+			if upgrade_id is String and not result_pool.has(upgrade_id):
+				result_pool.append(upgrade_id)
+	
+	# Always add universal upgrades (if not already present)
+	var universal_upgrades = ["upgrade_cost_minus_1", "upgrade_haste"]
+	for upgrade_id in universal_upgrades:
+		if not result_pool.has(upgrade_id):
+			result_pool.append(upgrade_id)
+	
+	# If no card-specific pool exists, return just universal upgrades
+	return result_pool
 
 func get_upgrade_def(upgrade_id: String) -> Dictionary:
 	## Get upgrade definition by ID
@@ -120,6 +149,12 @@ func get_upgrade_def(upgrade_id: String) -> Dictionary:
 func get_card_display_name(card_id: String) -> String:
 	## Get card display name from registered characters' cards
 	## Returns formatted card_id as fallback
+	# Check transcendent card cache first
+	if transcendent_card_cache.has(card_id):
+		var card_data = transcendent_card_cache[card_id]
+		if card_data and card_data is CardData:
+			return card_data.name
+	
 	# Search through registered characters' cards
 	for character_id in character_cache:
 		var char_data = character_cache[character_id]
@@ -145,3 +180,24 @@ func get_card_display_name(card_id: String) -> String:
 		if parts[i].length() > 0:
 			parts[i] = parts[i][0].to_upper() + parts[i].substr(1)
 	return " ".join(parts)
+
+func _initialize_transcendent_cards():
+	## Initialize 4 placeholder transcendent cards
+	# These are simple placeholder cards that can be used for transcendence upgrades
+	for i in range(1, 5):
+		var card_id = "transcend_placeholder_%d" % i
+		var card_data = CardData.new()
+		card_data.id = card_id
+		card_data.name = "Transcendent Card %d" % i
+		card_data.cost = 0
+		# Note: CardData doesn't have a description property, effects are in base_effects
+		# For placeholders, we leave base_effects empty
+		transcendent_card_cache[card_id] = card_data
+
+func get_transcendent_card_ids() -> Array[String]:
+	## Get all available transcendent placeholder card IDs
+	return transcendent_card_cache.keys()
+
+func get_transcendent_card(card_id: String) -> CardData:
+	## Get a transcendent card by ID
+	return transcendent_card_cache.get(card_id, null)

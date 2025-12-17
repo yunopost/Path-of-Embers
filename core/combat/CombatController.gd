@@ -82,8 +82,9 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	if not combat_active:
 		return false
 	
-	# Get card cost (placeholder - should load from CardData)
-	var card_cost = 1
+	# Get effective card cost (including upgrades)
+	var instance_id_str: String = str(deck_card.instance_id)
+	var card_cost = RunState.get_effective_cost(instance_id_str)
 	
 	if not can_play_card(card_cost):
 		return false
@@ -205,11 +206,9 @@ func _get_card_effects(deck_card: DeckCardData) -> Array:
 
 func _get_card_timer_tick(deck_card: DeckCardData) -> int:
 	## Get the timer tick amount for a card
-	## Default is 1, but can be overridden by card properties
-	## For Slice 4: check for timer_tick_override in card_id as placeholder logic
-	if "hasten" in deck_card.card_id or "timer_2" in deck_card.card_id:
-		return 2  # Test card with timer_tick_override = 2
-	return 1
+	## Returns 0 if card has Haste upgrade, 1 otherwise
+	var instance_id_str: String = str(deck_card.instance_id)
+	return RunState.get_timer_tick_amount_for_card(instance_id_str)
 
 func end_player_turn():
 	## End the player turn and start enemy turn

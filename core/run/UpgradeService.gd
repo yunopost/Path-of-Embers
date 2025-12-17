@@ -36,4 +36,3 @@ static func roll_upgrade_options_for_card(card_instance: DeckCardData, count: in
 		selected.append(remaining[i])
 	
 	return selected
-

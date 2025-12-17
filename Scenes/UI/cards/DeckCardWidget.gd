@@ -71,16 +71,27 @@ func _update_display():
 				if upgrade_text != "":
 					upgrade_text += ", "
 				upgrade_text += upgrade_def.get("title", upgrade_id)
-			upgrades_lbl.text = "Upgrades: " + upgrade_text
+			upgrades_lbl.text = "★ Upgrades: " + upgrade_text
 			upgrades_lbl.visible = true
+			upgrades_lbl.modulate = Color.GOLD
 		else:
 			upgrades_lbl.visible = false
+			upgrades_lbl.modulate = Color.WHITE
+	
+	# Add visual indicator (colored border/glow) for upgraded cards (panel already declared above)
+	if panel:
+		if card_instance.applied_upgrades.size() > 0:
+			# Add golden tint to upgraded cards
+			panel.modulate = Color(1.1, 1.05, 0.95, 1.0)
+		else:
+			panel.modulate = Color.WHITE
 	
 	# Transcend indicator
 	if transcend_lbl:
 		transcend_lbl.visible = card_instance.is_transcended
 	
 	# Disabled state (for upgrade selection)
+	# Note: We modulate the widget itself, but panel modulate (for upgrades) is separate
 	if disabled_lbl:
 		if is_clickable and card_instance:
 			var can_upgrade = RunState.can_upgrade_instance(card_instance.instance_id)
@@ -89,9 +100,14 @@ func _update_display():
 				modulate = Color(0.5, 0.5, 0.5, 0.7)
 			else:
 				disabled_lbl.visible = false
-				modulate = Color.WHITE
+				# Keep panel modulate from upgrade indicator, but reset widget modulate
+				if card_instance.applied_upgrades.size() > 0:
+					modulate = Color.WHITE  # Panel has golden tint, widget stays white
+				else:
+					modulate = Color.WHITE
 		else:
 			disabled_lbl.visible = false
+			modulate = Color.WHITE
 	
 	# Make clickable if needed
 	if is_clickable and panel:
