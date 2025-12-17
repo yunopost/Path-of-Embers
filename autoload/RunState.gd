@@ -218,6 +218,10 @@ func mark_current_node_completed() -> void:
 			"node_type": node.node_type,
 			"row": node.row
 		})
+		
+		# Force save after node completion
+		if AutoSaveManager:
+			AutoSaveManager.force_save("node_completed")
 
 func _update_available_nodes():
 	## Update the list of available next nodes based on current selection
@@ -530,6 +534,10 @@ func emit_game_event(event_type: String, payload: Dictionary = {}) -> void:
 func set_pending_rewards(bundle: RewardBundle):
 	## Set pending rewards (called by EncounterScreen)
 	pending_rewards = bundle
+	
+	# Force save when pending rewards are set (so crash mid-rewards is recoverable)
+	if AutoSaveManager:
+		AutoSaveManager.force_save("pending_rewards_set")
 
 func clear_pending_rewards():
 	## Clear pending rewards (called by RewardsScreen after completion)

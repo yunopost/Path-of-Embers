@@ -176,12 +176,17 @@ func _deserialize_run_state(save_data: Dictionary):
 					var deck_card = DeckCardData.from_dict(card_data)
 					RunState.deck[instance_id] = deck_card
 			
-			# Restore deck_order
+			# Restore deck_order (convert to typed array)
 			if save_data.has("deck_order"):
-				RunState.deck_order = save_data["deck_order"].duplicate()
+				var order_array = save_data["deck_order"]
+				RunState.deck_order.clear()
+				for item in order_array:
+					RunState.deck_order.append(str(item))
 			else:
 				# Fallback: use dictionary keys as order
-				RunState.deck_order = deck_data.keys()
+				RunState.deck_order.clear()
+				for key in deck_data.keys():
+					RunState.deck_order.append(str(key))
 		
 		elif deck_data is Array:
 			# Legacy structure: Array of DeckCardData dicts
@@ -242,15 +247,24 @@ func _deserialize_run_state(save_data: Dictionary):
 	if save_data.has("current_node_id"):
 		RunState.current_node_id = save_data["current_node_id"]
 	if save_data.has("available_next_node_ids"):
-		RunState.available_next_node_ids = save_data["available_next_node_ids"]
+		# Convert to typed array
+		var next_nodes_array = save_data["available_next_node_ids"]
+		RunState.available_next_node_ids.clear()
+		for item in next_nodes_array:
+			RunState.available_next_node_ids.append(str(item))
 	
-	# Restore party_ids (new in version 2)
+	# Restore party_ids (new in version 2) - convert to typed array
 	if save_data.has("party_ids"):
-		RunState.party_ids = save_data["party_ids"]
+		var party_ids_array = save_data["party_ids"]
+		RunState.party_ids.clear()
+		for item in party_ids_array:
+			RunState.party_ids.append(str(item))
 	else:
 		# Legacy: convert party array to party_ids
 		if save_data.has("party"):
-			RunState.party_ids = save_data["party"].duplicate()
+			RunState.party_ids.clear()
+			for item in save_data["party"]:
+				RunState.party_ids.append(str(item))
 		RunState.party_changed.emit()
 	
 	# Restore quests (convert dictionaries to QuestState objects)
@@ -297,6 +311,16 @@ func _deserialize_run_state(save_data: Dictionary):
 	# Restore settings
 	if save_data.has("tap_to_play"):
 		RunState.tap_to_play = save_data["tap_to_play"]
+	
+	# Restore pending_rewards (if present)
+	if save_data.has("pending_rewards") and save_data["pending_rewards"] != null:
+		var pending_rewards_data = save_data["pending_rewards"]
+		if pending_rewards_data is Dictionary:
+			RunState.pending_rewards = RewardBundle.from_dict(pending_rewards_data)
+		else:
+			RunState.pending_rewards = null
+	else:
+		RunState.pending_rewards = null
 	
 	# Emit signals for UI updates
 	RunState.hp_changed.emit()

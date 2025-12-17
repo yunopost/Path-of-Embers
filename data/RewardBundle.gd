@@ -45,15 +45,19 @@ static func from_dict(data: Dictionary) -> RewardBundle:
 	var card_choices_data = data.get("card_choices", [])
 	var card_choices_array: Array[String] = []
 	for item in card_choices_data:
-		if item is String:
-			card_choices_array.append(item)
+		card_choices_array.append(str(item))
+	
+	# Convert int fields (JSON may store as float)
+	var gold = int(data.get("gold", 0))
+	var upgrade_count = int(data.get("upgrade_count", 0))
+	var heal_amount = int(data.get("heal_amount", 0))
 	
 	return RewardBundle.new(
-		data.get("gold", 0),
+		gold,
 		card_choices_array,
 		data.get("relic_id", ""),
-		data.get("upgrade_count", 0),
-		data.get("heal_amount", 0),
+		upgrade_count,
+		heal_amount,
 		data.get("skip_allowed", true),
 		data.get("is_transcendence_upgrade", false)
 	)

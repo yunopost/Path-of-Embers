@@ -31,6 +31,20 @@ func initialize(reward_data: RewardBundle = null):
 			return
 		reward_bundle = RunState.pending_rewards
 	
+	# Ensure reward_bundle is valid before accessing its properties
+	if not reward_bundle:
+		push_error("RewardsScreen: reward_bundle is null after initialization")
+		_finish_rewards()
+		return
+	
+	# Initialize claim flags based on bundle state (for reloads after partial claiming)
+	# If bundle shows rewards as already claimed (0/empty), mark them as claimed
+	gold_claimed = (reward_bundle.gold <= 0)
+	card_claimed = (reward_bundle.card_choices.size() == 0)
+	relic_claimed = reward_bundle.relic_id.is_empty()
+	upgrade_claimed = (reward_bundle.upgrade_count <= 0)
+	heal_applied = false  # Heal is auto-applied on display, so reset this
+	
 	# Setup UI
 	_setup_ui()
 	
@@ -202,6 +216,8 @@ func _on_claim_gold(amount: int):
 		return
 	
 	RunState.set_gold(RunState.gold + amount)
+	# Remove gold from bundle to prevent re-claiming on reload
+	reward_bundle.gold = 0
 	gold_claimed = true
 	_update_continue_button()
 	_refresh_reward_sections()
@@ -213,6 +229,8 @@ func _on_choose_card(card_id: String):
 	
 	# Add card to deck (owner is empty for shared deck rewards)
 	RunState.add_card_to_deck_from_reward(card_id, "")
+	# Clear card choices from bundle to prevent re-claiming on reload
+	reward_bundle.card_choices.clear()
 	card_claimed = true
 	_update_continue_button()
 	_refresh_reward_sections()
@@ -222,6 +240,8 @@ func _on_skip_cards():
 	if card_claimed:
 		return
 	
+	# Clear card choices from bundle to prevent re-claiming on reload
+	reward_bundle.card_choices.clear()
 	card_claimed = true
 	_update_continue_button()
 	_refresh_reward_sections()
@@ -372,6 +392,10 @@ func _finish_rewards():
 	# Note: Node is already marked as completed when set_current_node was called in MapScreen
 	# Available nodes were already updated at that time
 	# We just need to clear pending rewards and return
+	
+	# Force save before clearing pending rewards (rewards finalized)
+	if AutoSaveManager:
+		AutoSaveManager.force_save("rewards_finalized")
 	
 	# Clear pending rewards
 	RunState.clear_pending_rewards()

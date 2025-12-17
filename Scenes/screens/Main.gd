@@ -2,11 +2,10 @@ extends Control
 
 ## Main menu screen - entry point for the game
 
-@onready var title_label: Label = null
-@onready var new_game_button: Button = null
-@onready var continue_button: Button = null
-@onready var settings_button: Button = null
-@onready var quit_button: Button = null
+@onready var new_game_button: TextureButton = null
+@onready var continue_button: TextureButton = null
+@onready var settings_button: TextureButton = null
+@onready var quit_button: TextureButton = null
 
 var settings_popup: Control = null
 
@@ -17,15 +16,14 @@ func _ready():
 	# Wait one frame to ensure nodes are ready
 	await get_tree().process_frame
 	
-	# Get node references
-	title_label = get_node_or_null("VBoxContainer/TitleLabel")
-	new_game_button = get_node_or_null("VBoxContainer/NewGameButton")
-	continue_button = get_node_or_null("VBoxContainer/ContinueButton")
-	settings_button = get_node_or_null("VBoxContainer/SettingsButton")
-	quit_button = get_node_or_null("VBoxContainer/QuitButton")
+	# Get node references (buttons are direct children of Main)
+	new_game_button = get_node_or_null("NewGameButton")
+	continue_button = get_node_or_null("ContinueButton")
+	settings_button = get_node_or_null("SettingsButton")
+	quit_button = get_node_or_null("QuitButton")
 	
 	# Debug: Check if nodes were found
-	print("Main.gd: Nodes found - title: ", title_label != null, ", new_game: ", new_game_button != null, ", continue: ", continue_button != null)
+	print("Main.gd: Nodes found - new_game: ", new_game_button != null, ", continue: ", continue_button != null)
 	
 	# Setup UI
 	_setup_ui()
@@ -49,12 +47,7 @@ func refresh_from_state():
 	_update_continue_button()
 
 func _setup_ui():
-	## Setup UI labels and buttons
-	if title_label:
-		title_label.text = "Path of Embers"
-		title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		title_label.add_theme_font_size_override("font_size", 32)
-	
+	## Setup UI buttons
 	# Connect buttons
 	if is_instance_valid(new_game_button):
 		if not new_game_button.pressed.is_connected(_on_new_game_pressed):

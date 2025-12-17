@@ -290,9 +290,9 @@ func _on_confirm_pressed():
 	var map_data = map_gen.generate_map(RunState.act)
 	RunState.set_map_data(map_data)
 	
-	# Save run
-	if SaveManager:
-		SaveManager.save_game()
+	# Force save new run (before navigating to map)
+	if AutoSaveManager:
+		AutoSaveManager.force_save("new_run_started")
 	
 	# Navigate to map screen
 	if SceneRouter:

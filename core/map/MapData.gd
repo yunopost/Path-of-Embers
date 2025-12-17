@@ -50,15 +50,25 @@ func to_dict() -> Dictionary:
 	}
 
 static func from_dict(data: Dictionary) -> MapData:
-	var map_data = MapData.new(data.get("act_index", 1))
-	map_data.total_rows = data.get("total_rows", 0)
+	# Convert act_index and total_rows to int (JSON may store as float)
+	var act_index = int(data.get("act_index", 1))
+	var total_rows = int(data.get("total_rows", 0))
+	var map_data = MapData.new(act_index)
+	map_data.total_rows = total_rows
 	map_data.boss_node_id = data.get("boss_node_id", "")
+	
+	# Restore start_node_ids as typed array
+	var start_node_ids_data = data.get("start_node_ids", [])
+	map_data.start_node_ids.clear()
+	for node_id in start_node_ids_data:
+		map_data.start_node_ids.append(str(node_id))
 	
 	var nodes_dict = data.get("nodes", {})
 	for node_id in nodes_dict:
 		var node_data = MapNodeData.from_dict(nodes_dict[node_id])
 		map_data.nodes[node_id] = node_data
-		if node_data.row == 0:
+		# Also add to start_node_ids if row 0 (in case save didn't include start_node_ids)
+		if node_data.row == 0 and not map_data.start_node_ids.has(node_id):
 			map_data.start_node_ids.append(node_id)
 	
 	return map_data

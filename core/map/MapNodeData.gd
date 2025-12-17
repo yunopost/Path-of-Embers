@@ -49,18 +49,25 @@ func to_dict() -> Dictionary:
 	}
 
 static func from_dict(data: Dictionary) -> MapNodeData:
+	# Convert row/col to int (JSON may store as float)
+	var row = int(data.get("row", 0))
+	var col = int(data.get("col", 0))
+	var node_type = int(data.get("node_type", NodeType.FIGHT))
 	var node = MapNodeData.new(
 		data.get("id", ""),
-		data.get("row", 0),
-		data.get("col", 0),
-		data.get("node_type", NodeType.FIGHT)
+		row,
+		col,
+		node_type
 	)
-	# Restore reward_flags by appending each item
+	# Restore reward_flags by appending each item (convert to int to handle float from JSON)
 	node.reward_flags.clear()
 	var reward_flags_data = data.get("reward_flags", [])
 	for flag in reward_flags_data:
-		node.reward_flags.append(flag)
-	node.connected_to = data.get("connected_to", [])
+		node.reward_flags.append(int(flag))
+	# Restore connected_to (convert to typed array)
+	var connected_to_data = data.get("connected_to", [])
+	node.connected_to.clear()
+	for conn in connected_to_data:
+		node.connected_to.append(str(conn))
 	node.is_completed = data.get("is_completed", false)
 	return node
-
