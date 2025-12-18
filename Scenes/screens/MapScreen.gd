@@ -107,6 +107,12 @@ func _setup_debug_ui():
 		reset_btn.pressed.connect(_reset_progress)
 		reset_btn.mouse_filter = Control.MOUSE_FILTER_STOP
 		bar.add_child(reset_btn)
+		
+		var pool_btn := Button.new()
+		pool_btn.text = "View Reward Pool"
+		pool_btn.pressed.connect(_show_reward_pool_popup)
+		pool_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+		bar.add_child(pool_btn)
 
 func _generate_map():
 	## Generate a new map
@@ -126,6 +132,25 @@ func _reset_progress():
 		RunState.node_position = 0
 		_update_available_nodes()
 		_render_map()
+
+func _show_reward_pool_popup():
+	## Show popup displaying all 66 cards in reward pool
+	if not has_node("RewardPoolPopup"):
+		_create_reward_pool_popup()
+	
+	var popup = get_node_or_null("RewardPoolPopup")
+	if popup:
+		popup.visible = true
+
+func _create_reward_pool_popup():
+	## Create the reward pool popup instance
+	var popup_scene = load("res://Path-of-Embers/Scenes/UI/RewardPoolPopup.tscn")
+	if popup_scene:
+		var popup = popup_scene.instantiate()
+		add_child(popup)
+		popup.visible = false
+	else:
+		push_warning("MapScreen: Could not load RewardPoolPopup.tscn")
 
 func _update_available_nodes():
 	## Update which nodes are available for selection (calls RunState method)

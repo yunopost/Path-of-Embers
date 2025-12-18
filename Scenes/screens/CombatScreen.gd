@@ -64,8 +64,8 @@ func refresh_from_state():
 func _start_combat():
 	## Initialize combat with test enemies (default for testing)
 	var enemy_data = [
-		{"id": "enemy1", "name": "Test Enemy 1", "max_hp": 40, "time_max": 3},
-		{"id": "enemy2", "name": "Test Enemy 2", "max_hp": 40, "time_max": 1}
+		{"id": "enemy1", "name": "Test Enemy 1", "max_hp": 6, "time_max": 3},
+		{"id": "enemy2", "name": "Test Enemy 2", "max_hp": 6, "time_max": 1}
 	]
 	_start_combat_with_data({"enemies": enemy_data})
 
@@ -75,7 +75,7 @@ func _start_combat_with_data(encounter_data: Dictionary):
 	if enemy_data.is_empty():
 		# Fallback to test enemies
 		enemy_data = [
-			{"id": "enemy1", "name": "Test Enemy 1", "max_hp": 40, "time_max": 3}
+			{"id": "enemy1", "name": "Test Enemy 1", "max_hp": 6, "time_max": 3}
 		]
 	
 	combat_controller.start_combat(enemy_data)

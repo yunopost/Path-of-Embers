@@ -50,7 +50,7 @@ func perform_intent(combat_controller: CombatController):
 			var damage = intent.values.get("damage", 0)
 			
 			# Apply damage to player using EffectResolver for consistency
-			var attack_effect = EffectData.new("DealDamage", {"amount": damage})
+			var attack_effect = EffectData.new("damage", {"amount": damage})
 			EffectResolver.resolve_effect(attack_effect, stats, combat_controller.player_stats)
 			
 			# Update RunState HP and block after damage

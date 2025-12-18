@@ -216,3 +216,4 @@ func _update_display():
 		else:
 			card_panel.modulate = Color.WHITE
 
+

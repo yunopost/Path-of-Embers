@@ -7,12 +7,10 @@ extends Control
 signal card_clicked(instance_id: String)
 
 @onready var card_panel: Panel = $CardPanel
-@onready var name_label: Label = $CardPanel/VBoxContainer/NameLabel
-@onready var owner_label: Label = $CardPanel/VBoxContainer/OwnerLabel
-@onready var upgrades_label: Label = $CardPanel/VBoxContainer/UpgradesLabel
 @onready var transcend_label: Label = $CardPanel/VBoxContainer/TranscendLabel
 @onready var disabled_label: Label = $CardPanel/VBoxContainer/DisabledLabel
 
+var card_widget: CardWidget = null
 var deck_index: int = -1
 var card_instance: DeckCardData = null
 var is_clickable: bool = false
@@ -40,69 +38,34 @@ func _update_display():
 	if not card_instance:
 		return
 	
-	# Get nodes safely (works even if @onready vars aren't set yet)
-	var name_lbl = _get_name_label()
-	var owner_lbl = _get_owner_label()
-	var upgrades_lbl = _get_upgrades_label()
+	# Get panel safely
+	var panel = _get_card_panel()
+	if not panel:
+		return
+	
+	# Create or reuse CardWidget for display
+	if not card_widget:
+		card_widget = CardWidget.new()
+		# Find VBoxContainer in panel
+		var vbox = panel.get_node_or_null("VBoxContainer")
+		if vbox:
+			# Insert CardWidget at the beginning of VBoxContainer
+			vbox.add_child(card_widget)
+			vbox.move_child(card_widget, 0)
+	
+	# Setup CardWidget with card instance
+	if card_widget:
+		card_widget.setup_card(card_instance)
+	
+	# Get label nodes safely
 	var transcend_lbl = _get_transcend_label()
 	var disabled_lbl = _get_disabled_label()
-	var panel = _get_card_panel()
-	
-	# Card name
-	if name_lbl:
-		# Get display name from DataRegistry
-		var display_name = DataRegistry.get_card_display_name(card_instance.card_id)
-		name_lbl.text = display_name
-	
-	# Owner info
-	if owner_lbl:
-		if card_instance.owner_character_id:
-			owner_lbl.text = "Owner: " + DataRegistry.get_character_display_name(card_instance.owner_character_id)
-			owner_lbl.visible = true
-		else:
-			owner_lbl.visible = false
-	
-	# Upgrades info - show keywords if any, otherwise show upgrade titles
-	if upgrades_lbl:
-		var card_data = DataRegistry.get_card_data(card_instance.card_id)
-		var keywords: Array[String] = []
-		if card_data:
-			keywords = CardRules.get_card_keywords(card_instance)
-		
-		if keywords.size() > 0:
-			# Show keywords (preferred)
-			upgrades_lbl.text = "Keywords: " + ", ".join(keywords)
-			upgrades_lbl.visible = true
-			upgrades_lbl.modulate = Color(1.0, 0.84, 0.0, 1.0)  # Gold color
-		elif card_instance.applied_upgrades.size() > 0:
-			# Fallback: show upgrade titles for non-keyword upgrades
-			var upgrade_text = ""
-			for upgrade_id in card_instance.applied_upgrades:
-				var upgrade_def = DataRegistry.get_upgrade_def(upgrade_id)
-				if upgrade_text != "":
-					upgrade_text += ", "
-				upgrade_text += upgrade_def.get("title", upgrade_id)
-			upgrades_lbl.text = "Upgrades: " + upgrade_text
-			upgrades_lbl.visible = true
-			upgrades_lbl.modulate = Color.GOLD
-		else:
-			upgrades_lbl.visible = false
-			upgrades_lbl.modulate = Color.WHITE
-	
-	# Add visual indicator (colored border/glow) for upgraded cards (panel already declared above)
-	if panel:
-		if card_instance.applied_upgrades.size() > 0:
-			# Add golden tint to upgraded cards
-			panel.modulate = Color(1.1, 1.05, 0.95, 1.0)
-		else:
-			panel.modulate = Color.WHITE
 	
 	# Transcend indicator
 	if transcend_lbl:
 		transcend_lbl.visible = card_instance.is_transcended
 	
 	# Disabled state (for upgrade selection)
-	# Note: We modulate the widget itself, but panel modulate (for upgrades) is separate
 	if disabled_lbl:
 		if is_clickable and card_instance:
 			var can_upgrade = RunState.can_upgrade_instance(card_instance.instance_id)
@@ -111,11 +74,7 @@ func _update_display():
 				modulate = Color(0.5, 0.5, 0.5, 0.7)
 			else:
 				disabled_lbl.visible = false
-				# Keep panel modulate from upgrade indicator, but reset widget modulate
-				if card_instance.applied_upgrades.size() > 0:
-					modulate = Color.WHITE  # Panel has golden tint, widget stays white
-				else:
-					modulate = Color.WHITE
+				modulate = Color.WHITE
 		else:
 			disabled_lbl.visible = false
 			modulate = Color.WHITE
@@ -124,24 +83,13 @@ func _update_display():
 	if is_clickable and panel:
 		panel.mouse_filter = Control.MOUSE_FILTER_STOP
 		# Connect gui_input signal
-		if panel.gui_input.is_connected(_on_card_clicked):
-			pass  # Already connected
-		else:
+		if not panel.gui_input.is_connected(_on_card_clicked):
 			panel.gui_input.connect(_on_card_clicked)
 	else:
 		if panel:
 			panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 # Helper methods to get nodes safely (works before @onready vars are set)
-func _get_name_label() -> Label:
-	return name_label if name_label else get_node_or_null("CardPanel/VBoxContainer/NameLabel") as Label
-
-func _get_owner_label() -> Label:
-	return owner_label if owner_label else get_node_or_null("CardPanel/VBoxContainer/OwnerLabel") as Label
-
-func _get_upgrades_label() -> Label:
-	return upgrades_label if upgrades_label else get_node_or_null("CardPanel/VBoxContainer/UpgradesLabel") as Label
-
 func _get_transcend_label() -> Label:
 	return transcend_label if transcend_label else get_node_or_null("CardPanel/VBoxContainer/TranscendLabel") as Label
 

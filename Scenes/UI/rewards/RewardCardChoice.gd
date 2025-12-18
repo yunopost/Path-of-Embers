@@ -40,3 +40,4 @@ func setup_preview(p_card_id: String, p_owner_id: String = ""):
 func _on_pressed():
 	chosen.emit(card_id, owner_id)
 
+

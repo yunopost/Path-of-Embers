@@ -275,6 +275,6 @@ func _initialize_generic_cards():
 	heal_1.cost = 1
 	heal_1.card_type = CardData.CardType.SKILL
 	heal_1.targeting_mode = CardData.TargetingMode.SELF
-	var heal_effect = EffectData.new("heal", {"amount": 4})
+	var heal_effect = EffectData.new("heal", {"amount": 5})
 	heal_1.base_effects.append(heal_effect)
 	generic_card_cache["heal_1"] = heal_1

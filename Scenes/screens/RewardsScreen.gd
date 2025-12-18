@@ -136,14 +136,25 @@ func _create_card_choices_section(card_ids: Array[String]):
 	cards_hbox.add_theme_constant_override("separation", 10)
 	vbox.add_child(cards_hbox)
 	
-	# Create a button for each card choice
+	# Create a CardWidget for each card choice
 	for card_id in card_ids:
-		var card_btn = Button.new()
-		card_btn.text = card_id  # Placeholder - can show card name later
-		card_btn.custom_minimum_size = Vector2(150, 60)
-		card_btn.pressed.connect(_on_choose_card.bind(card_id))
-		card_btn.disabled = card_claimed
-		cards_hbox.add_child(card_btn)
+		# Create temporary card instance for display
+		var temp_card_instance = DeckCardData.new(card_id, "")
+		
+		# Create CardWidget for visual display
+		var card_widget = CardWidget.new()
+		card_widget.setup_card(temp_card_instance)
+		card_widget.custom_minimum_size = Vector2(120, 160)
+		
+		# Make clickable via gui_input
+		if not card_claimed:
+			card_widget.gui_input.connect(func(event):
+				if event is InputEventMouseButton and event.pressed:
+					if event.button_index == MOUSE_BUTTON_LEFT and not card_claimed:
+						_on_choose_card(card_id)
+			)
+		
+		cards_hbox.add_child(card_widget)
 	
 	# Add skip option
 	if reward_bundle.skip_allowed:
