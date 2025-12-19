@@ -49,6 +49,9 @@ func _update_display():
 		# Find VBoxContainer in panel
 		var vbox = panel.get_node_or_null("VBoxContainer")
 		if vbox:
+			# Make CardWidget fill available space in VBoxContainer
+			card_widget.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			card_widget.size_flags_vertical = Control.SIZE_EXPAND_FILL
 			# Insert CardWidget at the beginning of VBoxContainer
 			vbox.add_child(card_widget)
 			vbox.move_child(card_widget, 0)

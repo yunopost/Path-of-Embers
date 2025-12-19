@@ -29,25 +29,6 @@ offset_bottom = -5.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="NameLabel" type="Label" parent="CardPanel/VBoxContainer"]
-clip_contents = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 12
-text = "Card Name"
-
-[node name="OwnerLabel" type="Label" parent="CardPanel/VBoxContainer"]
-visible = false
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 1, 1)
-theme_override_font_sizes/font_size = 10
-text = "Owner: Character"
-
-[node name="UpgradesLabel" type="Label" parent="CardPanel/VBoxContainer"]
-visible = false
-layout_mode = 2
-theme_override_font_sizes/font_size = 10
-text = "Upgrades: None"
-
 [node name="TranscendLabel" type="Label" parent="CardPanel/VBoxContainer"]
 visible = false
 layout_mode = 2
