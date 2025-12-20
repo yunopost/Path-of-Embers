@@ -44,6 +44,9 @@ var block: int = 0
 var energy: int = 3
 var max_energy: int = 3
 
+# Combat status effects
+var haste_next_card: bool = false  # Next card played doesn't advance enemy timer
+
 # Map/Progress
 var act: int = 1
 var map: String = ""
@@ -83,6 +86,7 @@ func _ready():
 	block = 0
 	energy = 3
 	max_energy = 3
+	haste_next_card = false
 	act = 1
 	map = "Act1"
 	node_position = 0
@@ -630,9 +634,27 @@ func has_upgrade(instance_id: String, upgrade_id: String) -> bool:
 	return card_instance.applied_upgrades.has(upgrade_id)
 
 func get_timer_tick_amount_for_card(instance_id: String) -> int:
-	## Get the timer tick amount for a card (0 if has Haste, 1 otherwise)
+	## Get the timer tick amount for a card
+	## Returns 0 if has Haste or haste_next_card status, 2 if has Slow keyword, 1 otherwise
+	
+	# Check for haste_next_card status (from Shoulder Tackle or similar effects)
+	# This applies to the CURRENT card being played (which was granted haste by the previous card)
+	if haste_next_card:
+		# Clear the status after using it (it only applies once)
+		haste_next_card = false
+		return 0
+	
+	# Check for Haste upgrade
 	if has_upgrade(instance_id, "upgrade_haste"):
 		return 0
+	
+	# Check for Slow keyword on card
+	var card_instance = deck.get(instance_id)
+	if card_instance:
+		var card_data = DataRegistry.get_card_data(card_instance.card_id)
+		if card_data and card_data.keywords.has("Slow"):
+			return 2
+	
 	return 1
 
 func transcend_card(instance_id: String, new_card_id: String) -> bool:
@@ -773,6 +795,7 @@ func reset_run() -> void:
 	set_hp(50, 50)
 	set_block(0)
 	set_energy(3, 3)
+	haste_next_card = false
 	
 	# Reset map/progress
 	set_act(1)

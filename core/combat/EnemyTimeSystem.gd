@@ -57,15 +57,14 @@ func resolve_enemy_time_triggers(_reason: String):
 		# Enemy performs its intent
 		enemy.perform_intent(combat_controller)
 		
-		# After acting, reset timer and generate new intent
+		# After acting, generate new intent first, then reset timer using new intent's timer
 		if enemy.stats.is_alive():  # Check if enemy is still alive after action
-			# Check if intent has time_max_override
-			var reset_time_max = enemy.time_max
-			if enemy.intent and enemy.intent.time_max_override > 0:
-				reset_time_max = enemy.intent.time_max_override
-			
-			enemy.time_current = reset_time_max
+			# Generate new intent first (so we can use its timer)
 			var new_intent = intent_system.generate_intent(enemy)
 			enemy.set_intent(new_intent)
+			
+			# Reset timer using the new intent's timer (move-specific timer)
+			var reset_time_max = enemy.time_max  # set_intent() updates time_max if intent has time_max_override
+			enemy.time_current = reset_time_max
 			enemy.time_changed.emit(enemy.time_current, enemy.time_max)
 

@@ -31,11 +31,13 @@ enum Rarity {
 @export var targeting_mode: TargetingMode = TargetingMode.NONE
 @export var owner_character_id: String = ""  # For character-specific cards/animations
 @export var rarity: Rarity = Rarity.COMMON
+@export var keywords: Array[String] = []  # Keywords directly on card (e.g., "Slow", "Exhaust")
 @export var base_effects: Array[EffectData] = []
 @export var upgrade_pool: Array[UpgradeData] = []
 @export var art_path: String = ""
 @export var full_art_path: String = ""
 
 func _init():
+	keywords = []
 	base_effects = []
 	upgrade_pool = []

@@ -25,6 +25,7 @@ func _ready():
 
 func start_combat(enemy_data: Array):
 	## Initialize combat with enemies
+	## enemy_data can be Array of enemy_info Dicts with "enemy_id" and "count" OR legacy format with "id", "name", "max_hp", "time_max"
 	combat_active = true
 	
 	# Initialize deck piles (ensure fresh state for combat)
@@ -33,18 +34,40 @@ func start_combat(enemy_data: Array):
 	# Create enemies
 	enemies.clear()
 	for enemy_info in enemy_data:
-		var enemy = Enemy.new(
-			enemy_info.get("id", "enemy"),
-			enemy_info.get("name", "Enemy"),
-			enemy_info.get("max_hp", 50),
-			enemy_info.get("time_max", 3)
-		)
+		var enemy_id = enemy_info.get("enemy_id", enemy_info.get("id", ""))
 		
-		# Generate initial intent
-		var initial_intent = intent_system.generate_intent(enemy)
-		enemy.set_intent(initial_intent)
+		# Try to load from EnemyData registry first
+		var enemy_data_def = DataRegistry.get_enemy(enemy_id)
 		
-		enemies.append(enemy)
+		if enemy_data_def:
+			# New system: create from EnemyData
+			var count = enemy_info.get("count", 1)
+			for i in range(count):
+				# Randomize HP from range
+				var random_hp = randi_range(enemy_data_def.min_hp, enemy_data_def.max_hp)
+				var display_name = enemy_data_def.display_name if enemy_data_def.display_name else enemy_data_def.name
+				
+				var enemy = Enemy.new(enemy_id, display_name, random_hp, 3)  # Default time_max, will be overridden by move timers
+				
+				# Generate initial intent
+				var initial_intent = intent_system.generate_intent(enemy)
+				enemy.set_intent(initial_intent, true)  # Update timer for initial intent
+				
+				enemies.append(enemy)
+		else:
+			# Legacy system: create from enemy_info directly
+			var enemy = Enemy.new(
+				enemy_info.get("id", "enemy"),
+				enemy_info.get("name", "Enemy"),
+				enemy_info.get("max_hp", 50),
+				enemy_info.get("time_max", 3)
+			)
+			
+			# Generate initial intent
+			var initial_intent = intent_system.generate_intent(enemy)
+			enemy.set_intent(initial_intent, true)  # Update timer for initial intent
+			
+			enemies.append(enemy)
 	
 	# Register enemies with time system
 	enemy_time_system.register_enemies(enemies)
@@ -61,6 +84,12 @@ func start_player_turn():
 	## Begin a new player turn
 	if not combat_active:
 		return
+	
+	# Expire status effects at start of turn
+	player_stats.expire_status_effects()
+	for enemy in enemies:
+		if enemy.stats.is_alive():
+			enemy.stats.expire_status_effects()
 	
 	# Reset block at start of turn (combat rule)
 	player_stats.reset_block()
@@ -113,13 +142,19 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	# Use set_energy() which will emit the signal if value changed
 	RunState.set_energy(current_energy, max_energy)
 	
-	# Resolve card effects
-	_resolve_card_effects(deck_card, target)
-	
-	# Determine timer tick amount (default 1, can be overridden by card)
+	# Determine timer tick amount BEFORE resolving effects
+	# This ensures haste_next_card applies to the NEXT card, not the current one
 	var timer_tick_amount = _get_card_timer_tick(deck_card)
 	
-	# Tick all enemies
+	# Resolve card effects (this may set haste_next_card status for the NEXT card)
+	_resolve_card_effects(deck_card, target)
+	
+	# If haste_next_card was set by this card's effects, it applies to the NEXT card
+	# So we clear it now if it was just set, but only after we've used it for the next card
+	# Actually, we need to track if we just set it, and only clear it after the next card uses it
+	# For now, we'll clear it when the next card checks it
+	
+	# Tick all enemies with the timer amount for THIS card
 	enemy_time_system.tick_all_enemies(timer_tick_amount)
 	
 	# Resolve any enemies that hit 0

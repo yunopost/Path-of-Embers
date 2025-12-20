@@ -81,19 +81,53 @@ func _create_placeholder_characters():
 	for i in range(2):
 		var char_data = CharacterData.new()
 		char_data.id = "warrior_%d" % (i + 1)
-		char_data.display_name = "Warrior %d" % (i + 1)
+		# First warrior is "Monster Hunter", others keep numbered names
+		if i == 0:
+			char_data.display_name = "Monster Hunter"
+		else:
+			char_data.display_name = "Warrior %d" % (i + 1)
 		char_data.role = "Warrior"
 		char_data.portrait_path = ""
 		
 		# Create 2 unique starter cards
-		var unique1 = CardData.new()
-		unique1.id = "warrior_unique_%d_1" % (i + 1)
-		unique1.name = "Warrior Strike %d" % (i + 1)
-		var unique2 = CardData.new()
-		unique2.id = "warrior_unique_%d_2" % (i + 1)
-		unique2.name = "Warrior Power %d" % (i + 1)
-		char_data.starter_unique_cards.append(unique1)
-		char_data.starter_unique_cards.append(unique2)
+		if i == 0:
+			# Monster Hunter specific cards
+			# Full Attack - Big damage card with Slow keyword
+			var full_attack = CardData.new()
+			full_attack.id = "monster_hunter_full_attack"
+			full_attack.name = "Full Attack"
+			full_attack.cost = 2
+			full_attack.card_type = CardData.CardType.ATTACK
+			full_attack.targeting_mode = CardData.TargetingMode.ENEMY
+			full_attack.owner_character_id = "warrior_1"
+			full_attack.rarity = CardData.Rarity.COMMON
+			full_attack.keywords.append("Slow")
+			var damage_effect = EffectData.new("damage", {"amount": 14})
+			full_attack.base_effects.append(damage_effect)
+			char_data.starter_unique_cards.append(full_attack)
+			
+			# Shoulder Tackle - Free card that enables next card
+			var shoulder_tackle = CardData.new()
+			shoulder_tackle.id = "monster_hunter_shoulder_tackle"
+			shoulder_tackle.name = "Shoulder Tackle"
+			shoulder_tackle.cost = 0
+			shoulder_tackle.card_type = CardData.CardType.SKILL
+			shoulder_tackle.targeting_mode = CardData.TargetingMode.SELF
+			shoulder_tackle.owner_character_id = "warrior_1"
+			shoulder_tackle.rarity = CardData.Rarity.COMMON
+			var haste_effect = EffectData.new("grant_haste_next_card", {})
+			shoulder_tackle.base_effects.append(haste_effect)
+			char_data.starter_unique_cards.append(shoulder_tackle)
+		else:
+			# Other warriors keep placeholder cards for now
+			var unique1 = CardData.new()
+			unique1.id = "warrior_unique_%d_1" % (i + 1)
+			unique1.name = "Warrior Strike %d" % (i + 1)
+			var unique2 = CardData.new()
+			unique2.id = "warrior_unique_%d_2" % (i + 1)
+			unique2.name = "Warrior Power %d" % (i + 1)
+			char_data.starter_unique_cards.append(unique1)
+			char_data.starter_unique_cards.append(unique2)
 		
 		# Create 22 reward pool cards (7 Common, 12 Uncommon, 3 Rare)
 		_generate_reward_pool_cards(char_data)

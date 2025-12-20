@@ -19,15 +19,22 @@ func _init(initial_hp: int = 50, initial_max_hp: int = 50):
 	block = 0
 
 func take_damage(amount: int):
-	## Apply damage, accounting for block
-	var actual_damage = amount
+	## Apply damage, accounting for block and vulnerable status
+	var base_damage = amount
+	
+	# Apply vulnerable multiplier (1.5x damage) if vulnerable status is active
+	var vulnerable_duration = get_status("vulnerable")
+	if vulnerable_duration != null and vulnerable_duration > 0:
+		base_damage = int(base_damage * 1.5)
+	
+	var actual_damage = base_damage
 	if block > 0:
-		if amount <= block:
-			block -= amount
+		if base_damage <= block:
+			block -= base_damage
 			actual_damage = 0
 			block_changed.emit(block)
 		else:
-			actual_damage = amount - block
+			actual_damage = base_damage - block
 			block = 0
 			block_changed.emit(block)
 	
@@ -60,3 +67,23 @@ func get_status(effect_type: String):
 
 func is_alive() -> bool:
 	return current_hp > 0
+
+func expire_status_effects():
+	## Decrease duration-based status effects by 1 turn, remove when duration reaches 0
+	## Called at the start/end of each turn
+	var statuses_to_remove: Array[String] = []
+	
+	for effect_type in status_effects.keys():
+		var value = status_effects[effect_type]
+		# If value is a number (duration), decrease it
+		if value is int or value is float:
+			var duration = int(value)
+			duration -= 1
+			if duration <= 0:
+				statuses_to_remove.append(effect_type)
+			else:
+				status_effects[effect_type] = duration
+	
+	# Remove expired statuses
+	for effect_type in statuses_to_remove:
+		status_effects.erase(effect_type)

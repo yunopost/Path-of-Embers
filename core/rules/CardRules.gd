@@ -124,6 +124,13 @@ static func get_card_keywords(card_inst: DeckCardData) -> Array[String]:
 	if not card_inst:
 		return keywords
 	
+	# Get card data to check for direct keywords
+	var card_data = DataRegistry.get_card_data(card_inst.card_id)
+	if card_data and card_data.keywords.size() > 0:
+		for keyword in card_data.keywords:
+			if not keyword.is_empty() and not keywords.has(keyword):
+				keywords.append(keyword)
+	
 	# Collect keywords from upgrades
 	for upgrade_id in card_inst.applied_upgrades:
 		var upgrade_def = DataRegistry.get_upgrade_def(upgrade_id)

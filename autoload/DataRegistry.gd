@@ -6,6 +6,9 @@ extends Node
 
 var character_cache: Dictionary = {}  # Maps character_id -> CharacterData
 
+# Enemy cache
+var enemy_cache: Dictionary = {}  # Maps enemy_id -> EnemyData
+
 # Upgrade definitions cache
 var upgrade_definitions: Dictionary = {}  # Maps upgrade_id -> Dictionary with title, description, etc.
 var card_upgrade_pools: Dictionary = {}  # Maps card_id -> Array[upgrade_id]
@@ -36,11 +39,21 @@ func clear_cache():
 	## Clear the character cache (useful for new runs)
 	character_cache.clear()
 
+func register_enemy(enemy_data: EnemyData):
+	## Register an EnemyData resource
+	if enemy_data and enemy_data.id:
+		enemy_cache[enemy_data.id] = enemy_data
+
+func get_enemy(enemy_id: String) -> EnemyData:
+	## Get EnemyData by ID, returns null if not found
+	return enemy_cache.get(enemy_id, null)
+
 func _ready():
 	## Initialize upgrade pools and definitions
 	_initialize_upgrade_content()
 	_initialize_transcendent_cards()
 	_initialize_generic_cards()
+	_initialize_enemies()
 
 func _initialize_upgrade_content():
 	## Initialize hardcoded upgrade content for testing
@@ -76,6 +89,30 @@ func _initialize_upgrade_content():
 			"max_stacks": 1,
 			"group": "tempo"
 		}
+	}
+	
+	# Slow keyword definition (for tooltip support)
+	upgrade_definitions["keyword_slow"] = {
+		"id": "keyword_slow",
+		"title": "Slow",
+		"description": "A card with Slow ticks the enemy timer 2 times instead of 1.",
+		"keyword": "Slow"
+	}
+	
+	# Exhaust keyword definition (for tooltip support, future use)
+	upgrade_definitions["keyword_exhaust"] = {
+		"id": "keyword_exhaust",
+		"title": "Exhaust",
+		"description": "Card is removed from play for the rest of this combat instead of going to the discard pile.",
+		"keyword": "Exhaust"
+	}
+	
+	# Vulnerable keyword definition (for tooltip support)
+	upgrade_definitions["keyword_vulnerable"] = {
+		"id": "keyword_vulnerable",
+		"title": "Vulnerable",
+		"description": "A vulnerable character or enemy takes 1.5x damage.",
+		"keyword": "Vulnerable"
 	}
 	
 	# Strike upgrades
@@ -278,3 +315,59 @@ func _initialize_generic_cards():
 	var heal_effect = EffectData.new("heal", {"amount": 5})
 	heal_1.base_effects.append(heal_effect)
 	generic_card_cache["heal_1"] = heal_1
+
+func _initialize_enemies():
+	## Initialize enemy definitions (currently hardcoded, later can load from .tres files)
+	
+	# Ash Men - Act 1 enemy
+	var ash_man = EnemyData.new()
+	ash_man.id = "ash_man"
+	ash_man.display_name = "Ash Man"
+	ash_man.name = "Ash Man"  # Legacy field
+	ash_man.act = 1
+	ash_man.min_hp = 38
+	ash_man.max_hp = 44
+	
+	# Move 1: Timer 4, Damage 8
+	var move_1 = {
+		"id": "move_1",
+		"timer": 4,
+		"telegraph_text": "Attack 8",
+		"effects": [
+			EffectData.new("damage", {"amount": 8})
+		]
+	}
+	
+	# Move 2: Timer 1, Vulnerable 1
+	var move_2 = {
+		"id": "move_2",
+		"timer": 1,
+		"telegraph_text": "Apply Vulnerable",
+		"effects": [
+			EffectData.new("vulnerable", {"duration": 1})
+		]
+	}
+	
+	# Move 3: Timer 4, Damage 2, Heal 2
+	var move_3 = {
+		"id": "move_3",
+		"timer": 4,
+		"telegraph_text": "Attack 2, Heal 2",
+		"effects": [
+			EffectData.new("damage", {"amount": 2}),
+			EffectData.new("heal", {"amount": 2})
+		]
+	}
+	
+	# Move 4: Timer 3, Damage 3x2 (3 damage twice)
+	var move_4 = {
+		"id": "move_4",
+		"timer": 3,
+		"telegraph_text": "Attack 3x2",
+		"effects": [
+			EffectData.new("damage", {"amount": 3, "hit_count": 2})
+		]
+	}
+	
+	ash_man.moves = [move_1, move_2, move_3, move_4]
+	register_enemy(ash_man)
