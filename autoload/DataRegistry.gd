@@ -52,6 +52,7 @@ func _ready():
 	## Initialize upgrade pools and definitions
 	_initialize_upgrade_content()
 	_initialize_transcendent_cards()
+	_initialize_full_attack_transcendence()
 	_initialize_generic_cards()
 	_initialize_enemies()
 
@@ -135,6 +136,17 @@ func _initialize_upgrade_content():
 	card_upgrade_pools["defend_1"] = defend_upgrades
 	card_upgrade_pools["defend"] = defend_upgrades  # Alias
 	
+	# Full Attack upgrade pool
+	var full_attack_upgrades: Array[String] = [
+		"full_attack_ignore_block",
+		"upgrade_cost_minus_1",  # Universal upgrade (note: not full_attack_cost_minus_1)
+		"full_attack_damage_plus_6",
+		"full_attack_half_damage_double_hit",
+		"full_attack_remove_slow",
+		"full_attack_block_plus_6"
+	]
+	card_upgrade_pools["monster_hunter_full_attack"] = full_attack_upgrades
+	
 	# Upgrade definitions - Card-specific upgrades
 	upgrade_definitions["strike_damage_plus"] = {
 		"id": "strike_damage_plus",
@@ -176,27 +188,71 @@ func _initialize_upgrade_content():
 		"title": "Healing Block",
 		"description": "Heal 2 HP when played"
 	}
+	
+	# Full Attack upgrade definitions
+	upgrade_definitions["full_attack_ignore_block"] = {
+		"id": "full_attack_ignore_block",
+		"title": "Ignore Block",
+		"description": "Damage bypasses block completely",
+		"effects": {
+			"ignore_block": true
+		}
+	}
+	
+	upgrade_definitions["full_attack_damage_plus_6"] = {
+		"id": "full_attack_damage_plus_6",
+		"title": "Damage+6",
+		"description": "Increase damage by 6",
+		"effects": {
+			"damage_delta": 6
+		}
+	}
+	
+	upgrade_definitions["full_attack_half_damage_double_hit"] = {
+		"id": "full_attack_half_damage_double_hit",
+		"title": "Half Damage, Double Hit",
+		"description": "Damage becomes 7, strikes twice",
+		"effects": {
+			"damage_multiply": 0.5,  # Multiply base damage by 0.5
+			"hit_count_set": 2  # Set hit_count to 2
+		}
+	}
+	
+	upgrade_definitions["full_attack_remove_slow"] = {
+		"id": "full_attack_remove_slow",
+		"title": "Remove Slow",
+		"description": "Removes Slow keyword",
+		"effects": {
+			"remove_keyword": "Slow"
+		}
+	}
+	
+	upgrade_definitions["full_attack_block_plus_6"] = {
+		"id": "full_attack_block_plus_6",
+		"title": "Block+6",
+		"description": "Also gain 6 block when played",
+		"effects": {
+			"add_block": 6
+		}
+	}
 
 func get_upgrade_pool_for_card(card_id: String) -> Array[String]:
 	## Get the upgrade pool for a card ID
-	## Always includes universal upgrades (upgrade_cost_minus_1, upgrade_haste)
+	## If card has a specific pool, return ONLY that pool (no universal upgrades added)
+	## If card has no specific pool, return universal upgrades
 	var card_specific_pool = card_upgrade_pools.get(card_id, null)
-	var result_pool: Array[String] = []
 	
-	# Add card-specific upgrades if they exist
+	# If card has a specific pool, return it as-is (no universal upgrades added)
 	if card_specific_pool != null:
+		var result_pool: Array[String] = []
 		for upgrade_id in card_specific_pool:
 			if upgrade_id is String and not result_pool.has(upgrade_id):
 				result_pool.append(upgrade_id)
+		return result_pool
 	
-	# Always add universal upgrades (if not already present)
+	# If no card-specific pool exists, return universal upgrades
 	var universal_upgrades = ["upgrade_cost_minus_1", "upgrade_haste"]
-	for upgrade_id in universal_upgrades:
-		if not result_pool.has(upgrade_id):
-			result_pool.append(upgrade_id)
-	
-	# If no card-specific pool exists, return just universal upgrades
-	return result_pool
+	return universal_upgrades.duplicate()
 
 func get_upgrade_def(upgrade_id: String) -> Dictionary:
 	## Get upgrade definition by ID
@@ -325,8 +381,8 @@ func _initialize_enemies():
 	ash_man.display_name = "Ash Man"
 	ash_man.name = "Ash Man"  # Legacy field
 	ash_man.act = 1
-	ash_man.min_hp = 38
-	ash_man.max_hp = 44
+	ash_man.min_hp = 6
+	ash_man.max_hp = 6
 	
 	# Move 1: Timer 4, Damage 8
 	var move_1 = {
@@ -369,5 +425,53 @@ func _initialize_enemies():
 		]
 	}
 	
-	ash_man.moves = [move_1, move_2, move_3, move_4]
+	ash_man.moves.append(move_1)
+	ash_man.moves.append(move_2)
+	ash_man.moves.append(move_3)
+	ash_man.moves.append(move_4)
 	register_enemy(ash_man)
+
+func _initialize_full_attack_transcendence():
+	## Initialize Full Attack transcendence cards
+	
+	# Transcend 1: Cost 3, Slow, Deal 18 damage to each enemy, Apply 2 Vulnerable to each enemy
+	var transcend_1 = CardData.new()
+	transcend_1.id = "full_attack_transcend_1"
+	transcend_1.name = "Full Attack"
+	transcend_1.cost = 3
+	transcend_1.card_type = CardData.CardType.ATTACK
+	transcend_1.targeting_mode = CardData.TargetingMode.ALL_ENEMIES
+	transcend_1.keywords.append("Slow")
+	var damage_effect_1 = EffectData.new("damage", {"amount": 18})
+	transcend_1.base_effects.append(damage_effect_1)
+	var vulnerable_effect_1 = EffectData.new("vulnerable", {"duration": 2})
+	transcend_1.base_effects.append(vulnerable_effect_1)
+	transcendent_card_cache[transcend_1.id] = transcend_1
+	
+	# Transcend 2: Cost 2, Slow, Deal 18 damage OR 36 damage if Elite/Boss
+	var transcend_2 = CardData.new()
+	transcend_2.id = "full_attack_transcend_2"
+	transcend_2.name = "Full Attack"
+	transcend_2.cost = 2
+	transcend_2.card_type = CardData.CardType.ATTACK
+	transcend_2.targeting_mode = CardData.TargetingMode.ENEMY
+	transcend_2.keywords.append("Slow")
+	var conditional_damage = EffectData.new("damage_conditional_elite", {"normal_amount": 18, "elite_amount": 36})
+	transcend_2.base_effects.append(conditional_damage)
+	transcendent_card_cache[transcend_2.id] = transcend_2
+	
+	# Transcend 3: Cost Discard X, Slow, Deal 9 damage X times
+	# Note: Discard cost handled separately in card play logic, hit_count set dynamically
+	var transcend_3 = CardData.new()
+	transcend_3.id = "full_attack_transcend_3"
+	transcend_3.name = "Full Attack"
+	transcend_3.cost = 1  # Display cost (not used for discard cost type)
+	transcend_3.cost_type = CardData.CostType.DISCARD
+	transcend_3.discard_cost_amount = 1  # Default X=1, can be modified if needed
+	transcend_3.card_type = CardData.CardType.ATTACK
+	transcend_3.targeting_mode = CardData.TargetingMode.ENEMY
+	transcend_3.keywords.append("Slow")
+	# Damage amount is 9, hit_count will be set dynamically to X (cards discarded) during play
+	var damage_effect_3 = EffectData.new("damage", {"amount": 9, "hit_count": 1})  # hit_count set dynamically
+	transcend_3.base_effects.append(damage_effect_3)
+	transcendent_card_cache[transcend_3.id] = transcend_3

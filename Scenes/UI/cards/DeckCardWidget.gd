@@ -46,6 +46,8 @@ func _update_display():
 	# Create or reuse CardWidget for display
 	if not card_widget:
 		card_widget = CardWidget.new()
+		# Set mouse_filter to IGNORE so clicks pass through to parent CardPanel
+		card_widget.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		# Find VBoxContainer in panel
 		var vbox = panel.get_node_or_null("VBoxContainer")
 		if vbox:

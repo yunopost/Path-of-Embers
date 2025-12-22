@@ -24,9 +24,16 @@ enum Rarity {
 	RARE
 }
 
+enum CostType {
+	ENERGY,
+	DISCARD  # Discard X cards from hand
+}
+
 @export var id: String = ""
 @export var name: String = ""
 @export var cost: int = 1
+@export var cost_type: CostType = CostType.ENERGY  # Cost payment type
+@export var discard_cost_amount: int = 1  # Number of cards to discard (for DISCARD cost type)
 @export var card_type: CardType = CardType.ATTACK
 @export var targeting_mode: TargetingMode = TargetingMode.NONE
 @export var owner_character_id: String = ""  # For character-specific cards/animations

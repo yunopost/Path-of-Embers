@@ -13,8 +13,13 @@ const COLOR_NORMAL = Color.WHITE
 static func get_effective_cost(card_def: CardData, card_inst: DeckCardData) -> int:
 	## Get effective cost after upgrades
 	## Returns base cost minus cost reduction upgrades (min 0)
+	## For DISCARD cost type, returns discard_cost_amount (upgrades not applied to discard cost)
 	if not card_def or not card_inst:
 		return 1  # Default fallback
+	
+	# For discard cost type, return discard amount (upgrades don't affect discard cost)
+	if card_def.cost_type == CardData.CostType.DISCARD:
+		return card_def.discard_cost_amount
 	
 	var base_cost = card_def.cost
 	var effective_cost = base_cost
@@ -131,13 +136,25 @@ static func get_card_keywords(card_inst: DeckCardData) -> Array[String]:
 			if not keyword.is_empty() and not keywords.has(keyword):
 				keywords.append(keyword)
 	
-	# Collect keywords from upgrades
+	# Collect keywords from upgrades (and handle keyword removal)
+	var removed_keywords: Array[String] = []
 	for upgrade_id in card_inst.applied_upgrades:
 		var upgrade_def = DataRegistry.get_upgrade_def(upgrade_id)
+		# Check for keyword removal
+		if upgrade_def.has("effects") and upgrade_def["effects"].has("remove_keyword"):
+			var keyword_to_remove = upgrade_def["effects"]["remove_keyword"]
+			if keyword_to_remove is String:
+				removed_keywords.append(keyword_to_remove)
+		# Check for keyword addition
 		if upgrade_def.has("keyword") and upgrade_def["keyword"] is String:
 			var keyword = upgrade_def["keyword"]
 			if not keyword.is_empty() and not keywords.has(keyword):
 				keywords.append(keyword)
+	
+	# Remove keywords that are marked for removal
+	for removed_keyword in removed_keywords:
+		if keywords.has(removed_keyword):
+			keywords.erase(removed_keyword)
 	
 	return keywords
 

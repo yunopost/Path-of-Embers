@@ -30,6 +30,8 @@ func start_combat(enemy_data: Array):
 	
 	# Initialize deck piles (ensure fresh state for combat)
 	RunState._initialize_deck_piles()
+	# Shuffle draw pile for randomized starting hand
+	RunState.deck_model.shuffle_draw_pile()
 	
 	# Create enemies
 	enemies.clear()
@@ -103,8 +105,18 @@ func start_player_turn():
 	# Draw 5 cards
 	RunState.draw_cards(5)
 
-func can_play_card(card_cost: int) -> bool:
-	return current_energy >= card_cost
+func can_play_card(card_cost: int, card_data: CardData = null) -> bool:
+	## Check if card can be played based on cost type
+	if not card_data:
+		return current_energy >= card_cost  # Default energy check
+	
+	if card_data.cost_type == CardData.CostType.DISCARD:
+		# For discard cost, check if hand has enough cards
+		var discard_amount = card_data.discard_cost_amount
+		return RunState.deck_model.hand.size() >= discard_amount + 1  # +1 because we remove the played card first
+	else:
+		# Energy cost
+		return current_energy >= card_cost
 
 func play_card(deck_card: DeckCardData, target: Node = null):
 	## Play a card from hand
@@ -117,7 +129,7 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 		return false
 	var card_cost = CardRules.get_effective_cost(card_data, deck_card)
 	
-	if not can_play_card(card_cost):
+	if not can_play_card(card_cost, card_data):
 		return false
 	
 	# Remove card from hand using instance_id
@@ -131,28 +143,41 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 		push_error("CombatController.play_card: deck_card has empty instance_id")
 		return false
 	
+	# Handle discard cost before removing card from hand (pass instance_id to exclude it)
+	var cards_discarded = 0
+	if card_data.cost_type == CardData.CostType.DISCARD:
+		cards_discarded = _pay_discard_cost(card_data.discard_cost_amount, instance_id)
+		if cards_discarded < card_data.discard_cost_amount:
+			# Failed to discard enough cards (shouldn't happen if can_play_card worked)
+			push_warning("Failed to discard required cards for discard cost card")
+			return false
+	
 	# Remove from deck_model hand
 	var hand_index = RunState.deck_model.hand.find(instance_id)
 	if hand_index >= 0:
 		RunState.deck_model.hand.remove_at(hand_index)
 		RunState.deck_model.hand_changed.emit()
 	
-	# Spend energy
-	current_energy -= card_cost
-	# Use set_energy() which will emit the signal if value changed
-	RunState.set_energy(current_energy, max_energy)
+	# Spend energy (if not discard cost)
+	if card_data.cost_type != CardData.CostType.DISCARD:
+		current_energy -= card_cost
+		# Use set_energy() which will emit the signal if value changed
+		RunState.set_energy(current_energy, max_energy)
 	
 	# Determine timer tick amount BEFORE resolving effects
 	# This ensures haste_next_card applies to the NEXT card, not the current one
 	var timer_tick_amount = _get_card_timer_tick(deck_card)
 	
-	# Resolve card effects (this may set haste_next_card status for the NEXT card)
-	_resolve_card_effects(deck_card, target)
+	# For discard cost cards (Transcend 3), set hit_count dynamically based on cards discarded
+	var effects = _get_card_effects(deck_card)
+	if card_data.cost_type == CardData.CostType.DISCARD and cards_discarded > 0:
+		# Modify effects to set hit_count to cards_discarded
+		for effect in effects:
+			if effect is EffectData and effect.effect_type == "damage":
+				effect.params["hit_count"] = cards_discarded
 	
-	# If haste_next_card was set by this card's effects, it applies to the NEXT card
-	# So we clear it now if it was just set, but only after we've used it for the next card
-	# Actually, we need to track if we just set it, and only clear it after the next card uses it
-	# For now, we'll clear it when the next card checks it
+	# Resolve card effects (this may set haste_next_card status for the NEXT card)
+	_resolve_card_effects_with_effects(deck_card, target, effects)
 	
 	# Tick all enemies with the timer amount for THIS card
 	enemy_time_system.tick_all_enemies(timer_tick_amount)
@@ -174,29 +199,95 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	
 	return true
 
-func _resolve_card_effects(deck_card: DeckCardData, target: Node = null):
-	## Resolve the effects of a played card
-	## Loads CardData and applies base_effects with upgrade modifications
-	var effects = _get_card_effects(deck_card)
+func _pay_discard_cost(discard_amount: int, exclude_instance_id: String = "") -> int:
+	## Pay discard cost by discarding cards from hand
+	## exclude_instance_id: Instance ID to exclude from discarding (the card being played)
+	## Returns number of cards actually discarded
+	var hand_size = RunState.deck_model.hand.size()
+	if hand_size <= discard_amount:
+		# Not enough cards (shouldn't happen if can_play_card worked)
+		return 0
 	
-	var target_stats: EntityStats = null
-	if target:
-		# Find target's EntityStats
-		if target.has_method("get_stats"):
-			target_stats = target.get_stats()
-		elif target.has_meta("enemy"):
-			var enemy = target.get_meta("enemy")
-			if enemy is Enemy:
-				target_stats = enemy.stats
-		else:
-			# Try to find enemy by iterating through enemies
-			for enemy in enemies:
-				if target.name.begins_with("Enemy_") and enemy.enemy_id in target.name:
+	# Get cards to discard (exclude the card being played)
+	var cards_available_to_discard: Array[String] = []
+	for card_id in RunState.deck_model.hand:
+		if card_id != exclude_instance_id:
+			cards_available_to_discard.append(card_id)
+	
+	if cards_available_to_discard.size() < discard_amount:
+		# Not enough cards available (shouldn't happen)
+		return 0
+	
+	# Discard cards (for now, remove from end of available cards; UI for player choice can be added later)
+	var discarded = 0
+	for i in range(discard_amount):
+		if cards_available_to_discard.size() > 0:
+			var card_to_discard_id = cards_available_to_discard[cards_available_to_discard.size() - 1]
+			cards_available_to_discard.pop_back()
+			
+			var hand_index = RunState.deck_model.hand.find(card_to_discard_id)
+			if hand_index >= 0:
+				RunState.deck_model.hand.remove_at(hand_index)
+				# Add to discard pile
+				var discard_index = RunState.deck_model.discard_pile.find(card_to_discard_id)
+				if discard_index < 0:
+					RunState.deck_model.discard_pile.append(card_to_discard_id)
+				discarded += 1
+	
+	if discarded > 0:
+		RunState.deck_model.hand_changed.emit()
+		RunState.deck_model.discard_pile_changed.emit()
+	
+	return discarded
+
+func _resolve_card_effects_with_effects(deck_card: DeckCardData, target: Node = null, effects: Array = []):
+	## Resolve card effects using provided effects array (for dynamic modifications)
+	
+	# Get card data to check targeting mode
+	var card_data = DataRegistry.get_card_data(deck_card.card_id)
+	if not card_data:
+		return
+	
+	var draw_count = 0
+	
+	# Handle ALL_ENEMIES targeting (e.g., Transcend 1)
+	if card_data.targeting_mode == CardData.TargetingMode.ALL_ENEMIES:
+		# Resolve effects for each alive enemy
+		for enemy in enemies:
+			if enemy.stats.is_alive():
+				draw_count += EffectResolver.resolve_effects(effects, player_stats, enemy.stats, enemy)
+	else:
+		# Single target resolution
+		var target_stats: EntityStats = null
+		if target:
+			# Find target's EntityStats
+			if target.has_method("get_stats"):
+				target_stats = target.get_stats()
+			elif target.has_meta("enemy"):
+				var enemy = target.get_meta("enemy")
+				if enemy is Enemy:
 					target_stats = enemy.stats
-					break
-	
-	# Resolve effects
-	var draw_count = EffectResolver.resolve_effects(effects, player_stats, target_stats)
+			else:
+				# Try to find enemy by iterating through enemies
+				for enemy in enemies:
+					if target.name.begins_with("Enemy_") and enemy.enemy_id in target.name:
+						target_stats = enemy.stats
+						break
+		
+		# Get enemy context if targeting an enemy
+		var enemy_context: Enemy = null
+		if target:
+			if target.has_meta("enemy"):
+				enemy_context = target.get_meta("enemy") as Enemy
+			else:
+				# Try to find enemy by iterating
+				for enemy in enemies:
+					if target.name.begins_with("Enemy_") and enemy.enemy_id in target.name:
+						enemy_context = enemy
+						break
+		
+		# Resolve effects
+		draw_count = EffectResolver.resolve_effects(effects, player_stats, target_stats, enemy_context)
 	
 	# Update RunState block
 	RunState.set_block(player_stats.block)
@@ -241,6 +332,29 @@ func _get_card_effects(deck_card: DeckCardData) -> Array:
 					var current_amount = effect.params.get("amount", 0)
 					effect.params["amount"] = current_amount + damage_delta
 		
+		# Apply damage multiplier (for half damage double hit)
+		if upgrade_effects.has("damage_multiply"):
+			var multiplier = upgrade_effects["damage_multiply"]
+			if multiplier is float or multiplier is int:
+				for effect in effects:
+					if effect is EffectData and effect.effect_type == "damage":
+						var current_amount = effect.params.get("amount", 0)
+						effect.params["amount"] = int(current_amount * float(multiplier))
+		
+		# Set hit_count (for double hit)
+		if upgrade_effects.has("hit_count_set"):
+			var hit_count = upgrade_effects["hit_count_set"]
+			if hit_count is int:
+				for effect in effects:
+					if effect is EffectData and effect.effect_type == "damage":
+						effect.params["hit_count"] = hit_count
+		
+		# Apply ignore_block flag
+		if upgrade_effects.has("ignore_block") and upgrade_effects["ignore_block"] == true:
+			for effect in effects:
+				if effect is EffectData and effect.effect_type == "damage":
+					effect.params["ignore_block"] = true
+		
 		# Apply block modifications
 		if upgrade_effects.has("block_delta"):
 			var block_delta = upgrade_effects["block_delta"]
@@ -249,6 +363,13 @@ func _get_card_effects(deck_card: DeckCardData) -> Array:
 				if effect is EffectData and effect.effect_type == "block":
 					var current_amount = effect.params.get("amount", 0)
 					effect.params["amount"] = current_amount + block_delta
+		
+		# Add block effect (for upgrades that add block)
+		if upgrade_effects.has("add_block"):
+			var block_amount = upgrade_effects["add_block"]
+			if block_amount is int:
+				var block_effect = EffectData.new("block", {"amount": block_amount})
+				effects.append(block_effect)
 		
 		# Apply heal modifications
 		if upgrade_effects.has("heal_delta"):

@@ -12,8 +12,10 @@ extends Control
 @onready var end_turn_button: Button = $BottomUI/EndTurnButton
 @onready var play_area: ColorRect = $PlayArea
 @onready var player_hp_label: Label = $CombatArea/PlayerAnchor/PlayerArea/PlayerHPLabel
+@onready var player_area: VBoxContainer = $CombatArea/PlayerAnchor/PlayerArea
 
 var card_ui_instances: Array[CardUI] = []
+var player_status_indicator: StatusEffectIndicator = null
 var is_updating_hand: bool = false
 
 var enemy_displays: Array[Control] = []
@@ -63,9 +65,9 @@ func refresh_from_state():
 
 func _start_combat():
 	## Initialize combat with test enemies (default for testing)
+	## Using new enemy system: 3 Ash Men
 	var enemy_data = [
-		{"id": "enemy1", "name": "Test Enemy 1", "max_hp": 6, "time_max": 3},
-		{"id": "enemy2", "name": "Test Enemy 2", "max_hp": 6, "time_max": 1}
+		{"enemy_id": "ash_man", "count": 3}
 	]
 	_start_combat_with_data({"enemies": enemy_data})
 
@@ -73,9 +75,9 @@ func _start_combat_with_data(encounter_data: Dictionary):
 	## Initialize combat with provided encounter data
 	var enemy_data = encounter_data.get("enemies", [])
 	if enemy_data.is_empty():
-		# Fallback to test enemies
+		# Fallback to test enemies: 3 Ash Men
 		enemy_data = [
-			{"id": "enemy1", "name": "Test Enemy 1", "max_hp": 6, "time_max": 3}
+			{"enemy_id": "ash_man", "count": 3}
 		]
 	
 	combat_controller.start_combat(enemy_data)
@@ -121,30 +123,49 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 	vbox.offset_bottom = -5
 	enemy_panel.add_child(vbox)
 	
+	# Health bar (at top)
+	var health_bar_scene = load("res://Path-of-Embers/Scenes/UI/HealthBar.tscn")
+	if health_bar_scene:
+		var health_bar = health_bar_scene.instantiate()
+		health_bar.setup(enemy.stats)
+		vbox.add_child(health_bar)
+	
+	# Status effect indicators (below health bar)
+	var status_indicator_scene = load("res://Path-of-Embers/Scenes/UI/StatusEffectIndicator.tscn")
+	if status_indicator_scene:
+		var status_indicator = status_indicator_scene.instantiate()
+		status_indicator.setup(enemy.stats)
+		vbox.add_child(status_indicator)
+	
+	# Name label with text wrapping
 	var name_label = Label.new()
 	name_label.text = enemy.name
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.clip_contents = true
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_label.custom_minimum_size = Vector2(0, 20)  # Minimum height for wrapped text
 	vbox.add_child(name_label)
 	
-	var hp_label = Label.new()
-	hp_label.name = "HPLabel"
-	hp_label.text = "HP: %d/%d" % [enemy.stats.current_hp, enemy.stats.max_hp]
-	vbox.add_child(hp_label)
-	
-	# Timer label
+	# Timer label with text wrapping
 	var timer_label = Label.new()
 	timer_label.name = "TimerLabel"
 	timer_label.text = "Timer: %d/%d" % [enemy.time_current, enemy.time_max]
+	timer_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	timer_label.clip_contents = true
+	timer_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	timer_label.custom_minimum_size = Vector2(0, 20)  # Minimum height for wrapped text
 	vbox.add_child(timer_label)
 	
-	# Intent label
+	# Intent label with text wrapping
 	var intent_label = Label.new()
 	intent_label.name = "IntentLabel"
 	intent_label.text = "Intent: %s" % (enemy.intent.telegraph_text if enemy.intent else "None")
+	intent_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intent_label.clip_contents = true
+	intent_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	intent_label.custom_minimum_size = Vector2(0, 20)  # Minimum height for wrapped text
 	vbox.add_child(intent_label)
-	
-	# Connect to stats signals
-	enemy.stats.hp_changed.connect(func(hp): hp_label.text = "HP: %d/%d" % [hp, enemy.stats.max_hp])
 	
 	# Connect to timer and intent signals
 	enemy.time_changed.connect(func(current, max_time): timer_label.text = "Timer: %d/%d" % [current, max_time])
@@ -242,6 +263,31 @@ func _update_player_hp():
 
 func _on_combat_started():
 	_update_player_hp()
+	_setup_player_status_indicator()
+
+func _setup_player_status_indicator():
+	## Set up status effect indicator for player
+	if not player_area or not combat_controller or not combat_controller.player_stats:
+		return
+	
+	# Remove existing indicator if present
+	if player_status_indicator and is_instance_valid(player_status_indicator):
+		player_status_indicator.queue_free()
+		player_status_indicator = null
+	
+	# Create and add status indicator
+	var status_indicator_scene = load("res://Path-of-Embers/Scenes/UI/StatusEffectIndicator.tscn")
+	if status_indicator_scene:
+		player_status_indicator = status_indicator_scene.instantiate()
+		player_status_indicator.setup(combat_controller.player_stats)
+		# Insert after PlayerHPLabel (or find appropriate position)
+		var hp_label_index = player_area.get_child_count()
+		for i in range(player_area.get_child_count()):
+			if player_area.get_child(i) == player_hp_label:
+				hp_label_index = i + 1
+				break
+		player_area.add_child(player_status_indicator)
+		player_area.move_child(player_status_indicator, hp_label_index)
 
 func _on_turn_ended():
 	_update_player_hp()

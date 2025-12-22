@@ -7,6 +7,7 @@ signal hp_changed(new_hp: int)
 signal max_hp_changed(new_max_hp: int)
 signal block_changed(new_block: int)
 signal died
+signal status_effects_changed  # Emitted when status_effects dictionary changes
 
 var current_hp: int = 50
 var max_hp: int = 50
@@ -18,8 +19,9 @@ func _init(initial_hp: int = 50, initial_max_hp: int = 50):
 	max_hp = initial_max_hp
 	block = 0
 
-func take_damage(amount: int):
+func take_damage(amount: int, ignore_block: bool = false):
 	## Apply damage, accounting for block and vulnerable status
+	## ignore_block: If true, bypass block completely
 	var base_damage = amount
 	
 	# Apply vulnerable multiplier (1.5x damage) if vulnerable status is active
@@ -28,7 +30,7 @@ func take_damage(amount: int):
 		base_damage = int(base_damage * 1.5)
 	
 	var actual_damage = base_damage
-	if block > 0:
+	if not ignore_block and block > 0:
 		if base_damage <= block:
 			block -= base_damage
 			actual_damage = 0
@@ -61,6 +63,7 @@ func reset_block():
 func apply_status(effect_type: String, value):
 	## Apply or update a status effect
 	status_effects[effect_type] = value
+	status_effects_changed.emit()
 
 func get_status(effect_type: String):
 	return status_effects.get(effect_type, null)
@@ -87,3 +90,7 @@ func expire_status_effects():
 	# Remove expired statuses
 	for effect_type in statuses_to_remove:
 		status_effects.erase(effect_type)
+	
+	# Emit signal if any statuses changed
+	if statuses_to_remove.size() > 0 or status_effects.size() > 0:
+		status_effects_changed.emit()

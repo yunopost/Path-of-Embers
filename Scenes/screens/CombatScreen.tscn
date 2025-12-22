@@ -97,11 +97,6 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="EnemyLabel" type="Label" parent="CombatArea/EnemyAnchor/EnemyArea"]
-layout_mode = 2
-text = "Enemies"
-horizontal_alignment = 1
-
 [node name="EnemySlots" type="HBoxContainer" parent="CombatArea/EnemyAnchor/EnemyArea"]
 layout_mode = 2
 alignment = 1
