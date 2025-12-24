@@ -10,8 +10,9 @@ var owner_character_id: String = ""  # Character who owns this card instance
 var applied_upgrades: Array[String] = []  # Upgrade IDs applied to this card
 var is_transcended: bool = false
 var transcendent_card_id: String = ""  # If transcended, the new card ID
+var is_temporary: bool = false  # Temporary cards removed at end of combat
 
-func _init(p_card_id: String = "", p_owner_id: String = "", p_upgrades: Array[String] = [], p_transcended: bool = false, p_transcendent_id: String = "", p_instance_id: String = ""):
+func _init(p_card_id: String = "", p_owner_id: String = "", p_upgrades: Array[String] = [], p_transcended: bool = false, p_transcendent_id: String = "", p_instance_id: String = "", p_is_temporary: bool = false):
 	card_id = p_card_id
 	owner_character_id = p_owner_id
 	if p_upgrades:
@@ -20,6 +21,7 @@ func _init(p_card_id: String = "", p_owner_id: String = "", p_upgrades: Array[St
 		applied_upgrades = []
 	is_transcended = p_transcended
 	transcendent_card_id = p_transcendent_id
+	is_temporary = p_is_temporary
 	
 	# Generate instance_id if not provided (UUID-style random string)
 	if p_instance_id.is_empty():
@@ -47,7 +49,8 @@ func to_dict() -> Dictionary:
 		"owner_character_id": owner_character_id,
 		"applied_upgrades": applied_upgrades,
 		"is_transcended": is_transcended,
-		"transcendent_card_id": transcendent_card_id
+		"transcendent_card_id": transcendent_card_id,
+		"is_temporary": is_temporary
 	}
 
 static func from_dict(data: Dictionary) -> DeckCardData:
@@ -62,5 +65,6 @@ static func from_dict(data: Dictionary) -> DeckCardData:
 		upgrades_array,
 		data.get("is_transcended", false),
 		data.get("transcendent_card_id", ""),
-		data.get("instance_id", "")  # Restore instance_id exactly as saved
+		data.get("instance_id", ""),  # Restore instance_id exactly as saved
+		data.get("is_temporary", false)
 	)

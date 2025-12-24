@@ -251,8 +251,8 @@ func get_upgrade_pool_for_card(card_id: String) -> Array[String]:
 		return result_pool
 	
 	# If no card-specific pool exists, return universal upgrades
-	var universal_upgrades = ["upgrade_cost_minus_1", "upgrade_haste"]
-	return universal_upgrades.duplicate()
+	var universal_upgrades: Array[String] = ["upgrade_cost_minus_1", "upgrade_haste"]
+	return universal_upgrades
 
 func get_upgrade_def(upgrade_id: String) -> Dictionary:
 	## Get upgrade definition by ID
@@ -371,6 +371,16 @@ func _initialize_generic_cards():
 	var heal_effect = EffectData.new("heal", {"amount": 5})
 	heal_1.base_effects.append(heal_effect)
 	generic_card_cache["heal_1"] = heal_1
+	
+	# Curse card (no effects, unplayable)
+	var curse_card = CardData.new()
+	curse_card.id = "curse_card"
+	curse_card.name = "Curse"
+	curse_card.card_type = CardData.CardType.CURSE
+	curse_card.cost = 0
+	curse_card.targeting_mode = CardData.TargetingMode.NONE
+	# No effects - curse cards do nothing
+	generic_card_cache["curse_card"] = curse_card
 
 func _initialize_enemies():
 	## Initialize enemy definitions (currently hardcoded, later can load from .tres files)

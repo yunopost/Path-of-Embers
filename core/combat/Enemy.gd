@@ -142,6 +142,10 @@ func perform_intent(combat_controller: CombatController):
 		# Update RunState HP and block after effects
 		RunState.set_hp(combat_controller.player_stats.current_hp, combat_controller.player_stats.max_hp)
 		RunState.set_block(combat_controller.player_stats.block)
+		
+		# Notify combat controller that enemy acted (for Power card effects)
+		if combat_controller.has_method("_on_enemy_acted"):
+			combat_controller._on_enemy_acted()
 	else:
 		# Legacy support: handle old "Attack" intent type
 		match intent.intent_type:
@@ -151,5 +155,9 @@ func perform_intent(combat_controller: CombatController):
 				EffectResolver.resolve_effect(attack_effect, stats, combat_controller.player_stats)
 				RunState.set_hp(combat_controller.player_stats.current_hp, combat_controller.player_stats.max_hp)
 				RunState.set_block(combat_controller.player_stats.block)
+				
+				# Notify combat controller that enemy acted (for Power card effects)
+				if combat_controller.has_method("_on_enemy_acted"):
+					combat_controller._on_enemy_acted()
 			_:
 				push_warning("Unknown intent type: " + intent.intent_type)

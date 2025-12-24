@@ -648,11 +648,11 @@ func get_timer_tick_amount_for_card(instance_id: String) -> int:
 	if has_upgrade(instance_id, "upgrade_haste"):
 		return 0
 	
-	# Check for Slow keyword on card
+	# Check for Slow keyword on card (using CardRules to account for upgrades that remove keywords)
 	var card_instance = deck.get(instance_id)
 	if card_instance:
-		var card_data = DataRegistry.get_card_data(card_instance.card_id)
-		if card_data and card_data.keywords.has("Slow"):
+		var keywords = CardRules.get_card_keywords(card_instance)
+		if keywords.has("Slow"):
 			return 2
 	
 	return 1

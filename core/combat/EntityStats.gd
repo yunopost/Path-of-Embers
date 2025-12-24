@@ -57,12 +57,32 @@ func add_block(amount: int):
 	block_changed.emit(block)
 
 func reset_block():
+	## Reset block to 0 (unless retain_block_this_turn status is active)
+	if get_status("retain_block_this_turn") != null:
+		# Don't reset block - retain it
+		# Remove the status after using it (it only applies once)
+		status_effects.erase("retain_block_this_turn")
+		status_effects_changed.emit()
+		return
 	block = 0
 	block_changed.emit(block)
 
 func apply_status(effect_type: String, value):
 	## Apply or update a status effect
-	status_effects[effect_type] = value
+	## For stacking statuses (strength, dexterity, faith): adds to existing value
+	## For duration-based statuses (weakness, vulnerable): replaces existing value
+	var stacking_statuses = ["strength", "dexterity", "faith"]
+	
+	if effect_type in stacking_statuses:
+		# Stacking status: add to existing value
+		var current_value = status_effects.get(effect_type, 0)
+		if current_value is int or current_value is float:
+			status_effects[effect_type] = int(current_value) + int(value)
+		else:
+			status_effects[effect_type] = int(value)
+	else:
+		# Duration-based status: replace value
+		status_effects[effect_type] = value
 	status_effects_changed.emit()
 
 func get_status(effect_type: String):
@@ -74,9 +94,20 @@ func is_alive() -> bool:
 func expire_status_effects():
 	## Decrease duration-based status effects by 1 turn, remove when duration reaches 0
 	## Called at the start/end of each turn
+	## Skips stacking status effects (strength, dexterity, faith) - they persist until combat ends
+	## Skips pending effects that are checked at specific times (pending_strength_if_no_damage)
+	var stacking_statuses = ["strength", "dexterity", "faith"]
+	var pending_statuses = ["pending_strength_if_no_damage"]
 	var statuses_to_remove: Array[String] = []
 	
 	for effect_type in status_effects.keys():
+		# Skip stacking statuses - they don't expire
+		if effect_type in stacking_statuses:
+			continue
+		# Skip pending statuses - they're handled at specific times
+		if effect_type in pending_statuses:
+			continue
+		
 		var value = status_effects[effect_type]
 		# If value is a number (duration), decrease it
 		if value is int or value is float:
@@ -92,5 +123,12 @@ func expire_status_effects():
 		status_effects.erase(effect_type)
 	
 	# Emit signal if any statuses changed
-	if statuses_to_remove.size() > 0 or status_effects.size() > 0:
+	if statuses_to_remove.size() > 0:
 		status_effects_changed.emit()
+
+func clear_combat_status_effects():
+	## Clear stacking status effects that persist until combat ends
+	status_effects.erase("strength")
+	status_effects.erase("dexterity")
+	status_effects.erase("faith")
+	status_effects_changed.emit()

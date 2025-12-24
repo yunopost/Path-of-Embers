@@ -6,7 +6,8 @@ class_name CardData
 enum CardType {
 	ATTACK,
 	SKILL,
-	POWER
+	POWER,
+	CURSE
 }
 
 enum TargetingMode {

@@ -323,9 +323,13 @@ func _end_combat_and_transition():
 	
 	combat_ending = true
 	
-	# Stop combat in controller
+	# Stop combat in controller, clear combat status effects, and remove temporary cards
 	if combat_controller:
 		combat_controller.combat_active = false
+		# Clear stacking status effects (Strength, Dexterity, Faith)
+		combat_controller.player_stats.clear_combat_status_effects()
+		# Remove temporary cards
+		combat_controller._remove_temporary_cards()
 	
 	# Emit COMBAT_VICTORY event for quest system (before marking node completed)
 	RunState.emit_game_event("COMBAT_VICTORY", {

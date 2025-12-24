@@ -12,12 +12,20 @@ var status_colors: Dictionary = {
 	"vulnerable": Color(1.0, 0.3, 0.3, 1.0),  # Red
 	"weak": Color(1.0, 0.8, 0.3, 1.0),  # Yellow (future)
 	"poisoned": Color(0.3, 1.0, 0.3, 1.0),  # Green (future)
+	"strength": Color(1.0, 0.5, 0.2, 1.0),  # Orange
+	"dexterity": Color(0.3, 0.8, 1.0, 1.0),  # Light blue
+	"faith": Color(0.7, 0.3, 1.0, 1.0),  # Purple
+	"weakness": Color(0.5, 0.2, 0.2, 1.0),  # Dark red
 }
 
 var status_names: Dictionary = {
 	"vulnerable": "Vulnerable",
 	"weak": "Weak",
 	"poisoned": "Poisoned",
+	"strength": "Strength",
+	"dexterity": "Dexterity",
+	"faith": "Faith",
+	"weakness": "Weakness",
 }
 
 func _ready():
@@ -51,20 +59,21 @@ func _update_display():
 		return
 	
 	# Display each active status effect
+	var stacking_statuses = ["strength", "dexterity", "faith"]
 	for status_type in entity_stats.status_effects.keys():
-		var duration = entity_stats.status_effects[status_type]
+		var value = entity_stats.status_effects[status_type]
 		
-		# Skip if duration is 0 or negative (shouldn't happen, but safety check)
-		if duration is int and duration <= 0:
+		# Skip if value is 0 or negative (shouldn't happen, but safety check)
+		if value is int and value <= 0:
 			continue
-		if duration is float and duration <= 0.0:
+		if value is float and value <= 0.0:
 			continue
 		
 		# Create status indicator
-		var status_indicator = _create_status_indicator(status_type, duration)
+		var status_indicator = _create_status_indicator(status_type, value, status_type in stacking_statuses)
 		status_container.add_child(status_indicator)
 
-func _create_status_indicator(status_type: String, duration) -> Control:
+func _create_status_indicator(status_type: String, value, is_stacking: bool = false) -> Control:
 	## Create a single status indicator (icon + duration)
 	var container = HBoxContainer.new()
 	container.custom_minimum_size = Vector2(50, 25)
@@ -77,18 +86,30 @@ func _create_status_indicator(status_type: String, duration) -> Control:
 	icon.size = Vector2(20, 20)
 	container.add_child(icon)
 	
-	# Duration label
-	var duration_label = Label.new()
-	var duration_value = int(duration) if (duration is int or duration is float) else duration
-	duration_label.text = str(duration_value)
-	duration_label.custom_minimum_size = Vector2(25, 20)
-	duration_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	duration_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	container.add_child(duration_label)
+	# Value label (stack count for stacking statuses, duration for duration-based)
+	var value_label = Label.new()
+	# Convert value to displayable format
+	var value_display = value
+	if value is int:
+		value_display = int(value)
+	elif value is float:
+		value_display = int(value)
+	else:
+		# For non-numeric values (e.g., boolean), convert to string
+		value_display = str(value)
 	
-	# Tooltip on hover
+	value_label.text = str(value_display)
+	value_label.custom_minimum_size = Vector2(25, 20)
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	container.add_child(value_label)
+	
+	# Tooltip on hover - use string formatting to handle all value types safely
 	var status_name = status_names.get(status_type, status_type.capitalize())
-	container.tooltip_text = "%s: %d turns" % [status_name, duration_value]
+	if is_stacking:
+		container.tooltip_text = "%s: %s" % [status_name, str(value_display)]
+	else:
+		container.tooltip_text = "%s: %s turns" % [status_name, str(value_display)]
 	
 	return container
 
