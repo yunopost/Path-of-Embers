@@ -28,8 +28,8 @@ func _ready():
 	set_process_input(true)
 	# Ensure we can receive input
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	# Set minimum size to ensure card has area for input
-	custom_minimum_size = Vector2(120, 160)
+	# Set minimum size to ensure card has area for input (matches CardWidget size)
+	custom_minimum_size = Vector2(210, 280)
 
 func _setup_ui():
 	# Create wrapper panel for drag/targeting functionality
@@ -46,7 +46,7 @@ func _setup_ui():
 	
 	# Make card draggable and interactive
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	custom_minimum_size = Vector2(120, 160)
+	custom_minimum_size = Vector2(210, 280)
 	
 	# Ensure card can receive input
 	set_process_input(true)

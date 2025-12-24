@@ -20,10 +20,14 @@ func _ready():
 	_setup_ui()
 
 func _setup_ui():
-	# Card panel (background)
+	# Card panel (background) - make it solid
 	card_panel = Panel.new()
 	card_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	card_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Add style to make panel solid (fully opaque)
+	var style_box = StyleBoxFlat.new()
+	style_box.bg_color = Color(0.2, 0.2, 0.2, 1.0)  # Dark gray, fully opaque
+	card_panel.add_theme_stylebox_override("panel", style_box)
 	add_child(card_panel)
 	
 	# Content container with clipping to ensure text stays within bounds
@@ -102,8 +106,8 @@ func _setup_ui():
 	owner_label.custom_minimum_size = Vector2(0, 15)
 	vbox.add_child(owner_label)
 	
-	# Set minimum size
-	custom_minimum_size = Vector2(120, 160)
+	# Set minimum size (75% larger: 120*1.75=210, 160*1.75=280)
+	custom_minimum_size = Vector2(210, 280)
 
 func setup_card(deck_card: DeckCardData):
 	## Setup card with DeckCardData instance
@@ -168,6 +172,7 @@ func _update_display():
 			var keyword_label = Label.new()
 			keyword_label.text = keyword
 			keyword_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			keyword_label.add_theme_font_size_override("font_size", 12)
 			keyword_label.modulate = Color(1.0, 0.84, 0.0, 1.0)  # Gold color
 			keyword_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			keyword_label.custom_minimum_size = Vector2(0, 20)
@@ -376,5 +381,3 @@ func _generate_effect_description(effect: EffectData, card_data: CardData) -> St
 			return "Effect: %s" % effect.effect_type
 	
 	return ""
-
-

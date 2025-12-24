@@ -73,6 +73,14 @@ layout_mode = 2
 custom_minimum_size = Vector2(100, 150)
 layout_mode = 2
 
+[node name="DrawPileArea" type="VBoxContainer" parent="CombatArea/PlayerAnchor/PlayerArea"]
+layout_mode = 2
+
+[node name="DrawPileLabel" type="Label" parent="CombatArea/PlayerAnchor/PlayerArea/DrawPileArea"]
+layout_mode = 2
+text = "Draw: 0"
+horizontal_alignment = 1
+
 [node name="EnemyAnchor" type="Control" parent="CombatArea"]
 layout_mode = 1
 anchors_preset = 6
@@ -123,6 +131,7 @@ horizontal_alignment = 1
 [node name="HandContainer" type="HBoxContainer" parent="HandArea"]
 layout_mode = 2
 alignment = 1
+theme_override_constants/separation = -42
 
 [node name="PlayArea" type="ColorRect" parent="."]
 layout_mode = 1
@@ -153,14 +162,6 @@ offset_bottom = -20.0
 grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
-
-[node name="DrawPileArea" type="VBoxContainer" parent="BottomUI"]
-layout_mode = 2
-
-[node name="DrawPileLabel" type="Label" parent="BottomUI/DrawPileArea"]
-layout_mode = 2
-text = "Draw: 0"
-horizontal_alignment = 1
 
 [node name="EnergyArea" type="VBoxContainer" parent="BottomUI"]
 layout_mode = 2
