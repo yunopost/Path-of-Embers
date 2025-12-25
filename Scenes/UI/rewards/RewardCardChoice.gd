@@ -24,6 +24,10 @@ func _ready():
 	
 	# Connect button press
 	pressed.connect(_on_pressed)
+	
+	# Connect hover signals for scale effect
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
 
 func setup_preview(p_card_id: String, p_owner_id: String = ""):
 	## Setup preview card for display
@@ -40,4 +44,19 @@ func setup_preview(p_card_id: String, p_owner_id: String = ""):
 func _on_pressed():
 	chosen.emit(card_id, owner_id)
 
+func _on_mouse_entered():
+	## Hover effect: scale up card from center
+	# Set pivot to center for scaling
+	pivot_offset = size / 2.0
+	var tween = create_tween()
+	tween.tween_property(self, "scale", Vector2(1.1, 1.1), 0.15)
+	# Bring to front during hover to prevent clipping
+	z_index = 10
+
+func _on_mouse_exited():
+	## Hover effect: scale back down
+	var tween = create_tween()
+	tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.15)
+	# Reset z-index
+	z_index = 0
 

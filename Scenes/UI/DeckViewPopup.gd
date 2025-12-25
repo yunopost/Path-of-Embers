@@ -20,6 +20,7 @@ func _ready():
 	RunState.discard_pile_changed.connect(_update_counts)
 	
 	_setup_popup()
+	_setup_grid()
 	_update_display()
 
 func _setup_popup():
@@ -34,28 +35,36 @@ func _setup_popup():
 	add_child(bg)
 	move_child(bg, 0)
 	
-	# Add panel behind content for better contrast
+	# Add panel behind content for better contrast (increased size to match content)
 	var content_bg = Panel.new()
 	content_bg.set_anchors_preset(Control.PRESET_CENTER)
-	content_bg.offset_left = -450
-	content_bg.offset_top = -350
-	content_bg.offset_right = 450
-	content_bg.offset_bottom = 350
+	content_bg.offset_left = -700
+	content_bg.offset_top = -450
+	content_bg.offset_right = 700
+	content_bg.offset_bottom = 450
 	content_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(content_bg)
 	move_child(content_bg, 1)
 	
-	# Center the content with more space
+	# Center the content with more space (increased size to accommodate 5 cards per row and hover scale)
+	# Width: 5 cards (220px each) + 4 gaps (15px each) = 1100px + padding = 1300px total (650 each side)
+	# Height: Increased to show multiple rows comfortably
 	var content = $VBoxContainer
 	content.set_anchors_preset(Control.PRESET_CENTER)
-	content.offset_left = -400
-	content.offset_top = -300
-	content.offset_right = 400
-	content.offset_bottom = 300
+	content.offset_left = -650
+	content.offset_top = -400
+	content.offset_right = 650
+	content.offset_bottom = 400
 	content.z_index = 10  # Ensure content is above backdrop
-	
-	# Setup grid
-	card_grid.columns = 3
+
+func _setup_grid():
+	## Setup grid with proper spacing - called after nodes are ready
+	if card_grid:
+		card_grid.columns = 5
+		card_grid.add_theme_constant_override("h_separation", 15)
+		card_grid.add_theme_constant_override("v_separation", 15)
+		# Make grid fill available horizontal space
+		card_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 func _update_display():
 	_update_card_grid()
@@ -82,6 +91,9 @@ func _update_card_grid():
 		if deck_card is DeckCardData:
 			var card_widget = card_widget_scene.instantiate()
 			card_widget.setup(deck_card, deck_index, false)  # Not clickable in deck view
+			# Cards maintain their aspect ratio (custom_minimum_size) without expanding
+			card_widget.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			card_widget.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			card_grid.add_child(card_widget)
 
 func _update_counts():

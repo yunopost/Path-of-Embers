@@ -14,6 +14,7 @@ var card_widget: CardWidget = null
 var deck_index: int = -1
 var card_instance: DeckCardData = null
 var is_clickable: bool = false
+var hover_effects_setup: bool = false
 
 func setup(p_card_instance: DeckCardData, p_deck_index: int, p_clickable: bool = false):
 	## Initialize the widget with card data
@@ -57,10 +58,16 @@ func _update_display():
 			# Insert CardWidget at the beginning of VBoxContainer
 			vbox.add_child(card_widget)
 			vbox.move_child(card_widget, 0)
+			# Wait for CardWidget to initialize, then override its minimum size
+			# This must be done after _setup_ui() runs in CardWidget._ready()
+			card_widget.call_deferred("set", "custom_minimum_size", Vector2(0, 0))
 	
 	# Setup CardWidget with card instance
 	if card_widget:
 		card_widget.setup_card(card_instance)
+		# Override minimum size after setup to prevent overflow in grid layouts
+		# This ensures CardWidget respects DeckCardWidget's container size (120x160)
+		card_widget.custom_minimum_size = Vector2(0, 0)
 	
 	# Get label nodes safely
 	var transcend_lbl = _get_transcend_label()
@@ -92,7 +99,13 @@ func _update_display():
 			panel.gui_input.connect(_on_card_clicked)
 	else:
 		if panel:
-			panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			# Still need mouse filter for hover effects even if not clickable
+			panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	
+	# Setup hover effects after panel is configured (only once)
+	if not hover_effects_setup:
+		call_deferred("_setup_hover_effects")
+		hover_effects_setup = true
 
 # Helper methods to get nodes safely (works before @onready vars are set)
 func _get_transcend_label() -> Label:
@@ -103,6 +116,38 @@ func _get_disabled_label() -> Label:
 
 func _get_card_panel() -> Panel:
 	return card_panel if card_panel else get_node_or_null("CardPanel") as Panel
+
+func _setup_hover_effects():
+	## Setup mouse hover effects for scale animation
+	var panel = _get_card_panel()
+	if not panel:
+		return
+	
+	# Ensure panel can receive mouse events (but don't override if already set for clicks)
+	if panel.mouse_filter == Control.MOUSE_FILTER_IGNORE:
+		panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	
+	# Connect hover signals if not already connected
+	if not panel.mouse_entered.is_connected(_on_mouse_entered):
+		panel.mouse_entered.connect(_on_mouse_entered)
+	if not panel.mouse_exited.is_connected(_on_mouse_exited):
+		panel.mouse_exited.connect(_on_mouse_exited)
+
+func _on_mouse_entered():
+	## Hover effect: scale up card from center
+	# Set pivot to center for scaling
+	pivot_offset = size / 2.0
+	var tween = create_tween()
+	tween.tween_property(self, "scale", Vector2(1.1, 1.1), 0.15)
+	# Bring to front during hover to prevent clipping
+	z_index = 10
+
+func _on_mouse_exited():
+	## Hover effect: scale back down
+	var tween = create_tween()
+	tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.15)
+	# Reset z-index
+	z_index = 0
 
 func _on_card_clicked(event: InputEvent):
 	if is_clickable and event is InputEventMouseButton:

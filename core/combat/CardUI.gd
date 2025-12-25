@@ -30,6 +30,10 @@ func _ready():
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	# Set minimum size to ensure card has area for input (matches CardWidget size)
 	custom_minimum_size = Vector2(210, 280)
+	
+	# Connect hover signals for scale effect
+	mouse_entered.connect(_on_mouse_entered)
+	mouse_exited.connect(_on_mouse_exited)
 
 func _setup_ui():
 	# Create wrapper panel for drag/targeting functionality
@@ -115,6 +119,8 @@ func _start_drag(start_pos: Vector2):
 	drag_start_pos = start_pos
 	original_position = global_position
 	z_index = 100
+	# Reset scale when starting drag
+	scale = Vector2(1.0, 1.0)
 	
 	if _is_targeting_card():
 		_show_targeting_line(start_pos)
@@ -217,3 +223,24 @@ func _on_keyword_mouse_exited():
 	## Hide tooltip
 	if tooltip_popup:
 		tooltip_popup.visible = false
+
+func _on_mouse_entered():
+	## Hover effect: scale up card from center
+	if is_dragging:
+		return  # Don't scale during drag
+	# Set pivot to center for scaling
+	pivot_offset = size / 2.0
+	var tween = create_tween()
+	tween.tween_property(self, "scale", Vector2(1.1, 1.1), 0.15)
+	# Bring to front during hover to prevent clipping
+	z_index = 10
+
+func _on_mouse_exited():
+	## Hover effect: scale back down
+	if is_dragging:
+		return  # Don't scale during drag
+	var tween = create_tween()
+	tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.15)
+	# Reset z-index if not dragging
+	if not is_dragging:
+		z_index = 0
