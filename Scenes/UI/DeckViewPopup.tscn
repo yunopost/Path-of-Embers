@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cflel50n7t4je"]
 
-[ext_resource type="Script" path="res://Path-of-Embers/Scenes/UI/DeckViewPopup.gd" id="1_deckviewpopup"]
+[ext_resource type="Script" uid="uid://37rrmjiho3f4" path="res://Path-of-Embers/Scenes/UI/DeckViewPopup.gd" id="1_deckviewpopup"]
 
 [node name="DeckViewPopup" type="Control"]
 layout_mode = 3
@@ -9,7 +9,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 0
 script = ExtResource("1_deckviewpopup")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
@@ -19,10 +18,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -400.0
-offset_top = -300.0
-offset_right = 400.0
-offset_bottom = 300.0
+offset_left = -650.0
+offset_top = -400.0
+offset_right = 650.0
+offset_bottom = 400.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -51,7 +50,10 @@ size_flags_vertical = 3
 
 [node name="CardGrid" type="GridContainer" parent="VBoxContainer/ScrollContainer"]
 layout_mode = 2
-columns = 3
+columns = 5
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 15
+theme_override_constants/v_separation = 15
 
 [node name="CloseButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2

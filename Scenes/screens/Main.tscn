@@ -1,0 +1,80 @@
+[gd_scene load_steps=8 format=3 uid="uid://c8x7k2nav1n4p"]
+
+[ext_resource type="Script" uid="uid://bnciref12xnam" path="res://Path-of-Embers/Scenes/screens/Main.gd" id="1_main"]
+[ext_resource type="Texture2D" uid="uid://fgggi4qea61w" path="res://Path-of-Embers/Art Assets/Start Menu/Main Menu background.png" id="2_lgc7k"]
+[ext_resource type="Texture2D" uid="uid://c1ghi80aehv5t" path="res://Path-of-Embers/Art Assets/Start Menu/NEW GAME FINAL.png" id="3_4ut7r"]
+[ext_resource type="Texture2D" uid="uid://mnb87brpajag" path="res://Path-of-Embers/Art Assets/Start Menu/QUIT FINAL.png" id="4_lgc7k"]
+[ext_resource type="Texture2D" uid="uid://bli7hc12j8cch" path="res://Path-of-Embers/Art Assets/Start Menu/CONTINUE FINAL.png" id="5_4ut7r"]
+[ext_resource type="Texture2D" uid="uid://cxtkcfi48uyw2" path="res://Path-of-Embers/Art Assets/Start Menu/Settings Final.png" id="7_bl6rt"]
+[ext_resource type="Texture2D" uid="uid://dg67xho8nckni" path="res://Path-of-Embers/Art Assets/Start Menu/PATH OF EMBERS FINAL.png" id="7_np1wl"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main")
+
+[node name="BackgroundTexture" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_lgc7k")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PathOfEmbersTitle" type="TextureRect" parent="."]
+custom_minimum_size = Vector2(1080, 720)
+layout_mode = 0
+offset_left = 396.0
+offset_top = -241.0
+offset_right = 1476.0
+offset_bottom = 479.0
+texture = ExtResource("7_np1wl")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NewGameButton" type="TextureButton" parent="."]
+layout_mode = 0
+offset_left = 760.0
+offset_top = 343.0
+offset_right = 1090.0
+offset_bottom = 460.0
+texture_normal = ExtResource("3_4ut7r")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="SettingsButton" type="TextureButton" parent="."]
+layout_mode = 0
+offset_left = 761.0
+offset_top = 591.0
+offset_right = 1089.0
+offset_bottom = 714.0
+texture_normal = ExtResource("7_bl6rt")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="ContinueButton" type="TextureButton" parent="."]
+layout_mode = 0
+offset_left = 762.0
+offset_top = 466.0
+offset_right = 1089.0
+offset_bottom = 583.0
+texture_normal = ExtResource("5_4ut7r")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="QuitButton" type="TextureButton" parent="."]
+layout_mode = 0
+offset_left = 764.0
+offset_top = 722.0
+offset_right = 1090.0
+offset_bottom = 837.0
+texture_normal = ExtResource("4_lgc7k")
+ignore_texture_size = true
+stretch_mode = 0

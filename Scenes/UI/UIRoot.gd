@@ -213,7 +213,7 @@ func _on_node_position_changed():
 		node_progress_label.text = "Node: %d" % RunState.node_position
 
 func _on_map_button_pressed():
-	SceneRouter.change_scene("map")
+	ScreenManager.go_to_map()
 
 func _on_deck_button_pressed():
 	open_popup("deck")

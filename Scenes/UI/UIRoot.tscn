@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://bqj8k3x7v2n1m"]
 
-[ext_resource type="Script" uid="uid://cfmfct8fhm1rr" path="res://Path-of-Embers/Scenes/UI/UIRoot.gd" id="1_uiroot"]
-[ext_resource type="PackedScene" uid="uid://b8x7k2nav1n4q" path="res://Path-of-Embers/Scenes/UI/HUD/PartyHUD.tscn" id="2_partyhud"]
+[ext_resource type="Script" uid="uid://cfmfct8fhm1rr" path="res://Path-of-Embers/scenes/ui/UIRoot.gd" id="1_uiroot"]
+[ext_resource type="PackedScene" uid="uid://b8x7k2nav1n4q" path="res://Path-of-Embers/scenes/ui/HUD/PartyHUD.tscn" id="2_partyhud"]
 
 [node name="UIRoot" type="Control"]
 layout_mode = 3

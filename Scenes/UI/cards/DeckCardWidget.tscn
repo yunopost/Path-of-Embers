@@ -1,0 +1,45 @@
+[gd_scene load_steps=2 format=3 uid="uid://kpbepchfrstk"]
+
+[ext_resource type="Script" uid="uid://df7smrg8cm1oe" path="res://Path-of-Embers/Scenes/UI/cards/DeckCardWidget.gd" id="1_cardwidget"]
+
+[node name="DeckCardWidget" type="Control"]
+custom_minimum_size = Vector2(220, 293)
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_cardwidget")
+
+[node name="CardPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+clip_contents = true
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CardPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = -5.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TranscendLabel" type="Label" parent="CardPanel/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.843, 0, 1)
+theme_override_font_sizes/font_size = 10
+text = "Transcended!"
+
+[node name="DisabledLabel" type="Label" parent="CardPanel/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 10
+text = "(Cannot upgrade)"
