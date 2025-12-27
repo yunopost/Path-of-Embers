@@ -12,7 +12,7 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 		return
 	
 	match effect.effect_type:
-		"damage":  # Standardized effect type name
+		EffectType.DAMAGE:
 			var base_damage = effect.params.get("amount", 0)
 			var hit_count = effect.params.get("hit_count", 1)  # Multi-hit support
 			var ignore_block = effect.params.get("ignore_block", false)  # Ignore block flag
@@ -21,7 +21,7 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 			# Apply Strength bonus
 			var strength_amount = 0
 			if source:
-				var strength_value = source.get_status("strength")
+				var strength_value = source.get_status(StatusEffectType.STRENGTH)
 				if strength_value != null:
 					strength_amount = int(strength_value)
 					if double_strength:
@@ -30,7 +30,7 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 			# Apply Weakness reduction (25% reduction = multiply by 0.75)
 			var weakness_active = false
 			if source:
-				var weakness_value = source.get_status("weakness")
+				var weakness_value = source.get_status(StatusEffectType.WEAKNESS)
 				if weakness_value != null and int(weakness_value) > 0:
 					weakness_active = true
 			
@@ -45,13 +45,13 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 				for i in range(hit_count):
 					target.take_damage(final_damage, ignore_block)
 		
-		"block":  # Standardized effect type name
+		EffectType.BLOCK:
 			var base_block = effect.params.get("amount", 0)
 			
 			# Apply Dexterity bonus
 			var dexterity_amount = 0
 			if source:
-				var dexterity_value = source.get_status("dexterity")
+				var dexterity_value = source.get_status(StatusEffectType.DEXTERITY)
 				if dexterity_value != null:
 					dexterity_amount = int(dexterity_value)
 			
@@ -59,13 +59,13 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 			if source:
 				source.add_block(final_block)
 		
-		"heal":  # Standardized effect type name
+		EffectType.HEAL:
 			var base_heal = effect.params.get("amount", 0)
 			
 			# Apply Faith bonus
 			var faith_amount = 0
 			if source:
-				var faith_value = source.get_status("faith")
+				var faith_value = source.get_status(StatusEffectType.FAITH)
 				if faith_value != null:
 					faith_amount = int(faith_value)
 			
@@ -73,61 +73,61 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 			if source:
 				source.heal(final_heal)
 		
-		"ApplyStatus":
+		EffectType.APPLY_STATUS:
 			var status_type = effect.params.get("status_type", "")
 			var status_value = effect.params.get("value", 0)
 			if target:
 				target.apply_status(status_type, status_value)
 		
-		"ModifyEnemyTimer":
+		EffectType.MODIFY_ENEMY_TIMER:
 			# Placeholder for future implementation
 			pass
 		
-		"draw":  # Standardized effect type name (was "DrawCards")
+		EffectType.DRAW:
 			# Draw cards handled separately in CombatController
 			var draw_count = effect.params.get("amount", 1)
 			# Signal will be handled by CombatController
 			return draw_count
 		
-		"grant_haste_next_card":  # Next card played doesn't advance enemy timer
+		EffectType.GRANT_HASTE_NEXT_CARD:
 			# Set status in RunState
 			if RunState:
 				RunState.haste_next_card = true
 		
-		"vulnerable":  # Apply vulnerable status (duration-based)
+		EffectType.VULNERABLE:
 			var duration = effect.params.get("duration", 1)
 			if target:
-				target.apply_status("vulnerable", duration)
+				target.apply_status(StatusEffectType.VULNERABLE, duration)
 		
-		"vulnerable_all_enemies":  # Apply vulnerable to all enemies
+		EffectType.VULNERABLE_ALL_ENEMIES:
 			var duration = effect.params.get("duration", 1)
 			if combat_controller and combat_controller.has_method("get_enemies"):
 				var all_enemies = combat_controller.get_enemies()
 				for enemy in all_enemies:
 					if enemy.stats.is_alive():
-						enemy.stats.apply_status("vulnerable", duration)
+						enemy.stats.apply_status(StatusEffectType.VULNERABLE, duration)
 		
-		"strength":  # Apply Strength status (stacking)
+		EffectType.STRENGTH:
 			var amount = effect.params.get("amount", 1)
 			if source:
-				source.apply_status("strength", amount)
+				source.apply_status(StatusEffectType.STRENGTH, amount)
 		
-		"dexterity":  # Apply Dexterity status (stacking)
+		EffectType.DEXTERITY:
 			var amount = effect.params.get("amount", 1)
 			if source:
-				source.apply_status("dexterity", amount)
+				source.apply_status(StatusEffectType.DEXTERITY, amount)
 		
-		"faith":  # Apply Faith status (stacking)
+		EffectType.FAITH:
 			var amount = effect.params.get("amount", 1)
 			if source:
-				source.apply_status("faith", amount)
+				source.apply_status(StatusEffectType.FAITH, amount)
 		
-		"weakness":  # Apply Weakness status (duration-based)
+		EffectType.WEAKNESS:
 			var duration = effect.params.get("duration", 1)
 			if target:
-				target.apply_status("weakness", duration)
+				target.apply_status(StatusEffectType.WEAKNESS, duration)
 		
-		"damage_per_curse":  # Damage based on curses in hand/discard (Malediction Lash)
+		EffectType.DAMAGE_PER_CURSE:
 			var base_amount = effect.params.get("base_amount", 0)
 			var per_curse = effect.params.get("per_curse", 0)
 			
@@ -157,13 +157,13 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 				# Apply Strength and Weakness modifiers
 				var strength_amount = 0
 				if source:
-					var strength_value = source.get_status("strength")
+					var strength_value = source.get_status(StatusEffectType.STRENGTH)
 					if strength_value != null:
 						strength_amount = int(strength_value)
 				
 				var weakness_active = false
 				if source:
-					var weakness_value = source.get_status("weakness")
+					var weakness_value = source.get_status(StatusEffectType.WEAKNESS)
 					if weakness_value != null and int(weakness_value) > 0:
 						weakness_active = true
 				
@@ -174,35 +174,35 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 				
 				target.take_damage(final_damage, false)
 		
-		"add_curse_to_hand":  # Add a curse card to hand (Hexbound Ritual)
+		EffectType.ADD_CURSE_TO_HAND:
 			var is_temporary = effect.params.get("is_temporary", false)
 			if combat_controller and combat_controller.has_method("_add_curse_to_hand"):
 				combat_controller._add_curse_to_hand(is_temporary)
 		
-		"conditional_strength_if_no_damage":  # Fade Step - gain Strength if no damage this turn (checked at end of turn)
+		EffectType.CONDITIONAL_STRENGTH_IF_NO_DAMAGE:
 			var amount = effect.params.get("amount", 1)
 			# Set a pending status that will be checked at end of turn
 			if source:
-				source.apply_status("pending_strength_if_no_damage", amount)
+				source.apply_status(StatusEffectType.PENDING_STRENGTH_IF_NO_DAMAGE, amount)
 		
-		"add_temporary_upgrade_to_random_hand_card":  # Reinforce - placeholder for now
+		EffectType.ADD_TEMPORARY_UPGRADE_TO_RANDOM_HAND_CARD:
 			push_warning("EffectResolver: add_temporary_upgrade_to_random_hand_card not yet implemented (placeholder)")
 			# TODO: Implement temporary upgrade system
 		
-		"retain_block_this_turn":  # Plated Guard - do not lose block at end of turn
+		EffectType.RETAIN_BLOCK_THIS_TURN:
 			var status_value = effect.params.get("value", true)
 			if source:
 				source.apply_status("retain_block_this_turn", status_value)
 		
-		"block_on_enemy_act":  # Survey the Path - gain block when enemy acts (handled in Power card setup)
+		EffectType.BLOCK_ON_ENEMY_ACT:
 			# This is handled in CombatController._setup_power_card_effects()
 			pass
 		
-		"damage_on_block_gain":  # Resonant Frame - deal damage when block gained (handled in Power card setup)
+		EffectType.DAMAGE_ON_BLOCK_GAIN:
 			# This is handled in CombatController._setup_power_card_effects()
 			pass
 		
-		"damage_conditional_elite":  # Conditional damage: more for Elite/Boss
+		EffectType.DAMAGE_CONDITIONAL_ELITE:
 			var normal_damage = effect.params.get("normal_amount", 18)
 			var elite_damage = effect.params.get("elite_amount", 36)
 			var hit_count = effect.params.get("hit_count", 1)
@@ -232,11 +232,11 @@ static func resolve_effects(effects: Array, source: EntityStats, target: EntityS
 	var draw_cards = 0
 	for effect in effects:
 		if effect is EffectData:
-			if effect.effect_type == "draw":  # Standardized effect type name
+			if effect.effect_type == EffectType.DRAW:
 				var result = resolve_effect(effect, source, target, enemy_context, combat_controller)
 				if result is int:
 					draw_cards += result
-			elif effect.effect_type == "damage_per_curse":
+			elif effect.effect_type == EffectType.DAMAGE_PER_CURSE:
 				# Special handling for damage_per_curse with ALL_ENEMIES targeting
 				if combat_controller and combat_controller.has_method("get_enemies"):
 					var all_enemies = combat_controller.get_enemies()

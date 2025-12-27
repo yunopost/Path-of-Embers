@@ -102,7 +102,7 @@ func _create_placeholder_characters():
 			full_attack.owner_character_id = "warrior_1"
 			full_attack.rarity = CardData.Rarity.COMMON
 			full_attack.keywords.append("Slow")
-			var damage_effect = EffectData.new("damage", {"amount": 14})
+			var damage_effect = EffectData.new(EffectType.DAMAGE, {"amount": 14})
 			full_attack.base_effects.append(damage_effect)
 			char_data.starter_unique_cards.append(full_attack)
 			
@@ -115,7 +115,7 @@ func _create_placeholder_characters():
 			shoulder_tackle.targeting_mode = CardData.TargetingMode.SELF
 			shoulder_tackle.owner_character_id = "warrior_1"
 			shoulder_tackle.rarity = CardData.Rarity.COMMON
-			var haste_effect = EffectData.new("grant_haste_next_card", {})
+			var haste_effect = EffectData.new(EffectType.GRANT_HASTE_NEXT_CARD, {})
 			shoulder_tackle.base_effects.append(haste_effect)
 			char_data.starter_unique_cards.append(shoulder_tackle)
 		else:
@@ -129,7 +129,7 @@ func _create_placeholder_characters():
 			dark_knife.targeting_mode = CardData.TargetingMode.ENEMY
 			dark_knife.owner_character_id = "warrior_2"
 			dark_knife.rarity = CardData.Rarity.COMMON
-			var dark_knife_damage = EffectData.new("damage", {"amount": 6, "double_strength": true})
+			var dark_knife_damage = EffectData.new(EffectType.DAMAGE, {"amount": 6, "double_strength": true})
 			dark_knife.base_effects.append(dark_knife_damage)
 			char_data.starter_unique_cards.append(dark_knife)
 			
@@ -142,10 +142,10 @@ func _create_placeholder_characters():
 			fade_step.targeting_mode = CardData.TargetingMode.SELF
 			fade_step.owner_character_id = "warrior_2"
 			fade_step.rarity = CardData.Rarity.COMMON
-			var fade_step_block = EffectData.new("block", {"amount": 4})
+			var fade_step_block = EffectData.new(EffectType.BLOCK, {"amount": 4})
 			fade_step.base_effects.append(fade_step_block)
 			# Conditional Strength effect will be handled in card-specific mechanics
-			var fade_step_strength = EffectData.new("conditional_strength_if_no_damage", {"amount": 1})
+			var fade_step_strength = EffectData.new(EffectType.CONDITIONAL_STRENGTH_IF_NO_DAMAGE, {"amount": 1})
 			fade_step.base_effects.append(fade_step_strength)
 			char_data.starter_unique_cards.append(fade_step)
 		
@@ -197,9 +197,9 @@ func _create_placeholder_characters():
 			hexbound_ritual.targeting_mode = CardData.TargetingMode.SELF
 			hexbound_ritual.owner_character_id = "healer_1"
 			hexbound_ritual.rarity = CardData.Rarity.COMMON
-			var add_curse_effect = EffectData.new("add_curse_to_hand", {"is_temporary": true})
+			var add_curse_effect = EffectData.new(EffectType.ADD_CURSE_TO_HAND, {"is_temporary": true})
 			hexbound_ritual.base_effects.append(add_curse_effect)
-			var vulnerable_all_effect = EffectData.new("vulnerable_all_enemies", {"duration": 2})
+			var vulnerable_all_effect = EffectData.new(EffectType.VULNERABLE_ALL_ENEMIES, {"duration": 2})
 			hexbound_ritual.base_effects.append(vulnerable_all_effect)
 			char_data.starter_unique_cards.append(hexbound_ritual)
 			
@@ -212,7 +212,7 @@ func _create_placeholder_characters():
 			malediction_lash.targeting_mode = CardData.TargetingMode.ALL_ENEMIES
 			malediction_lash.owner_character_id = "healer_1"
 			malediction_lash.rarity = CardData.Rarity.COMMON
-			var malediction_damage = EffectData.new("damage_per_curse", {"base_amount": 2, "per_curse": 2})
+			var malediction_damage = EffectData.new(EffectType.DAMAGE_PER_CURSE, {"base_amount": 2, "per_curse": 2})
 			malediction_lash.base_effects.append(malediction_damage)
 			char_data.starter_unique_cards.append(malediction_lash)
 		else:
@@ -226,7 +226,7 @@ func _create_placeholder_characters():
 			clear_the_way.targeting_mode = CardData.TargetingMode.ENEMY
 			clear_the_way.owner_character_id = "healer_2"
 			clear_the_way.rarity = CardData.Rarity.COMMON
-			var clear_damage = EffectData.new("damage", {"amount": 10})
+			var clear_damage = EffectData.new(EffectType.DAMAGE, {"amount": 10})
 			clear_the_way.base_effects.append(clear_damage)
 			# First card only restriction will be handled in card-specific mechanics
 			clear_the_way.keywords.append("FirstCardOnly")
@@ -241,7 +241,7 @@ func _create_placeholder_characters():
 			survey_path.targeting_mode = CardData.TargetingMode.SELF
 			survey_path.owner_character_id = "healer_2"
 			survey_path.rarity = CardData.Rarity.COMMON
-			var survey_effect = EffectData.new("block_on_enemy_act", {"amount": 1})
+			var survey_effect = EffectData.new(EffectType.BLOCK_ON_ENEMY_ACT, {"amount": 1})
 			survey_path.base_effects.append(survey_effect)
 			char_data.starter_unique_cards.append(survey_path)
 		
@@ -292,9 +292,9 @@ func _create_placeholder_characters():
 			stonebound_strike.targeting_mode = CardData.TargetingMode.ENEMY
 			stonebound_strike.owner_character_id = "defender_1"
 			stonebound_strike.rarity = CardData.Rarity.COMMON
-			var stonebound_damage = EffectData.new("damage", {"amount": 6})
+			var stonebound_damage = EffectData.new(EffectType.DAMAGE, {"amount": 6})
 			stonebound_strike.base_effects.append(stonebound_damage)
-			var stonebound_block = EffectData.new("block", {"amount": 3})
+			var stonebound_block = EffectData.new(EffectType.BLOCK, {"amount": 3})
 			stonebound_strike.base_effects.append(stonebound_block)
 			char_data.starter_unique_cards.append(stonebound_strike)
 			
@@ -307,9 +307,9 @@ func _create_placeholder_characters():
 			reinforce.targeting_mode = CardData.TargetingMode.SELF
 			reinforce.owner_character_id = "defender_1"
 			reinforce.rarity = CardData.Rarity.COMMON
-			var reinforce_block = EffectData.new("block", {"amount": 4})
+			var reinforce_block = EffectData.new(EffectType.BLOCK, {"amount": 4})
 			reinforce.base_effects.append(reinforce_block)
-			var add_temp_upgrade = EffectData.new("add_temporary_upgrade_to_random_hand_card", {})
+			var add_temp_upgrade = EffectData.new(EffectType.ADD_TEMPORARY_UPGRADE_TO_RANDOM_HAND_CARD, {})
 			reinforce.base_effects.append(add_temp_upgrade)
 			char_data.starter_unique_cards.append(reinforce)
 		else:
@@ -323,9 +323,9 @@ func _create_placeholder_characters():
 			plated_guard.targeting_mode = CardData.TargetingMode.SELF
 			plated_guard.owner_character_id = "defender_2"
 			plated_guard.rarity = CardData.Rarity.COMMON
-			var plated_block = EffectData.new("block", {"amount": 8})
+			var plated_block = EffectData.new(EffectType.BLOCK, {"amount": 8})
 			plated_guard.base_effects.append(plated_block)
-			var retain_block_effect = EffectData.new("retain_block_this_turn", {})
+			var retain_block_effect = EffectData.new(EffectType.RETAIN_BLOCK_THIS_TURN, {})
 			plated_guard.base_effects.append(retain_block_effect)
 			char_data.starter_unique_cards.append(plated_guard)
 			
@@ -338,7 +338,7 @@ func _create_placeholder_characters():
 			resonant_frame.targeting_mode = CardData.TargetingMode.SELF
 			resonant_frame.owner_character_id = "defender_2"
 			resonant_frame.rarity = CardData.Rarity.COMMON
-			var resonant_effect = EffectData.new("damage_on_block_gain", {"amount": 1})
+			var resonant_effect = EffectData.new(EffectType.DAMAGE_ON_BLOCK_GAIN, {"amount": 1})
 			resonant_frame.base_effects.append(resonant_effect)
 			char_data.starter_unique_cards.append(resonant_frame)
 		
@@ -543,9 +543,9 @@ func _update_party_summary():
 			if DataRegistry:
 				char_data = DataRegistry.get_character(char_id)
 			if char_data:
-				summary_lines.append("  • %s (%s)" % [char_data.display_name, char_data.role])
+				summary_lines.append("  â€¢ %s (%s)" % [char_data.display_name, char_data.role])
 			else:
-				summary_lines.append("  • %s" % char_id)
+				summary_lines.append("  â€¢ %s" % char_id)
 		party_summary_label.text = "\n".join(summary_lines)
 		party_summary_label.visible = true
 	else:
@@ -570,20 +570,24 @@ func _on_confirm_pressed():
 		push_error("Failed to find CharacterData for all selected characters")
 		return
 	
-	# Set party in RunState
+	# Set party
+	if PartyManager:
+		PartyManager.set_party(selected_character_ids)
+	
+	# Generate starter deck
 	if RunState:
-		RunState.set_party(selected_character_ids)
-		
-		# Generate starter deck
 		RunState.generate_starter_deck(selected_char_data)
-		
+	
 	# Initialize quests
-	RunState.initialize_quests(selected_char_data)
+	if QuestManager:
+		QuestManager.initialize_quests(selected_char_data)
 	
 	# Generate initial map
 	var map_gen = MapGenerator.new()
-	var map_data = map_gen.generate_map(RunState.act)
-	RunState.set_map_data(map_data)
+	var act = MapManager.act if MapManager else 1
+	var map_data = map_gen.generate_map(act)
+	if MapManager:
+		MapManager.set_map_data(map_data)
 	
 	# Force save new run (before navigating to map)
 	if AutoSaveManager:

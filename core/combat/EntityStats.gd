@@ -25,7 +25,7 @@ func take_damage(amount: int, ignore_block: bool = false):
 	var base_damage = amount
 	
 	# Apply vulnerable multiplier (1.5x damage) if vulnerable status is active
-	var vulnerable_duration = get_status("vulnerable")
+	var vulnerable_duration = get_status(StatusEffectType.VULNERABLE)
 	if vulnerable_duration != null and vulnerable_duration > 0:
 		base_damage = int(base_damage * 1.5)
 	
@@ -58,10 +58,10 @@ func add_block(amount: int):
 
 func reset_block():
 	## Reset block to 0 (unless retain_block_this_turn status is active)
-	if get_status("retain_block_this_turn") != null:
+	if get_status(StatusEffectType.RETAIN_BLOCK_THIS_TURN) != null:
 		# Don't reset block - retain it
 		# Remove the status after using it (it only applies once)
-		status_effects.erase("retain_block_this_turn")
+		status_effects.erase(StatusEffectType.RETAIN_BLOCK_THIS_TURN)
 		status_effects_changed.emit()
 		return
 	block = 0
@@ -71,9 +71,9 @@ func apply_status(effect_type: String, value):
 	## Apply or update a status effect
 	## For stacking statuses (strength, dexterity, faith): adds to existing value
 	## For duration-based statuses (weakness, vulnerable): replaces existing value
-	var stacking_statuses = ["strength", "dexterity", "faith"]
+	## Use StatusEffectType constants for type safety
 	
-	if effect_type in stacking_statuses:
+	if StatusEffectType.is_stacking(effect_type):
 		# Stacking status: add to existing value
 		var current_value = status_effects.get(effect_type, 0)
 		if current_value is int or current_value is float:
@@ -96,16 +96,14 @@ func expire_status_effects():
 	## Called at the start/end of each turn
 	## Skips stacking status effects (strength, dexterity, faith) - they persist until combat ends
 	## Skips pending effects that are checked at specific times (pending_strength_if_no_damage)
-	var stacking_statuses = ["strength", "dexterity", "faith"]
-	var pending_statuses = ["pending_strength_if_no_damage"]
 	var statuses_to_remove: Array[String] = []
 	
 	for effect_type in status_effects.keys():
 		# Skip stacking statuses - they don't expire
-		if effect_type in stacking_statuses:
+		if StatusEffectType.is_stacking(effect_type):
 			continue
 		# Skip pending statuses - they're handled at specific times
-		if effect_type in pending_statuses:
+		if StatusEffectType.is_pending(effect_type):
 			continue
 		
 		var value = status_effects[effect_type]
@@ -128,7 +126,6 @@ func expire_status_effects():
 
 func clear_combat_status_effects():
 	## Clear stacking status effects that persist until combat ends
-	status_effects.erase("strength")
-	status_effects.erase("dexterity")
-	status_effects.erase("faith")
+	for stacking_type in StatusEffectType.get_stacking_statuses():
+		status_effects.erase(stacking_type)
 	status_effects_changed.emit()

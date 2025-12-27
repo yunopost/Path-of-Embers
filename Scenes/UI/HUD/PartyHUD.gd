@@ -18,12 +18,13 @@ func _ready():
 	# Enforce padding and spacing at runtime
 	_apply_layout_overrides()
 	
-	# Connect to RunState signals (with safety check)
-	if RunState:
-		if not RunState.party_changed.is_connected(_on_party_changed):
-			RunState.party_changed.connect(_on_party_changed)
-		if not RunState.quests_changed.is_connected(_on_quests_changed):
-			RunState.quests_changed.connect(_on_quests_changed)
+	# Connect to manager signals (with safety check)
+	if PartyManager:
+		if not PartyManager.party_changed.is_connected(_on_party_changed):
+			PartyManager.party_changed.connect(_on_party_changed)
+	if QuestManager:
+		if not QuestManager.quests_changed.is_connected(_on_quests_changed):
+			QuestManager.quests_changed.connect(_on_quests_changed)
 	
 	# Initial refresh (deferred to ensure everything is ready)
 	call_deferred("refresh")
@@ -50,7 +51,7 @@ func _on_quests_changed():
 	refresh()
 
 func refresh():
-	## Refresh the party display from RunState
+	## Refresh the party display from managers
 	# Apply layout overrides every refresh to ensure they persist
 	_apply_layout_overrides()
 	
@@ -61,9 +62,9 @@ func refresh():
 	character_hud_blocks.clear()
 	
 	# Create blocks for each party member
-	if RunState and RunState.party_ids.size() == 3 and is_instance_valid(party_row):
+	if PartyManager and PartyManager.party_ids.size() == 3 and is_instance_valid(party_row):
 		for i in range(3):
-			var char_id = RunState.party_ids[i]
+			var char_id = PartyManager.party_ids[i]
 			var block = _create_character_hud_block(char_id)
 			party_row.add_child(block)
 			character_hud_blocks.append(block)
@@ -143,8 +144,8 @@ func _create_character_hud_block(character_id: String) -> Control:
 	quest_progress_label.add_theme_font_size_override("font_size", 10)
 	quest_progress_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
-	# Get quest data from RunState (now QuestState objects) - used for both title and progress
-	var quest_state = RunState.get_quest(character_id)
+	# Get quest data from QuestManager - used for both title and progress
+	var quest_state = QuestManager.get_quest(character_id) if QuestManager else null
 	if quest_state and quest_state is QuestState:
 		# Set quest title
 		quest_title_label.text = quest_state.title

@@ -3,27 +3,12 @@ extends Node
 ## Autoload singleton - Source of truth for game state
 ## Emits signals when values change for reactive UI updates
 
-signal party_changed
 signal deck_changed
 signal relics_changed
-signal gold_changed
-signal act_changed
-signal map_changed
-signal node_position_changed
-signal current_node_changed
-signal available_next_node_ids_changed
-signal quests_changed
-signal hp_changed
-signal block_changed
-signal energy_changed
 signal buffs_changed
 signal hand_changed
 signal draw_pile_changed
 signal discard_pile_changed
-
-# Party (3 characters)
-var party: Array = []  # Will contain character data (legacy, kept for compatibility)
-var party_ids: Array[String] = []  # Array of 3 character IDs
 
 # Deck
 var deck: Dictionary = {}  # instance_id -> DeckCardData (authoritative registry)
@@ -36,27 +21,8 @@ var deck_model: DeckModel = null
 # Relics
 var relics: Array = []  # Will contain relic data
 
-# Resources
-var gold: int = 0
-var current_hp: int = 50
-var max_hp: int = 50
-var block: int = 0
-var energy: int = 3
-var max_energy: int = 3
-
 # Combat status effects
 var haste_next_card: bool = false  # Next card played doesn't advance enemy timer
-
-# Map/Progress
-var act: int = 1
-var map: String = ""
-var node_position: int = 0  # How many nodes progressed (0 = start)
-var current_map: MapData = null  # Current map for the floor
-var current_node_id: String = ""  # ID of currently selected node
-var available_next_node_ids: Array[String] = []  # IDs of nodes that can be selected next
-
-# Quests
-var quests: Dictionary = {}  # Dictionary keyed by character_id, value is QuestState
 
 # Reward pool
 var reward_card_pool: Array[CardData] = []  # Merged reward card pool from selected characters
@@ -75,25 +41,10 @@ var tap_to_play: bool = false
 
 func _ready():
 	# Initialize with empty values (will be set by character selection)
-	party = []
-	party_ids = []
 	deck = {}
 	deck_order = []
 	relics = []
-	gold = 0
-	current_hp = 50
-	max_hp = 50
-	block = 0
-	energy = 3
-	max_energy = 3
 	haste_next_card = false
-	act = 1
-	map = "Act1"
-	node_position = 0
-	current_map = null
-	current_node_id = ""
-	available_next_node_ids = []
-	quests = {}
 	reward_card_pool = []
 	rare_pity_counter = -2
 	buffs = []
@@ -101,143 +52,11 @@ func _ready():
 	# Initialize models
 	deck_model = DeckModel.new()
 	
-	# Connect model signals to RunState signals for backward compatibility
+	# Connect model signals to RunState signals
 	deck_model.deck_changed.connect(func(): deck_changed.emit())
 	deck_model.draw_pile_changed.connect(func(): draw_pile_changed.emit())
 	deck_model.hand_changed.connect(func(): hand_changed.emit())
 	deck_model.discard_pile_changed.connect(func(): discard_pile_changed.emit())
-	
-	# Note: CombatModel removed - CombatController manages combat state directly
-
-func set_gold(value: int):
-	if gold != value:
-		gold = value
-		gold_changed.emit()
-
-func set_hp(current: int, maximum: int = -1):
-	if current_hp != current:
-		current_hp = current
-		if maximum > 0:
-			max_hp = maximum
-		hp_changed.emit()
-
-func set_block(value: int):
-	if block != value:
-		block = value
-		block_changed.emit()
-
-func set_energy(current: int, maximum: int = -1):
-	if energy != current:
-		energy = current
-		if maximum > 0:
-			max_energy = maximum
-		energy_changed.emit()
-
-func reset_block():
-	## Called at start of each player turn
-	set_block(0)
-
-func set_node_position(value: int):
-	if node_position != value:
-		node_position = value
-		node_position_changed.emit()
-
-func set_act(value: int):
-	if act != value:
-		act = value
-		act_changed.emit()
-
-func set_map_data(map_data: MapData):
-	## Set the current map data
-	if current_map != map_data:
-		current_map = map_data
-		map_changed.emit()
-		_update_available_nodes()
-
-func set_current_node(node_id: String):
-	## Set the currently selected node
-	## Note: Does NOT mark node as completed - use mark_current_node_completed() after encounter finishes
-	if current_node_id != node_id:
-		current_node_id = node_id
-		
-		# Update available next nodes
-		_update_available_nodes()
-		
-		# Update node position
-		if current_map and current_map.nodes.has(current_node_id):
-			var node = current_map.nodes[current_node_id]
-			node_position = node.row
-		
-		current_node_changed.emit(node_id)
-		node_position_changed.emit()
-
-func get_current_node_type() -> int:
-	## Get the current node's type (MapNodeData.NodeType)
-	## Returns FIGHT as fallback if node not found
-	if not current_map or current_node_id.is_empty():
-		return MapNodeData.NodeType.FIGHT
-	
-	var node = current_map.get_node(current_node_id)
-	if node:
-		return node.node_type
-	
-	return MapNodeData.NodeType.FIGHT
-
-func mark_current_node_completed() -> void:
-	## Mark the current node as completed and update available nodes
-	## This is called after combat ends, separate from set_current_node
-	## Emits NODE_COMPLETED event for quest system
-	if not current_map or current_node_id.is_empty():
-		return
-	
-	var node = current_map.get_node(current_node_id)
-	if node:
-		node.is_completed = true
-		_update_available_nodes()
-		# Emit map_changed to refresh map display
-		map_changed.emit()
-		
-		# Emit NODE_COMPLETED event for quest system
-		emit_game_event("NODE_COMPLETED", {
-			"node_id": current_node_id,
-			"node_type": node.node_type,
-			"row": node.row
-		})
-		
-		# Force save after node completion
-		if AutoSaveManager:
-			AutoSaveManager.force_save("node_completed")
-
-func _update_available_nodes():
-	## Update the list of available next nodes based on current selection
-	var old_available = available_next_node_ids.duplicate()
-	available_next_node_ids.clear()
-	
-	if not current_map:
-		# No map - make start nodes available
-		available_next_node_ids_changed.emit([])
-		return
-	
-	if current_node_id.is_empty():
-		# No node selected - start nodes are available
-		available_next_node_ids = current_map.start_node_ids.duplicate()
-	else:
-		# Get nodes connected from current node
-		var current_node = current_map.get_node(current_node_id)
-		if current_node:
-			available_next_node_ids = current_node.connected_to.duplicate()
-	
-	# Filter out completed nodes (can't go back)
-	available_next_node_ids = available_next_node_ids.filter(func(id): return not current_map.get_node(id).is_completed)
-	
-	# Emit signal if changed
-	if available_next_node_ids != old_available:
-		available_next_node_ids_changed.emit(available_next_node_ids)
-
-func set_map(value: String):
-	if map != value:
-		map = value
-		map_changed.emit()
 
 func add_card_to_deck(card_id: String, owner_character_id: String = "", upgrades: Array[String] = [], transcended: bool = false, transcendent_card_id: String = ""):
 	## Add a card to the deck with optional upgrades and owner
@@ -270,13 +89,6 @@ func add_card_to_deck(card_id: String, owner_character_id: String = "", upgrades
 	draw_pile_changed.emit()
 	
 	deck_changed.emit()
-
-func remove_card_from_deck(index: int):
-	## DEPRECATED: Use remove_card_instance(instance_id) instead
-	## Legacy method - converts index to instance_id and calls remove_card_instance
-	if index >= 0 and index < deck_order.size():
-		var instance_id = deck_order[index]
-		remove_card_instance(instance_id)
 
 func remove_card_instance(instance_id: String) -> void:
 	## Remove a card instance from the deck and all piles
@@ -364,15 +176,6 @@ func get_discard_pile_count() -> int:
 func get_hand_size() -> int:
 	return deck_model.get_hand_size()
 
-func set_party(character_ids: Array[String]):
-	## Set the party to the given character IDs (must be exactly 3)
-	if character_ids.size() != 3:
-		push_error("Party must contain exactly 3 characters, got %d" % character_ids.size())
-		return
-	party_ids = character_ids.duplicate()
-	party = character_ids.duplicate()  # Keep legacy party for compatibility
-	party_changed.emit()
-
 func generate_starter_deck(character_data_list: Array[CharacterData]):
 	## Generate starter deck from selected characters
 	## character_data_list must be exactly 3 CharacterData resources
@@ -434,65 +237,6 @@ func generate_starter_deck(character_data_list: Array[CharacterData]):
 	# Initialize rare pity counter (starts at -2%)
 	rare_pity_counter = -2
 
-func initialize_quests(character_data_list: Array[CharacterData]):
-	## Initialize quest state for selected characters
-	## character_data_list must be exactly 3 CharacterData resources
-	## Creates QuestState objects from QuestData templates
-	if character_data_list.size() != 3:
-		push_error("initialize_quests requires exactly 3 characters, got %d" % character_data_list.size())
-		return
-	
-	quests.clear()
-	
-	for char_data in character_data_list:
-		if char_data.quest:
-			# Create QuestState from QuestData (immutable template)
-			var quest_state = QuestState.new(
-				char_data.quest.id,
-				char_data.id,
-				char_data.quest.title,
-				char_data.quest.description,
-				char_data.quest.progress_max,
-				char_data.quest.tracking_type,
-				char_data.quest.params.duplicate()
-			)
-			# Use character_id as key for easy lookup
-			quests[char_data.id] = quest_state
-	
-	quests_changed.emit()
-
-func get_quest(character_id: String) -> QuestState:
-	## Get quest state for a character
-	return quests.get(character_id, null)
-
-func are_all_party_quests_complete() -> bool:
-	## Check if all party member quests are complete
-	if quests.is_empty():
-		return false
-	
-	# Check all 3 party members have complete quests
-	for character_id in party_ids:
-		var quest = quests.get(character_id)
-		if not quest or not quest.is_complete:
-			return false
-	
-	return true
-
-func emit_game_event(event_type: String, payload: Dictionary = {}) -> void:
-	## Emit a game event and evaluate all quests
-	## This is the single entry point for quest updates
-	var any_changed = false
-	
-	for character_id in quests:
-		var quest = quests[character_id]
-		if quest and quest is QuestState:
-			var changed = QuestSystem.evaluate(quest, event_type, payload)
-			if changed:
-				any_changed = true
-	
-	if any_changed:
-		quests_changed.emit()
-
 func set_pending_rewards(bundle: RewardBundle):
 	## Set pending rewards (called by EncounterScreen)
 	pending_rewards = bundle
@@ -508,17 +252,18 @@ func clear_pending_rewards():
 func apply_reward_bundle(bundle: RewardBundle):
 	## Apply all rewards from a bundle to RunState
 	## This is called by RewardsScreen after player makes choices
+	## Uses ResourceManager for resource updates
 	if not bundle:
 		return
 	
-	# Apply gold
-	if bundle.gold > 0:
-		set_gold(gold + bundle.gold)
+	# Apply gold (uses ResourceManager)
+	if bundle.gold > 0 and ResourceManager:
+		ResourceManager.set_gold(ResourceManager.gold + bundle.gold)
 	
-	# Apply healing
-	if bundle.heal_amount > 0:
-		var new_hp = min(current_hp + bundle.heal_amount, max_hp)
-		set_hp(new_hp, max_hp)
+	# Apply healing (uses ResourceManager)
+	if bundle.heal_amount > 0 and ResourceManager:
+		var new_hp = min(ResourceManager.current_hp + bundle.heal_amount, ResourceManager.max_hp)
+		ResourceManager.set_hp(new_hp, ResourceManager.max_hp)
 	
 	# Card rewards are handled separately by RewardsScreen (player chooses which card)
 	# Relic and upgrade rewards are also handled separately by RewardsScreen
@@ -550,14 +295,6 @@ func can_upgrade_instance(instance_id: String) -> bool:
 	
 	return not available.is_empty()
 
-func can_upgrade_card_at(deck_index: int) -> bool:
-	## DEPRECATED: Use can_upgrade_instance(instance_id) instead
-	## Legacy method - converts index to instance_id
-	if deck_index < 0 or deck_index >= deck_order.size():
-		return false
-	var instance_id = deck_order[deck_index]
-	return can_upgrade_instance(instance_id)
-
 func apply_upgrade_to_instance(instance_id: String, upgrade_id: String) -> bool:
 	## Apply an upgrade to a card instance by instance_id
 	var card_instance = deck.get(instance_id)
@@ -588,14 +325,6 @@ func apply_upgrade_to_instance(instance_id: String, upgrade_id: String) -> bool:
 	
 	return true
 
-func apply_upgrade_to_card_at(deck_index: int, upgrade_id: String) -> bool:
-	## DEPRECATED: Use apply_upgrade_to_instance(instance_id, upgrade_id) instead
-	## Legacy method - converts index to instance_id
-	if deck_index < 0 or deck_index >= deck_order.size():
-		return false
-	var instance_id = deck_order[deck_index]
-	return apply_upgrade_to_instance(instance_id, upgrade_id)
-
 func get_upgradeable_instance_ids() -> Array[String]:
 	## Get all instance_ids of cards that can be upgraded
 	var instance_ids: Array[String] = []
@@ -603,15 +332,6 @@ func get_upgradeable_instance_ids() -> Array[String]:
 		if can_upgrade_instance(instance_id):
 			instance_ids.append(instance_id)
 	return instance_ids
-
-func get_upgradeable_deck_indices() -> Array[int]:
-	## DEPRECATED: Use get_upgradeable_instance_ids() instead
-	## Legacy method - returns indices of upgradeable cards
-	var indices: Array[int] = []
-	for i in range(deck_order.size()):
-		if can_upgrade_instance(deck_order[i]):
-			indices.append(i)
-	return indices
 
 func get_effective_cost(instance_id: String) -> int:
 	## Get the effective cost of a card after upgrades (delegates to CardRules)
@@ -709,7 +429,8 @@ func add_relic(relic_id: String, is_boss: bool = false) -> void:
 	relics_changed.emit()
 	
 	# Emit RELIC_GAINED event for quest system
-	emit_game_event("RELIC_GAINED", { "relic_id": relic_id, "is_boss": is_boss })
+	if QuestManager:
+		QuestManager.emit_game_event("RELIC_GAINED", { "relic_id": relic_id, "is_boss": is_boss })
 
 func get_rare_chance(node_type: MapNodeData.NodeType) -> float:
 	## Calculate current Rare chance including Elite bonus
@@ -763,12 +484,11 @@ func reset_rare_pity() -> void:
 
 func reset_run() -> void:
 	## Reset all run state to initial values (for New Game)
-	## Clears party, deck, quests, map, and all resources
+	## Clears deck, relics, buffs, and delegates to managers for their state
 	
-	# Clear party
-	party.clear()
-	party_ids.clear()
-	party_changed.emit()
+	# Clear party (delegates to PartyManager)
+	if PartyManager:
+		PartyManager.clear_party()
 	
 	# Clear deck
 	deck.clear()
@@ -782,31 +502,23 @@ func reset_run() -> void:
 	hand_changed.emit()
 	discard_pile_changed.emit()
 	
-	# Clear quests
-	quests.clear()
-	quests_changed.emit()
+	# Clear quests (delegates to QuestManager)
+	if QuestManager:
+		QuestManager.clear_quests()
 	
 	# Clear relics
 	relics.clear()
 	relics_changed.emit()
 	
-	# Reset resources
-	set_gold(0)
-	set_hp(50, 50)
-	set_block(0)
-	set_energy(3, 3)
+	# Reset resources (delegates to ResourceManager)
+	if ResourceManager:
+		ResourceManager.reset_resources()
+	
 	haste_next_card = false
 	
-	# Reset map/progress
-	set_act(1)
-	set_map("Act1")
-	set_node_position(0)
-	current_map = null
-	current_node_id = ""
-	available_next_node_ids.clear()
-	map_changed.emit()
-	current_node_changed.emit("")
-	available_next_node_ids_changed.emit([])
+	# Reset map/progress (delegates to MapManager)
+	if MapManager:
+		MapManager.reset_map_state()
 	
 	# Clear pending rewards
 	pending_rewards = null

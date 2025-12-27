@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/UpgradeData.gd" id="1_upgradedata"]
+
+[resource]
+script = ExtResource("1_upgradedata")
+id = "keyword_exhaust"
+name = "Exhaust"
+description = "Card is removed from play for the rest of this combat instead of going to the discard pile."
+rarity = "common"
+weight = 1.0
+is_keyword = true
+effects_dict = {}
+applies_to_cards = []
+

@@ -1,16 +1,21 @@
 extends Node
 
 ## Autoload singleton - Provides access to CharacterData and CardData resources
-## For Slice 5, stores character data in memory from CharacterSelect
-## Later can be extended to load from .tres files
+## Loads resources from .tres files and provides caching/registry functionality
+
+# Data directory paths (relative to res://)
+const DATA_DIR_CARDS = "res://Path-of-Embers/data/cards/"
+const DATA_DIR_CHARACTERS = "res://Path-of-Embers/data/characters/"
+const DATA_DIR_ENEMIES = "res://Path-of-Embers/data/enemies/"
+const DATA_DIR_UPGRADES = "res://Path-of-Embers/data/upgrades/"
 
 var character_cache: Dictionary = {}  # Maps character_id -> CharacterData
 
 # Enemy cache
 var enemy_cache: Dictionary = {}  # Maps enemy_id -> EnemyData
 
-# Upgrade definitions cache
-var upgrade_definitions: Dictionary = {}  # Maps upgrade_id -> Dictionary with title, description, etc.
+# Upgrade cache
+var upgrade_resource_cache: Dictionary = {}  # Maps upgrade_id -> UpgradeData Resource
 var card_upgrade_pools: Dictionary = {}  # Maps card_id -> Array[upgrade_id]
 
 # Transcendent placeholder cards cache
@@ -39,6 +44,146 @@ func clear_cache():
 	## Clear the character cache (useful for new runs)
 	character_cache.clear()
 
+func _load_all_resources():
+	## Load all resources from .tres files
+	## All game data must be provided as .tres resource files - no hardcoded fallbacks
+	
+	# Load resources from files
+	var loaded_cards = _load_resources_from_directory(DATA_DIR_CARDS, "CardData")
+	var loaded_enemies = _load_resources_from_directory(DATA_DIR_ENEMIES, "EnemyData")
+	var loaded_characters = _load_resources_from_directory(DATA_DIR_CHARACTERS, "CharacterData")
+	var loaded_upgrades = _load_resources_from_directory(DATA_DIR_UPGRADES, "UpgradeData")
+	
+	# Cache loaded cards
+	for card in loaded_cards:
+		if card and card is CardData and not card.id.is_empty():
+			if _validate_card_resource(card):
+				generic_card_cache[card.id] = card
+	
+	# Cache loaded enemies
+	for enemy in loaded_enemies:
+		if enemy and enemy is EnemyData and not enemy.id.is_empty():
+			if _validate_enemy_resource(enemy):
+				register_enemy(enemy)
+	
+	# Cache loaded characters
+	for character in loaded_characters:
+		if character and character is CharacterData and not character.id.is_empty():
+			if _validate_character_resource(character):
+				register_character(character)
+	
+	# Cache loaded upgrades and build upgrade pools
+	for upgrade in loaded_upgrades:
+		if upgrade and upgrade is UpgradeData and not upgrade.id.is_empty():
+			if _validate_upgrade_resource(upgrade):
+				upgrade_resource_cache[upgrade.id] = upgrade
+				# Build upgrade pools from applies_to_cards field
+				for card_id in upgrade.applies_to_cards:
+					if not card_upgrade_pools.has(card_id):
+						card_upgrade_pools[card_id] = []
+					if not card_upgrade_pools[card_id].has(upgrade.id):
+						card_upgrade_pools[card_id].append(upgrade.id)
+	
+	# Log loading summary
+	var total_loaded = loaded_cards.size() + loaded_enemies.size() + loaded_characters.size() + loaded_upgrades.size()
+	if total_loaded == 0:
+		push_error("DataRegistry: No resource files found! Please create .tres files in data directories.")
+	else:
+		print("DataRegistry: Loaded %d cards, %d enemies, %d characters, %d upgrades" % [loaded_cards.size(), loaded_enemies.size(), loaded_characters.size(), loaded_upgrades.size()])
+
+func _load_resources_from_directory(path: String, resource_type_name: String) -> Array:
+	## Load all .tres files of the specified resource type from a directory
+	## Returns Array of loaded resources (empty if directory doesn't exist or has no valid files)
+	## resource_type_name should be the class_name string (e.g., "CardData", "EnemyData")
+	var resources: Array = []
+	
+	# Check if directory exists
+	if not DirAccess.dir_exists_absolute(path):
+		push_warning("DataRegistry: Directory does not exist: %s" % path)
+		return resources
+	
+	var dir = DirAccess.open(path)
+	if not dir:
+		push_error("DataRegistry: Failed to open directory: %s" % path)
+		return resources
+	
+	# Iterate through files in directory
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	
+	while file_name != "":
+		if file_name.ends_with(".tres"):
+			var full_path = path + file_name
+			var resource = load(full_path)
+			
+			# Validate resource type by checking class name
+			if resource:
+				var script = resource.get_script()
+				if script and script.get_global_name() == resource_type_name:
+					resources.append(resource)
+				else:
+					var actual_type = script.get_global_name() if script else "unknown"
+					push_error("DataRegistry: Invalid resource type in %s (expected %s, got %s)" % [full_path, resource_type_name, actual_type])
+		
+		file_name = dir.get_next()
+	
+	return resources
+
+func _validate_card_resource(card: CardData) -> bool:
+	## Validate a CardData resource has required fields
+	if card.id.is_empty():
+		push_error("DataRegistry: Card resource missing id")
+		return false
+	if card.name.is_empty():
+		push_warning("DataRegistry: Card '%s' missing name" % card.id)
+	return true
+
+func _validate_enemy_resource(enemy: EnemyData) -> bool:
+	## Validate an EnemyData resource has required fields
+	if enemy.id.is_empty():
+		push_error("DataRegistry: Enemy resource missing id")
+		return false
+	if enemy.display_name.is_empty() and enemy.name.is_empty():
+		push_warning("DataRegistry: Enemy '%s' missing display_name" % enemy.id)
+	return true
+
+func _validate_character_resource(character: CharacterData) -> bool:
+	## Validate a CharacterData resource has required fields
+	if character.id.is_empty():
+		push_error("DataRegistry: Character resource missing id")
+		return false
+	return true
+
+func _validate_upgrade_resource(upgrade: UpgradeData) -> bool:
+	## Validate an UpgradeData resource has required fields
+	if upgrade.id.is_empty():
+		push_error("DataRegistry: Upgrade resource missing id")
+		return false
+	if upgrade.name.is_empty():
+		push_warning("DataRegistry: Upgrade '%s' missing name" % upgrade.id)
+	return true
+
+func _build_upgrade_dict_from_resource(upgrade: UpgradeData) -> Dictionary:
+	## Build Dictionary from UpgradeData Resource for legacy code compatibility
+	## Prefer using get_upgrade_resource() instead
+	if not upgrade or not upgrade.id:
+		return {}
+	
+	var upgrade_dict = {
+		"id": upgrade.id,
+		"title": upgrade.name,
+		"description": upgrade.description
+	}
+	
+	# Merge effects_dict if present (legacy format)
+	if upgrade.effects_dict and upgrade.effects_dict.size() > 0:
+		if not upgrade_dict.has("effects"):
+			upgrade_dict["effects"] = {}
+		for key in upgrade.effects_dict:
+			upgrade_dict["effects"][key] = upgrade.effects_dict[key]
+	
+	return upgrade_dict
+
 func register_enemy(enemy_data: EnemyData):
 	## Register an EnemyData resource
 	if enemy_data and enemy_data.id:
@@ -49,192 +194,8 @@ func get_enemy(enemy_id: String) -> EnemyData:
 	return enemy_cache.get(enemy_id, null)
 
 func _ready():
-	## Initialize upgrade pools and definitions
-	_initialize_upgrade_content()
-	_initialize_transcendent_cards()
-	_initialize_full_attack_transcendence()
-	_initialize_generic_cards()
-	_initialize_enemies()
-
-func _initialize_upgrade_content():
-	## Initialize hardcoded upgrade content for testing
-	
-	# Universal upgrades (available to all cards)
-	var universal_upgrades: Array[String] = [
-		"upgrade_cost_minus_1",
-		"upgrade_haste"
-	]
-	
-	# Upgrade definitions - Universal upgrades
-	upgrade_definitions["upgrade_cost_minus_1"] = {
-		"id": "upgrade_cost_minus_1",
-		"title": "-1 Cost",
-		"description": "Costs 1 less (minimum 0).",
-		"effects": {
-			"cost_delta": -1
-		},
-		"rules": {
-			"max_stacks": 1,
-			"group": "cost"
-		}
-	}
-	upgrade_definitions["upgrade_haste"] = {
-		"id": "upgrade_haste",
-		"title": "Haste",
-		"description": "Playing this card does not advance the enemy turn.",
-		"keyword": "Haste",
-		"effects": {
-			"timer_tick_override": 0
-		},
-		"rules": {
-			"max_stacks": 1,
-			"group": "tempo"
-		}
-	}
-	
-	# Slow keyword definition (for tooltip support)
-	upgrade_definitions["keyword_slow"] = {
-		"id": "keyword_slow",
-		"title": "Slow",
-		"description": "A card with Slow ticks the enemy timer 2 times instead of 1.",
-		"keyword": "Slow"
-	}
-	
-	# Exhaust keyword definition (for tooltip support, future use)
-	upgrade_definitions["keyword_exhaust"] = {
-		"id": "keyword_exhaust",
-		"title": "Exhaust",
-		"description": "Card is removed from play for the rest of this combat instead of going to the discard pile.",
-		"keyword": "Exhaust"
-	}
-	
-	# Vulnerable keyword definition (for tooltip support)
-	upgrade_definitions["keyword_vulnerable"] = {
-		"id": "keyword_vulnerable",
-		"title": "Vulnerable",
-		"description": "A vulnerable character or enemy takes 1.5x damage.",
-		"keyword": "Vulnerable"
-	}
-	
-	# Strike upgrades
-	var strike_upgrades: Array[String] = [
-		"strike_damage_plus",
-		"strike_draw",
-		"strike_energy",
-		"strike_block"
-	]
-	card_upgrade_pools["strike_1"] = strike_upgrades
-	card_upgrade_pools["strike"] = strike_upgrades  # Alias
-	
-	# Defend upgrades
-	var defend_upgrades: Array[String] = [
-		"defend_block_plus",
-		"defend_retain",
-		"defend_draw",
-		"defend_exhaust_heal"
-	]
-	card_upgrade_pools["defend_1"] = defend_upgrades
-	card_upgrade_pools["defend"] = defend_upgrades  # Alias
-	
-	# Full Attack upgrade pool
-	var full_attack_upgrades: Array[String] = [
-		"full_attack_ignore_block",
-		"upgrade_cost_minus_1",  # Universal upgrade (note: not full_attack_cost_minus_1)
-		"full_attack_damage_plus_6",
-		"full_attack_half_damage_double_hit",
-		"full_attack_remove_slow",
-		"full_attack_block_plus_6"
-	]
-	card_upgrade_pools["monster_hunter_full_attack"] = full_attack_upgrades
-	
-	# Upgrade definitions - Card-specific upgrades
-	upgrade_definitions["strike_damage_plus"] = {
-		"id": "strike_damage_plus",
-		"title": "Damage+",
-		"description": "Increase damage by 2"
-	}
-	upgrade_definitions["strike_draw"] = {
-		"id": "strike_draw",
-		"title": "Draw Card",
-		"description": "Draw 1 card when played"
-	}
-	upgrade_definitions["strike_energy"] = {
-		"id": "strike_energy",
-		"title": "Energy+",
-		"description": "Gain 1 energy when played"
-	}
-	upgrade_definitions["strike_block"] = {
-		"id": "strike_block",
-		"title": "Block+",
-		"description": "Also gain 3 block"
-	}
-	upgrade_definitions["defend_block_plus"] = {
-		"id": "defend_block_plus",
-		"title": "Block+",
-		"description": "Increase block by 2"
-	}
-	upgrade_definitions["defend_retain"] = {
-		"id": "defend_retain",
-		"title": "Retain",
-		"description": "Card stays in hand if not played"
-	}
-	upgrade_definitions["defend_draw"] = {
-		"id": "defend_draw",
-		"title": "Draw Card",
-		"description": "Draw 1 card when played"
-	}
-	upgrade_definitions["defend_exhaust_heal"] = {
-		"id": "defend_exhaust_heal",
-		"title": "Healing Block",
-		"description": "Heal 2 HP when played"
-	}
-	
-	# Full Attack upgrade definitions
-	upgrade_definitions["full_attack_ignore_block"] = {
-		"id": "full_attack_ignore_block",
-		"title": "Ignore Block",
-		"description": "Damage bypasses block completely",
-		"effects": {
-			"ignore_block": true
-		}
-	}
-	
-	upgrade_definitions["full_attack_damage_plus_6"] = {
-		"id": "full_attack_damage_plus_6",
-		"title": "Damage+6",
-		"description": "Increase damage by 6",
-		"effects": {
-			"damage_delta": 6
-		}
-	}
-	
-	upgrade_definitions["full_attack_half_damage_double_hit"] = {
-		"id": "full_attack_half_damage_double_hit",
-		"title": "Half Damage, Double Hit",
-		"description": "Damage becomes 7, strikes twice",
-		"effects": {
-			"damage_multiply": 0.5,  # Multiply base damage by 0.5
-			"hit_count_set": 2  # Set hit_count to 2
-		}
-	}
-	
-	upgrade_definitions["full_attack_remove_slow"] = {
-		"id": "full_attack_remove_slow",
-		"title": "Remove Slow",
-		"description": "Removes Slow keyword",
-		"effects": {
-			"remove_keyword": "Slow"
-		}
-	}
-	
-	upgrade_definitions["full_attack_block_plus_6"] = {
-		"id": "full_attack_block_plus_6",
-		"title": "Block+6",
-		"description": "Also gain 6 block when played",
-		"effects": {
-			"add_block": 6
-		}
-	}
+	## Load all resources from .tres files
+	_load_all_resources()
 
 func get_upgrade_pool_for_card(card_id: String) -> Array[String]:
 	## Get the upgrade pool for a card ID
@@ -250,17 +211,37 @@ func get_upgrade_pool_for_card(card_id: String) -> Array[String]:
 				result_pool.append(upgrade_id)
 		return result_pool
 	
-	# If no card-specific pool exists, return universal upgrades
-	var universal_upgrades: Array[String] = ["upgrade_cost_minus_1", "upgrade_haste"]
+	# If no card-specific pool exists, return universal upgrades from resources
+	# Universal upgrades are those that have empty applies_to_cards array (applies to all cards)
+	var universal_upgrades: Array[String] = []
+	for upgrade_id in upgrade_resource_cache:
+		var upgrade = upgrade_resource_cache[upgrade_id]
+		if upgrade and upgrade.applies_to_cards.is_empty():
+			universal_upgrades.append(upgrade_id)
 	return universal_upgrades
 
+func get_upgrade_resource(upgrade_id: String) -> UpgradeData:
+	## Get UpgradeData Resource by ID (preferred method)
+	## Returns null if not found
+	return upgrade_resource_cache.get(upgrade_id, null)
+
 func get_upgrade_def(upgrade_id: String) -> Dictionary:
-	## Get upgrade definition by ID
-	return upgrade_definitions.get(upgrade_id, {})
+	## Get upgrade definition as Dictionary (legacy method)
+	## Prefer using get_upgrade_resource() instead
+	var upgrade = get_upgrade_resource(upgrade_id)
+	if upgrade:
+		return _build_upgrade_dict_from_resource(upgrade)
+	return {}
 
 func get_all_upgrade_definitions() -> Dictionary:
-	## Get all upgrade definitions (for keyword tooltip lookup)
-	return upgrade_definitions.duplicate()
+	## Get all upgrade definitions as Dictionary (legacy method)
+	## Prefer iterating upgrade_resource_cache directly
+	var result = {}
+	for upgrade_id in upgrade_resource_cache:
+		var upgrade = upgrade_resource_cache[upgrade_id]
+		if upgrade:
+			result[upgrade_id] = _build_upgrade_dict_from_resource(upgrade)
+	return result
 
 func get_card_data(card_id: String) -> CardData:
 	## Get CardData by card_id
@@ -312,21 +293,6 @@ func get_card_display_name(card_id: String) -> String:
 			parts[i] = parts[i][0].to_upper() + parts[i].substr(1)
 	return " ".join(parts)
 
-func _initialize_transcendent_cards():
-	## Initialize 4 placeholder transcendent cards
-	## PLACEHOLDER FOR FUTURE WORK: These cards exist for testing game loop,
-	## but transcendence upgrade logic is not implemented. The upgrade flow
-	## does not use these cards even when is_transcendence_upgrade flag is set.
-	for i in range(1, 5):
-		var card_id = "transcend_placeholder_%d" % i
-		var card_data = CardData.new()
-		card_data.id = card_id
-		card_data.name = "Transcendent Card %d" % i
-		card_data.cost = 0
-		# Note: CardData doesn't have a description property, effects are in base_effects
-		# For placeholders, we leave base_effects empty
-		transcendent_card_cache[card_id] = card_data
-
 func get_transcendent_card_ids() -> Array[String]:
 	## Get all available transcendent placeholder card IDs
 	return transcendent_card_cache.keys()
@@ -334,154 +300,3 @@ func get_transcendent_card_ids() -> Array[String]:
 func get_transcendent_card(card_id: String) -> CardData:
 	## Get a transcendent card by ID
 	return transcendent_card_cache.get(card_id, null)
-
-func _initialize_generic_cards():
-	## Initialize generic cards (strike_1, defend_1, heal_1)
-	## These are basic cards available to all characters
-	
-	# Strike 1 - Basic attack card
-	var strike_1 = CardData.new()
-	strike_1.id = "strike_1"
-	strike_1.name = "Strike"
-	strike_1.cost = 1
-	strike_1.card_type = CardData.CardType.ATTACK
-	strike_1.targeting_mode = CardData.TargetingMode.ENEMY
-	var strike_damage = EffectData.new("damage", {"amount": 6})
-	strike_1.base_effects.append(strike_damage)
-	generic_card_cache["strike_1"] = strike_1
-	
-	# Defend 1 - Basic block card
-	var defend_1 = CardData.new()
-	defend_1.id = "defend_1"
-	defend_1.name = "Defend"
-	defend_1.cost = 1
-	defend_1.card_type = CardData.CardType.SKILL
-	defend_1.targeting_mode = CardData.TargetingMode.SELF
-	var defend_block = EffectData.new("block", {"amount": 5})
-	defend_1.base_effects.append(defend_block)
-	generic_card_cache["defend_1"] = defend_1
-	
-	# Heal 1 - Basic heal card
-	var heal_1 = CardData.new()
-	heal_1.id = "heal_1"
-	heal_1.name = "Heal"
-	heal_1.cost = 1
-	heal_1.card_type = CardData.CardType.SKILL
-	heal_1.targeting_mode = CardData.TargetingMode.SELF
-	var heal_effect = EffectData.new("heal", {"amount": 5})
-	heal_1.base_effects.append(heal_effect)
-	generic_card_cache["heal_1"] = heal_1
-	
-	# Curse card (no effects, unplayable)
-	var curse_card = CardData.new()
-	curse_card.id = "curse_card"
-	curse_card.name = "Curse"
-	curse_card.card_type = CardData.CardType.CURSE
-	curse_card.cost = 0
-	curse_card.targeting_mode = CardData.TargetingMode.NONE
-	# No effects - curse cards do nothing
-	generic_card_cache["curse_card"] = curse_card
-
-func _initialize_enemies():
-	## Initialize enemy definitions (currently hardcoded, later can load from .tres files)
-	
-	# Ash Men - Act 1 enemy
-	var ash_man = EnemyData.new()
-	ash_man.id = "ash_man"
-	ash_man.display_name = "Ash Man"
-	ash_man.name = "Ash Man"  # Legacy field
-	ash_man.act = 1
-	ash_man.min_hp = 6
-	ash_man.max_hp = 6
-	
-	# Move 1: Timer 4, Damage 8
-	var move_1 = {
-		"id": "move_1",
-		"timer": 4,
-		"telegraph_text": "Attack 8",
-		"effects": [
-			EffectData.new("damage", {"amount": 8})
-		]
-	}
-	
-	# Move 2: Timer 1, Vulnerable 1
-	var move_2 = {
-		"id": "move_2",
-		"timer": 1,
-		"telegraph_text": "Apply Vulnerable",
-		"effects": [
-			EffectData.new("vulnerable", {"duration": 1})
-		]
-	}
-	
-	# Move 3: Timer 4, Damage 2, Heal 2
-	var move_3 = {
-		"id": "move_3",
-		"timer": 4,
-		"telegraph_text": "Attack 2, Heal 2",
-		"effects": [
-			EffectData.new("damage", {"amount": 2}),
-			EffectData.new("heal", {"amount": 2})
-		]
-	}
-	
-	# Move 4: Timer 3, Damage 3x2 (3 damage twice)
-	var move_4 = {
-		"id": "move_4",
-		"timer": 3,
-		"telegraph_text": "Attack 3x2",
-		"effects": [
-			EffectData.new("damage", {"amount": 3, "hit_count": 2})
-		]
-	}
-	
-	ash_man.moves.append(move_1)
-	ash_man.moves.append(move_2)
-	ash_man.moves.append(move_3)
-	ash_man.moves.append(move_4)
-	register_enemy(ash_man)
-
-func _initialize_full_attack_transcendence():
-	## Initialize Full Attack transcendence cards
-	
-	# Transcend 1: Cost 3, Slow, Deal 18 damage to each enemy, Apply 2 Vulnerable to each enemy
-	var transcend_1 = CardData.new()
-	transcend_1.id = "full_attack_transcend_1"
-	transcend_1.name = "Full Attack"
-	transcend_1.cost = 3
-	transcend_1.card_type = CardData.CardType.ATTACK
-	transcend_1.targeting_mode = CardData.TargetingMode.ALL_ENEMIES
-	transcend_1.keywords.append("Slow")
-	var damage_effect_1 = EffectData.new("damage", {"amount": 18})
-	transcend_1.base_effects.append(damage_effect_1)
-	var vulnerable_effect_1 = EffectData.new("vulnerable", {"duration": 2})
-	transcend_1.base_effects.append(vulnerable_effect_1)
-	transcendent_card_cache[transcend_1.id] = transcend_1
-	
-	# Transcend 2: Cost 2, Slow, Deal 18 damage OR 36 damage if Elite/Boss
-	var transcend_2 = CardData.new()
-	transcend_2.id = "full_attack_transcend_2"
-	transcend_2.name = "Full Attack"
-	transcend_2.cost = 2
-	transcend_2.card_type = CardData.CardType.ATTACK
-	transcend_2.targeting_mode = CardData.TargetingMode.ENEMY
-	transcend_2.keywords.append("Slow")
-	var conditional_damage = EffectData.new("damage_conditional_elite", {"normal_amount": 18, "elite_amount": 36})
-	transcend_2.base_effects.append(conditional_damage)
-	transcendent_card_cache[transcend_2.id] = transcend_2
-	
-	# Transcend 3: Cost Discard X, Slow, Deal 9 damage X times
-	# Note: Discard cost handled separately in card play logic, hit_count set dynamically
-	var transcend_3 = CardData.new()
-	transcend_3.id = "full_attack_transcend_3"
-	transcend_3.name = "Full Attack"
-	transcend_3.cost = 1  # Display cost (not used for discard cost type)
-	transcend_3.cost_type = CardData.CostType.DISCARD
-	transcend_3.discard_cost_amount = 1  # Default X=1, can be modified if needed
-	transcend_3.card_type = CardData.CardType.ATTACK
-	transcend_3.targeting_mode = CardData.TargetingMode.ENEMY
-	transcend_3.keywords.append("Slow")
-	# Damage amount is 9, hit_count will be set dynamically to X (cards discarded) during play
-	var damage_effect_3 = EffectData.new("damage", {"amount": 9, "hit_count": 1})  # hit_count set dynamically
-	transcend_3.base_effects.append(damage_effect_3)
-	transcendent_card_cache[transcend_3.id] = transcend_3

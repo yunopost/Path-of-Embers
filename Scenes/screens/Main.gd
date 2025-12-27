@@ -103,7 +103,7 @@ func _on_continue_pressed():
 	if RunState and RunState.pending_rewards != null:
 		# Resume at rewards screen
 		ScreenManager.go_to_rewards(RunState.pending_rewards)
-	elif RunState and RunState.current_map != null:
+	elif MapManager and MapManager.current_map != null:
 		# Resume at map
 		ScreenManager.go_to_map()
 	else:

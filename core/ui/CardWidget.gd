@@ -16,7 +16,14 @@ var keywords_container: VBoxContainer
 var stats_container: VBoxContainer
 var owner_label: Label
 
+# Card textures
+const ATTACK_CARD_TEXTURE_PATH = "res://Path-of-Embers/Art Assets/Card Assets/Attack Card.png"
+var attack_card_texture: Texture2D = null
+
 func _ready():
+	# Preload attack card texture
+	if ResourceLoader.exists(ATTACK_CARD_TEXTURE_PATH):
+		attack_card_texture = load(ATTACK_CARD_TEXTURE_PATH)
 	_setup_ui()
 
 func _setup_ui():
@@ -243,11 +250,11 @@ func _update_display():
 				continue
 			
 			# Skip effects that are already shown as stats
-			if effect.effect_type == "damage" and shown_stat_types.has("damage"):
+			if effect.effect_type == EffectType.DAMAGE and shown_stat_types.has("damage"):
 				continue
-			if effect.effect_type == "block" and shown_stat_types.has("block"):
+			if effect.effect_type == EffectType.BLOCK and shown_stat_types.has("block"):
 				continue
-			if effect.effect_type == "heal" and shown_stat_types.has("heal"):
+			if effect.effect_type == EffectType.HEAL and shown_stat_types.has("heal"):
 				continue
 			
 			# Generate and display description
@@ -271,8 +278,24 @@ func _update_display():
 		else:
 			owner_label.text = ""
 	
-	# Visual styling for upgraded cards
+	# Visual styling for upgraded cards and card type textures
 	if card_panel:
+		# Set texture based on card type - use StyleBoxTexture for attack cards
+		if card_data.card_type == CardData.CardType.ATTACK and attack_card_texture:
+			# Use StyleBoxTexture for attack cards with texture
+			var texture_style_box = StyleBoxTexture.new()
+			texture_style_box.texture = attack_card_texture
+			# Stretch texture to fill the entire card (both horizontal and vertical)
+			texture_style_box.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+			texture_style_box.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_STRETCH
+			card_panel.add_theme_stylebox_override("panel", texture_style_box)
+		else:
+			# For non-attack cards, use solid color background with StyleBoxFlat
+			var flat_style_box = StyleBoxFlat.new()
+			flat_style_box.bg_color = Color(0.2, 0.2, 0.2, 1.0)  # Dark gray
+			card_panel.add_theme_stylebox_override("panel", flat_style_box)
+		
+		# Apply golden tint for upgraded cards
 		if deck_card_data.applied_upgrades.size() > 0:
 			card_panel.modulate = Color(1.1, 1.05, 0.95, 1.0)  # Golden tint
 		else:

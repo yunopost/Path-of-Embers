@@ -16,4 +16,3 @@ static func get_generic_starters_for_role(role: String) -> Array[String]:
 		_:
 			# Default fallback
 			return ["strike_1", "defend_1", "heal_1"]
-

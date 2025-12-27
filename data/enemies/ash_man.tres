@@ -1,0 +1,72 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EnemyData.gd" id="1_enemydata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/EffectData.gd" id="2_effectdata"]
+
+[sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "damage"
+params = {
+"amount": 8
+}
+
+[sub_resource type="Resource" id="EffectData_2" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "vulnerable"
+params = {
+"duration": 1
+}
+
+[sub_resource type="Resource" id="EffectData_3" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "damage"
+params = {
+"amount": 2
+}
+
+[sub_resource type="Resource" id="EffectData_4" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "heal"
+params = {
+"amount": 2
+}
+
+[sub_resource type="Resource" id="EffectData_5" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "damage"
+params = {
+"amount": 3,
+"hit_count": 2
+}
+
+[resource]
+script = ExtResource("1_enemydata")
+id = "ash_man"
+display_name = "Ash Man"
+name = "Ash Man"
+act = 1
+enemy_type = 0
+min_hp = 6
+max_hp = 6
+moves = [{
+"effects": [SubResource("EffectData_1")],
+"id": "move_1",
+"telegraph_text": "Attack 8",
+"timer": 4
+}, {
+"effects": [SubResource("EffectData_2")],
+"id": "move_2",
+"telegraph_text": "Apply Vulnerable",
+"timer": 1
+}, {
+"effects": [SubResource("EffectData_3"), SubResource("EffectData_4")],
+"id": "move_3",
+"telegraph_text": "Attack 2, Heal 2",
+"timer": 4
+}, {
+"effects": [SubResource("EffectData_5")],
+"id": "move_4",
+"telegraph_text": "Attack 3x2",
+"timer": 3
+}]
+

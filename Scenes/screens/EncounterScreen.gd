@@ -11,12 +11,12 @@ var current_node: MapNodeData = null
 
 func _ready():
 	# Verify we have a valid encounter node
-	if not RunState.current_map or RunState.current_node_id.is_empty():
+	if not MapManager.current_map or MapManager.current_node_id.is_empty():
 		push_warning("EncounterScreen: No current node, returning to map")
 		ScreenManager.go_to_map()
 		return
 	
-	current_node = RunState.current_map.get_node(RunState.current_node_id)
+	current_node = MapManager.current_map.get_node(MapManager.current_node_id)
 	if not current_node or current_node.node_type != MapNodeData.NodeType.ENCOUNTER:
 		push_warning("EncounterScreen: Current node is not an ENCOUNTER, returning to map")
 		ScreenManager.go_to_map()
@@ -74,7 +74,7 @@ func _setup_choices():
 func _on_help_chosen():
 	## Generate rewards for "Help" choice
 	# Emit ENCOUNTER_CHOICE event for quest system
-	RunState.emit_game_event("ENCOUNTER_CHOICE", {
+	QuestManager.emit_game_event("ENCOUNTER_CHOICE", {
 		"encounter_id": "encounter_placeholder_01",
 		"choice_id": "help"
 	})
@@ -90,7 +90,7 @@ func _on_help_chosen():
 func _on_threaten_chosen():
 	## Generate rewards for "Threaten" choice
 	# Emit ENCOUNTER_CHOICE event for quest system
-	RunState.emit_game_event("ENCOUNTER_CHOICE", {
+	QuestManager.emit_game_event("ENCOUNTER_CHOICE", {
 		"encounter_id": "encounter_placeholder_01",
 		"choice_id": "threaten"
 	})
@@ -107,7 +107,7 @@ func _on_threaten_chosen():
 func _on_leave_chosen():
 	## Generate rewards for "Leave" choice
 	# Emit ENCOUNTER_CHOICE event for quest system
-	RunState.emit_game_event("ENCOUNTER_CHOICE", {
+	QuestManager.emit_game_event("ENCOUNTER_CHOICE", {
 		"encounter_id": "encounter_placeholder_01",
 		"choice_id": "leave"
 	})

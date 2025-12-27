@@ -27,8 +27,8 @@ func _ready():
 	RunState.hand_changed.connect(_update_hand)
 	RunState.draw_pile_changed.connect(_update_draw_pile_count)
 	RunState.discard_pile_changed.connect(_update_discard_pile_count)
-	RunState.energy_changed.connect(_update_energy)
-	RunState.hp_changed.connect(_update_player_hp)
+	ResourceManager.energy_changed.connect(_update_energy)
+	ResourceManager.hp_changed.connect(_update_player_hp)
 	
 	# Connect combat controller signals
 	combat_controller.combat_started.connect(_on_combat_started)
@@ -56,7 +56,7 @@ func initialize(encounter_data: Dictionary = {}):
 		_start_combat_with_data(encounter_data)
 
 func refresh_from_state():
-	## Refresh UI from RunState (architecture rule 11.2)
+	## Refresh UI from managers (architecture rule 11.2)
 	_update_hand()
 	_update_draw_pile_count()
 	_update_discard_pile_count()
@@ -253,13 +253,13 @@ func _update_discard_pile_count():
 
 func _update_energy():
 	if energy_label:
-		energy_label.text = "Energy: %d/%d" % [RunState.energy, RunState.max_energy]
+		energy_label.text = "Energy: %d/%d" % [ResourceManager.energy, ResourceManager.max_energy]
 
 func _update_player_hp():
 	if player_hp_label:
-		player_hp_label.text = "HP: %d/%d" % [RunState.current_hp, RunState.max_hp]
+		player_hp_label.text = "HP: %d/%d" % [ResourceManager.current_hp, ResourceManager.max_hp]
 	if combat_controller and combat_controller.player_stats:
-		combat_controller.player_stats.current_hp = RunState.current_hp
+		combat_controller.player_stats.current_hp = ResourceManager.current_hp
 
 func _on_combat_started():
 	_update_player_hp()
@@ -332,16 +332,20 @@ func _end_combat_and_transition():
 		combat_controller._remove_temporary_cards()
 	
 	# Emit COMBAT_VICTORY event for quest system (before marking node completed)
-	RunState.emit_game_event("COMBAT_VICTORY", {
-		"node_id": RunState.current_node_id,
-		"node_type": RunState.get_current_node_type()
-	})
+	if QuestManager:
+		QuestManager.emit_game_event("COMBAT_VICTORY", {
+			"node_id": MapManager.current_node_id if MapManager else "",
+			"node_type": MapManager.get_current_node_type() if MapManager else MapNodeData.NodeType.FIGHT
+		})
 	
 	# Mark node as completed (this also emits NODE_COMPLETED event)
-	RunState.mark_current_node_completed()
+	if MapManager:
+		MapManager.mark_current_node_completed()
 	
 	# Compute rewards based on node's reward flags
-	var current_node = RunState.current_map.get_node(RunState.current_node_id) if RunState.current_map else null
+	var current_node = null
+	if MapManager and MapManager.current_map:
+		current_node = MapManager.current_map.get_node(MapManager.current_node_id)
 	var bundle = RewardResolver.build_rewards_for_node(current_node)
 	
 	var node_type_str = "Unknown"
