@@ -100,12 +100,29 @@ func _create_character_hud_block(character_id: String) -> Control:
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	container.add_child(spacer)
 	
-	# Portrait placeholder panel with enforced size
-	var portrait = Panel.new()
-	portrait.custom_minimum_size = Vector2(170, 95)
-	portrait.size_flags_horizontal = Control.SIZE_FILL
+	# Portrait container with background panel
+	var portrait_container = Panel.new()
+	portrait_container.custom_minimum_size = Vector2(170, 95)
+	portrait_container.size_flags_horizontal = Control.SIZE_FILL
+	portrait_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(portrait_container)
+	
+	# Character portrait image
+	var portrait = TextureRect.new()
+	portrait.name = "Portrait_" + character_id
+	portrait.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	container.add_child(portrait)
+	portrait.set_anchors_preset(Control.PRESET_FULL_RECT)
+	
+	# Load character portrait if available
+	var char_data = DataRegistry.get_character(character_id) if DataRegistry else null
+	if char_data and char_data.portrait_path != "":
+		var texture = load(char_data.portrait_path)
+		if texture:
+			portrait.texture = texture
+	
+	portrait_container.add_child(portrait)
 	
 	# Character name label centered over portrait
 	var name_label = Label.new()
@@ -119,7 +136,7 @@ func _create_character_hud_block(character_id: String) -> Control:
 	name_label.add_theme_font_size_override("font_size", 14)
 	name_label.add_theme_constant_override("outline_size", 4)
 	name_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	portrait.add_child(name_label)
+	portrait_container.add_child(name_label)
 	name_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
