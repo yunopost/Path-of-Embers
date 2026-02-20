@@ -144,7 +144,7 @@ func _show_reward_pool_popup():
 
 func _create_reward_pool_popup():
 	## Create the reward pool popup instance
-	var popup_scene = load("res://Path-of-Embers/Scenes/UI/RewardPoolPopup.tscn")
+	var popup_scene = load("res://Path-of-Embers/scenes/ui/RewardPoolPopup.tscn")
 	if popup_scene:
 		var popup = popup_scene.instantiate()
 		add_child(popup)

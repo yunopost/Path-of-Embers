@@ -1,0 +1,59 @@
+[gd_scene load_steps=3 format=3 uid="uid://character_entry"]
+
+[ext_resource type="Script" path="res://Path-of-Embers/scenes/ui/CharacterEntry.gd" id="1_character_entry"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0.2, 0.2, 0.2, 0.5)
+
+[node name="CharacterEntry" type="VBoxContainer"]
+custom_minimum_size = Vector2(200, 250)
+size = Vector2(200, 250)
+theme_override_constants/separation = 4
+mouse_filter = 2
+script = ExtResource("1_character_entry")
+
+[node name="PortraitContainer" type="Panel" parent="."]
+layout_mode = 2
+custom_minimum_size = Vector2(180, 120)
+size = Vector2(180, 120)
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="Portrait" type="TextureRect" parent="PortraitContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="SelectButton" type="Button" parent="."]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 60)
+size = Vector2(200, 60)
+text = "Character Name
+(Role)"
+
+[node name="QuestTitle" type="Label" parent="."]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+clip_contents = true
+custom_minimum_size = Vector2(0, 20)
+text = "Quest Title"
+
+[node name="QuestDesc" type="Label" parent="."]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 10
+autowrap_mode = 3
+clip_contents = true
+custom_minimum_size = Vector2(0, 40)
+text = "Quest Description"
+

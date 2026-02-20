@@ -103,16 +103,22 @@ func _ready():
 
 func _load_popups():
 	# Load Settings popup
-	var settings_scene = load("res://Path-of-Embers/Scenes/UI/SettingsPopup.tscn")
+	var settings_scene = load("res://Path-of-Embers/scenes/ui/SettingsPopup.tscn")
 	settings_popup = settings_scene.instantiate()
 	add_child(settings_popup)
 	settings_popup.visible = false
+	# Connect popup closed signal
+	if settings_popup.has_signal("popup_closed"):
+		settings_popup.popup_closed.connect(_on_popup_closed)
 	
 	# Load Deck popup
-	var deck_scene = load("res://Path-of-Embers/Scenes/UI/DeckViewPopup.tscn")
+	var deck_scene = load("res://Path-of-Embers/scenes/ui/DeckViewPopup.tscn")
 	deck_popup = deck_scene.instantiate()
 	add_child(deck_popup)
 	deck_popup.visible = false
+	# Connect popup closed signal
+	if deck_popup.has_signal("popup_closed"):
+		deck_popup.popup_closed.connect(_on_popup_closed)
 
 func _update_all_ui():
 	_on_hp_changed()
@@ -236,6 +242,10 @@ func close_popup(popup_name: String):
 		settings_popup.visible = false
 	elif popup_name == "deck" and deck_popup:
 		deck_popup.visible = false
+
+func _on_popup_closed(popup_name: String):
+	## Handle popup closed signal from child popups
+	close_popup(popup_name)
 
 func _setup_debug_info():
 	## Setup debug info label (debug builds only)

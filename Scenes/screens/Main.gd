@@ -125,7 +125,7 @@ func _on_quit_pressed():
 
 func _load_settings_popup():
 	## Load settings popup scene
-	var settings_scene = load("res://Path-of-Embers/Scenes/UI/SettingsPopup.tscn")
+	var settings_scene = load("res://Path-of-Embers/scenes/ui/SettingsPopup.tscn")
 	if settings_scene:
 		settings_popup = settings_scene.instantiate()
 		add_child(settings_popup)

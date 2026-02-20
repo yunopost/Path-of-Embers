@@ -124,14 +124,14 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 	enemy_panel.add_child(vbox)
 	
 	# Health bar (at top)
-	var health_bar_scene = load("res://Path-of-Embers/Scenes/UI/HealthBar.tscn")
+	var health_bar_scene = load("res://Path-of-Embers/scenes/ui/HealthBar.tscn")
 	if health_bar_scene:
 		var health_bar = health_bar_scene.instantiate()
 		health_bar.setup(enemy.stats)
 		vbox.add_child(health_bar)
 	
 	# Status effect indicators (below health bar)
-	var status_indicator_scene = load("res://Path-of-Embers/Scenes/UI/StatusEffectIndicator.tscn")
+	var status_indicator_scene = load("res://Path-of-Embers/scenes/ui/StatusEffectIndicator.tscn")
 	if status_indicator_scene:
 		var status_indicator = status_indicator_scene.instantiate()
 		status_indicator.setup(enemy.stats)
@@ -276,7 +276,7 @@ func _setup_player_status_indicator():
 		player_status_indicator = null
 	
 	# Create and add status indicator
-	var status_indicator_scene = load("res://Path-of-Embers/Scenes/UI/StatusEffectIndicator.tscn")
+	var status_indicator_scene = load("res://Path-of-Embers/scenes/ui/StatusEffectIndicator.tscn")
 	if status_indicator_scene:
 		player_status_indicator = status_indicator_scene.instantiate()
 		player_status_indicator.setup(combat_controller.player_stats)
