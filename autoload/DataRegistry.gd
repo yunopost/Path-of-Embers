@@ -196,6 +196,265 @@ func get_enemy(enemy_id: String) -> EnemyData:
 func _ready():
 	## Load all resources from .tres files
 	_load_all_resources()
+	## Register placeholder characters if no .tres characters were loaded
+	## (Placeholder logic runs until real CharacterData .tres files exist)
+	if character_cache.is_empty():
+		_create_placeholder_characters()
+
+func get_all_characters() -> Array[CharacterData]:
+	## Return all registered CharacterData sorted by id
+	var result: Array[CharacterData] = []
+	for char_data in character_cache.values():
+		result.append(char_data)
+	result.sort_custom(func(a, b): return a.id < b.id)
+	return result
+
+func _create_placeholder_characters():
+	## Create and register placeholder CharacterData in lieu of .tres files.
+	## Mirrors the data in CharacterSelect._create_placeholder_characters().
+	## Remove this function once real CharacterData .tres files exist in data/characters/.
+
+	# ---- Warriors ----
+	for i in range(2):
+		var char_data = CharacterData.new()
+		char_data.id = "warrior_%d" % (i + 1)
+		char_data.display_name = "Monster Hunter" if i == 0 else "Shadowfoot"
+		char_data.role = "Warrior"
+		char_data.portrait_path = ""
+
+		if i == 0:
+			var full_attack = CardData.new()
+			full_attack.id = "monster_hunter_full_attack"
+			full_attack.name = "Full Attack"
+			full_attack.cost = 2
+			full_attack.card_type = CardData.CardType.ATTACK
+			full_attack.targeting_mode = CardData.TargetingMode.ENEMY
+			full_attack.owner_character_id = "warrior_1"
+			full_attack.rarity = CardData.Rarity.COMMON
+			full_attack.keywords.append("Slow")
+			full_attack.base_effects.append(EffectData.new(EffectType.DAMAGE, {"amount": 14}))
+			char_data.starter_unique_cards.append(full_attack)
+
+			var shoulder_tackle = CardData.new()
+			shoulder_tackle.id = "monster_hunter_shoulder_tackle"
+			shoulder_tackle.name = "Shoulder Tackle"
+			shoulder_tackle.cost = 0
+			shoulder_tackle.card_type = CardData.CardType.SKILL
+			shoulder_tackle.targeting_mode = CardData.TargetingMode.SELF
+			shoulder_tackle.owner_character_id = "warrior_1"
+			shoulder_tackle.rarity = CardData.Rarity.COMMON
+			shoulder_tackle.base_effects.append(EffectData.new(EffectType.GRANT_HASTE_NEXT_CARD, {}))
+			char_data.starter_unique_cards.append(shoulder_tackle)
+		else:
+			var dark_knife = CardData.new()
+			dark_knife.id = "shadowfoot_dark_knife"
+			dark_knife.name = "Dark Knife"
+			dark_knife.cost = 1
+			dark_knife.card_type = CardData.CardType.ATTACK
+			dark_knife.targeting_mode = CardData.TargetingMode.ENEMY
+			dark_knife.owner_character_id = "warrior_2"
+			dark_knife.rarity = CardData.Rarity.COMMON
+			dark_knife.base_effects.append(EffectData.new(EffectType.DAMAGE, {"amount": 6, "double_strength": true}))
+			char_data.starter_unique_cards.append(dark_knife)
+
+			var fade_step = CardData.new()
+			fade_step.id = "shadowfoot_fade_step"
+			fade_step.name = "Fade Step"
+			fade_step.cost = 1
+			fade_step.card_type = CardData.CardType.SKILL
+			fade_step.targeting_mode = CardData.TargetingMode.SELF
+			fade_step.owner_character_id = "warrior_2"
+			fade_step.rarity = CardData.Rarity.COMMON
+			fade_step.base_effects.append(EffectData.new(EffectType.BLOCK, {"amount": 4}))
+			fade_step.base_effects.append(EffectData.new(EffectType.CONDITIONAL_STRENGTH_IF_NO_DAMAGE, {"amount": 1}))
+			char_data.starter_unique_cards.append(fade_step)
+
+		_generate_placeholder_reward_pool(char_data)
+
+		var quest = QuestData.new()
+		quest.id = "quest_warrior_%d" % (i + 1)
+		if i == 0:
+			quest.title = "Monster Hunter Quest"
+			quest.description = "Complete %d nodes" % 10
+			quest.progress_max = 10
+			quest.tracking_type = "complete_nodes"
+		else:
+			quest.title = "Shadowfoot Quest"
+			quest.description = "Complete combat without taking damage %d times" % 6
+			quest.progress_max = 6
+			quest.tracking_type = "combat_no_damage"
+		char_data.quest = quest
+		register_character(char_data)
+
+	# ---- Healers ----
+	for i in range(2):
+		var char_data = CharacterData.new()
+		char_data.id = "healer_%d" % (i + 1)
+		char_data.display_name = "Witch" if i == 0 else "Wanderer"
+		char_data.role = "Healer"
+		char_data.portrait_path = ""
+
+		if i == 0:
+			var hexbound = CardData.new()
+			hexbound.id = "witch_hexbound_ritual"
+			hexbound.name = "Hexbound Ritual"
+			hexbound.cost = 0
+			hexbound.card_type = CardData.CardType.SKILL
+			hexbound.targeting_mode = CardData.TargetingMode.SELF
+			hexbound.owner_character_id = "healer_1"
+			hexbound.rarity = CardData.Rarity.COMMON
+			hexbound.base_effects.append(EffectData.new(EffectType.ADD_CURSE_TO_HAND, {"is_temporary": true}))
+			hexbound.base_effects.append(EffectData.new(EffectType.VULNERABLE_ALL_ENEMIES, {"duration": 2}))
+			char_data.starter_unique_cards.append(hexbound)
+
+			var malediction = CardData.new()
+			malediction.id = "witch_malediction_lash"
+			malediction.name = "Malediction Lash"
+			malediction.cost = 1
+			malediction.card_type = CardData.CardType.ATTACK
+			malediction.targeting_mode = CardData.TargetingMode.ALL_ENEMIES
+			malediction.owner_character_id = "healer_1"
+			malediction.rarity = CardData.Rarity.COMMON
+			malediction.base_effects.append(EffectData.new(EffectType.DAMAGE_PER_CURSE, {"base_amount": 2, "per_curse": 2}))
+			char_data.starter_unique_cards.append(malediction)
+		else:
+			var clear_the_way = CardData.new()
+			clear_the_way.id = "wanderer_clear_the_way"
+			clear_the_way.name = "Clear the way"
+			clear_the_way.cost = 1
+			clear_the_way.card_type = CardData.CardType.ATTACK
+			clear_the_way.targeting_mode = CardData.TargetingMode.ENEMY
+			clear_the_way.owner_character_id = "healer_2"
+			clear_the_way.rarity = CardData.Rarity.COMMON
+			clear_the_way.keywords.append("FirstCardOnly")
+			clear_the_way.base_effects.append(EffectData.new(EffectType.DAMAGE, {"amount": 10}))
+			char_data.starter_unique_cards.append(clear_the_way)
+
+			var survey = CardData.new()
+			survey.id = "wanderer_survey_path"
+			survey.name = "Survey the Path"
+			survey.cost = 2
+			survey.card_type = CardData.CardType.POWER
+			survey.targeting_mode = CardData.TargetingMode.SELF
+			survey.owner_character_id = "healer_2"
+			survey.rarity = CardData.Rarity.COMMON
+			survey.base_effects.append(EffectData.new(EffectType.BLOCK_ON_ENEMY_ACT, {"amount": 1}))
+			char_data.starter_unique_cards.append(survey)
+
+		_generate_placeholder_reward_pool(char_data)
+
+		var quest = QuestData.new()
+		quest.id = "quest_healer_%d" % (i + 1)
+		if i == 0:
+			quest.title = "Witch Quest"
+			quest.description = "Gain %d Curse cards" % 6
+			quest.progress_max = 6
+			quest.tracking_type = "gain_curse_cards"
+		else:
+			quest.title = "Wanderer Quest"
+			quest.description = "Take the explore action at rest sites %d times" % 3
+			quest.progress_max = 3
+			quest.tracking_type = "rest_site_explore"
+		char_data.quest = quest
+		register_character(char_data)
+
+	# ---- Defenders ----
+	for i in range(2):
+		var char_data = CharacterData.new()
+		char_data.id = "defender_%d" % (i + 1)
+		char_data.display_name = "Golemancer" if i == 0 else "Living Armor"
+		char_data.role = "Defender"
+		char_data.portrait_path = ""
+
+		if i == 0:
+			var stonebound = CardData.new()
+			stonebound.id = "golemancer_stonebound_strike"
+			stonebound.name = "Stonebound Strike"
+			stonebound.cost = 1
+			stonebound.card_type = CardData.CardType.ATTACK
+			stonebound.targeting_mode = CardData.TargetingMode.ENEMY
+			stonebound.owner_character_id = "defender_1"
+			stonebound.rarity = CardData.Rarity.COMMON
+			stonebound.base_effects.append(EffectData.new(EffectType.DAMAGE, {"amount": 6}))
+			stonebound.base_effects.append(EffectData.new(EffectType.BLOCK, {"amount": 3}))
+			char_data.starter_unique_cards.append(stonebound)
+
+			var reinforce = CardData.new()
+			reinforce.id = "golemancer_reinforce"
+			reinforce.name = "Reinforce"
+			reinforce.cost = 1
+			reinforce.card_type = CardData.CardType.SKILL
+			reinforce.targeting_mode = CardData.TargetingMode.SELF
+			reinforce.owner_character_id = "defender_1"
+			reinforce.rarity = CardData.Rarity.COMMON
+			reinforce.base_effects.append(EffectData.new(EffectType.BLOCK, {"amount": 4}))
+			reinforce.base_effects.append(EffectData.new(EffectType.ADD_TEMPORARY_UPGRADE_TO_RANDOM_HAND_CARD, {}))
+			char_data.starter_unique_cards.append(reinforce)
+		else:
+			var plated_guard = CardData.new()
+			plated_guard.id = "living_armor_plated_guard"
+			plated_guard.name = "Plated Guard"
+			plated_guard.cost = 1
+			plated_guard.card_type = CardData.CardType.SKILL
+			plated_guard.targeting_mode = CardData.TargetingMode.SELF
+			plated_guard.owner_character_id = "defender_2"
+			plated_guard.rarity = CardData.Rarity.COMMON
+			plated_guard.base_effects.append(EffectData.new(EffectType.BLOCK, {"amount": 8}))
+			plated_guard.base_effects.append(EffectData.new(EffectType.RETAIN_BLOCK_THIS_TURN, {}))
+			char_data.starter_unique_cards.append(plated_guard)
+
+			var resonant = CardData.new()
+			resonant.id = "living_armor_resonant_frame"
+			resonant.name = "Resonant Frame"
+			resonant.cost = 1
+			resonant.card_type = CardData.CardType.POWER
+			resonant.targeting_mode = CardData.TargetingMode.SELF
+			resonant.owner_character_id = "defender_2"
+			resonant.rarity = CardData.Rarity.COMMON
+			resonant.base_effects.append(EffectData.new(EffectType.DAMAGE_ON_BLOCK_GAIN, {"amount": 1}))
+			char_data.starter_unique_cards.append(resonant)
+
+		_generate_placeholder_reward_pool(char_data)
+
+		var quest = QuestData.new()
+		quest.id = "quest_defender_%d" % (i + 1)
+		if i == 0:
+			quest.title = "Golemancer Quest"
+			quest.description = "Have a card with %d upgrades" % 6
+			quest.progress_max = 6
+			quest.tracking_type = "card_upgrades"
+		else:
+			quest.title = "Living Armor Quest"
+			quest.description = "Buy %d relics" % 6
+			quest.progress_max = 6
+			quest.tracking_type = "buy_relics"
+		char_data.quest = quest
+		register_character(char_data)
+
+func _generate_placeholder_reward_pool(char_data: CharacterData):
+	## Generate 22 placeholder reward pool cards (7 Common, 12 Uncommon, 3 Rare)
+	var char_id = char_data.id
+	for i in range(1, 8):
+		var card = CardData.new()
+		card.id = "%s_common_%d" % [char_id, i]
+		card.name = "%s Common %d" % [char_data.display_name, i]
+		card.rarity = CardData.Rarity.COMMON
+		card.cost = 1
+		char_data.reward_card_pool.append(card)
+	for i in range(1, 13):
+		var card = CardData.new()
+		card.id = "%s_uncommon_%d" % [char_id, i]
+		card.name = "%s Uncommon %d" % [char_data.display_name, i]
+		card.rarity = CardData.Rarity.UNCOMMON
+		card.cost = 1
+		char_data.reward_card_pool.append(card)
+	for i in range(1, 4):
+		var card = CardData.new()
+		card.id = "%s_rare_%d" % [char_id, i]
+		card.name = "%s Rare %d" % [char_data.display_name, i]
+		card.rarity = CardData.Rarity.RARE
+		card.cost = 2
+		char_data.reward_card_pool.append(card)
 
 func get_upgrade_pool_for_card(card_id: String) -> Array[String]:
 	## Get the upgrade pool for a card ID

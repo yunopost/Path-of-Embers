@@ -237,6 +237,20 @@ func generate_starter_deck(character_data_list: Array[CharacterData]):
 	# Initialize rare pity counter (starts at -2%)
 	rare_pity_counter = -2
 
+func rebuild_reward_pool_from_party():
+	## Rebuild reward_card_pool from the current party's CharacterData.
+	## Called after loading a save so the pool reflects the saved party's cards.
+	reward_card_pool.clear()
+	var party_ids = PartyManager.party_ids if PartyManager else []
+	for char_id in party_ids:
+		var char_data: CharacterData = DataRegistry.get_character(char_id) if DataRegistry else null
+		if not char_data:
+			push_warning("RunState.rebuild_reward_pool_from_party: no CharacterData for '%s'" % char_id)
+			continue
+		for reward_card in char_data.reward_card_pool:
+			if reward_card:
+				reward_card_pool.append(reward_card)
+
 func set_pending_rewards(bundle: RewardBundle):
 	## Set pending rewards (called by EncounterScreen)
 	pending_rewards = bundle

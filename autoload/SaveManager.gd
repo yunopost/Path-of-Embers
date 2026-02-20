@@ -174,6 +174,12 @@ func _deserialize_run_state(save_data: Dictionary):
 			if PartyManager:
 				PartyManager.set_party(typed_party_ids)
 	
+	# Rebuild reward_card_pool from party character data now that party_ids are restored.
+	# Characters are always registered in DataRegistry._ready(), so this works even when
+	# loading a save that bypasses the CharacterSelect screen.
+	if RunState:
+		RunState.rebuild_reward_pool_from_party()
+
 	# Restore deck with DeckCardData (new instance_id-based structure)
 	if save_data.has("deck"):
 		RunState.deck.clear()
