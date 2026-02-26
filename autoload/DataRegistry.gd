@@ -300,7 +300,7 @@ func _create_placeholder_characters():
 	for i in range(2):
 		var char_data = CharacterData.new()
 		char_data.id = "healer_%d" % (i + 1)
-		char_data.display_name = "Witch" if i == 0 else "Wanderer"
+		char_data.display_name = "Witch" if i == 0 else "Golemancer"
 		char_data.role = "Healer"
 		char_data.portrait_path = ""
 
@@ -382,7 +382,7 @@ func _create_placeholder_characters():
 	for i in range(2):
 		var char_data = CharacterData.new()
 		char_data.id = "defender_%d" % (i + 1)
-		char_data.display_name = "Golemancer" if i == 0 else "Living Armor"
+		char_data.display_name = "Mechanist" if i == 0 else "Living Armor"
 		char_data.role = "Defender"
 		char_data.portrait_path = ""
 
