@@ -105,8 +105,8 @@ func _create_character_entry(char_data: CharacterData) -> Dictionary:
 	# Root container (VBoxContainer)
 	var root = VBoxContainer.new()
 	root.name = "Entry_" + char_data.id
-	root.custom_minimum_size = Vector2(200, 200)
-	root.size = Vector2(200, 200)
+	root.custom_minimum_size = Vector2(200, 310)
+	root.size = Vector2(200, 310)
 	root.add_theme_constant_override("separation", 4)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
@@ -153,13 +153,56 @@ func _create_character_entry(char_data: CharacterData) -> Dictionary:
 	
 	root.add_child(quest_title)
 	root.add_child(quest_desc)
-	
+
+	# ── Themes section ──
+	var themes_sep = Label.new()
+	themes_sep.name = "ThemesSep_" + char_data.id
+	themes_sep.text = "── Themes ──"
+	themes_sep.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	themes_sep.add_theme_font_size_override("font_size", 10)
+	themes_sep.modulate = Color(0.7, 0.7, 0.7)
+	themes_sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(themes_sep)
+
+	var theme1_label = _create_theme_label(char_data.id, 1, char_data.theme_1, false)
+	var theme2_label = _create_theme_label(char_data.id, 2, char_data.theme_2, false)
+	var theme3_label = _create_theme_label(char_data.id, 3, char_data.theme_3, true)
+	root.add_child(theme1_label)
+	root.add_child(theme2_label)
+	root.add_child(theme3_label)
+
 	return {
 		"button": button,
 		"root": root,
 		"quest_title": quest_title,
-		"quest_desc": quest_desc
+		"quest_desc": quest_desc,
+		"theme1_label": theme1_label,
+		"theme2_label": theme2_label,
+		"theme3_label": theme3_label,
 	}
+
+func _create_theme_label(char_id: String, theme_num: int, theme_name: String, is_advanced: bool) -> Label:
+	## Create a label for one theme row in a character entry card.
+	## is_advanced marks theme 3 with an "Advanced:" prefix and gold colour.
+	var label = Label.new()
+	label.name = "Theme%d_%s" % [theme_num, char_id]
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 11)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.clip_contents = true
+	label.custom_minimum_size.y = 18
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	if theme_name.is_empty():
+		label.visible = false
+	elif is_advanced:
+		label.text = "⚡ %s" % theme_name
+		label.modulate = Color(1.0, 0.85, 0.3)  # Gold tint for advanced theme
+	else:
+		label.text = "◆ %s" % theme_name
+		label.modulate = Color(0.85, 0.95, 1.0)  # Light blue tint for standard themes
+
+	return label
 
 func _on_character_selected(character_id: String):
 	## Handle character selection/deselection

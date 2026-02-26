@@ -269,6 +269,16 @@ func _create_placeholder_characters():
 			fade_step.base_effects.append(EffectData.new(EffectType.CONDITIONAL_STRENGTH_IF_NO_DAMAGE, {"amount": 1}))
 			char_data.starter_unique_cards.append(fade_step)
 
+		# Set themes
+		if i == 0:  # Monster Hunter
+			char_data.theme_1 = "Timer Manipulation"
+			char_data.theme_2 = "Vulnerability"
+			char_data.theme_3 = "Elite Hunter"
+		else:  # Shadowfoot
+			char_data.theme_1 = "Fast Actions"
+			char_data.theme_2 = "Combo Chains"
+			char_data.theme_3 = "Untouchable"
+
 		_generate_placeholder_reward_pool(char_data)
 
 		var quest = QuestData.new()
@@ -340,6 +350,16 @@ func _create_placeholder_characters():
 			survey.rarity = CardData.Rarity.COMMON
 			survey.base_effects.append(EffectData.new(EffectType.BLOCK_ON_ENEMY_ACT, {"amount": 1}))
 			char_data.starter_unique_cards.append(survey)
+
+		# Set themes
+		if i == 0:  # Witch
+			char_data.theme_1 = "Curse Generation"
+			char_data.theme_2 = "Discard Payoffs"
+			char_data.theme_3 = "Contagion"
+		else:  # Golemancer (Wanderer)
+			char_data.theme_1 = "Damage Reduction"
+			char_data.theme_2 = "Heavy Strikes"
+			char_data.theme_3 = "Augury"
 
 		_generate_placeholder_reward_pool(char_data)
 
@@ -413,6 +433,16 @@ func _create_placeholder_characters():
 			resonant.rarity = CardData.Rarity.COMMON
 			resonant.base_effects.append(EffectData.new(EffectType.DAMAGE_ON_BLOCK_GAIN, {"amount": 1}))
 			char_data.starter_unique_cards.append(resonant)
+
+		# Set themes
+		if i == 0:  # Mechanist (Golemancer)
+			char_data.theme_1 = "Board Control"
+			char_data.theme_2 = "Legacy Cards"
+			char_data.theme_3 = "Transcendence Synergy"
+		else:  # Living Armor
+			char_data.theme_1 = "Defense into Offense"
+			char_data.theme_2 = "Escalation"
+			char_data.theme_3 = "Enemy Absorption"
 
 		_generate_placeholder_reward_pool(char_data)
 
