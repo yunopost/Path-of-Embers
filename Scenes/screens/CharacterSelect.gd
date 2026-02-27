@@ -17,7 +17,7 @@ func _ready():
 	
 	# Get node references safely
 	selection_count_label = get_node_or_null("VBoxContainer/SelectionCountLabel")
-	character_grid = get_node_or_null("VBoxContainer/CharacterGrid")
+	character_grid = get_node_or_null("VBoxContainer/ScrollContainer/CharacterGrid")
 	confirm_button = get_node_or_null("VBoxContainer/ConfirmButton")
 	party_summary_label = get_node_or_null("VBoxContainer/PartySummaryLabel")
 	
@@ -102,11 +102,11 @@ func _create_character_entry(char_data: CharacterData) -> Dictionary:
 	## Create a character entry card with quest info
 	## Returns dictionary with references to UI elements
 	
-	# Root container (VBoxContainer)
+	# Root container (VBoxContainer) — fills the grid cell width, fixed height
 	var root = VBoxContainer.new()
 	root.name = "Entry_" + char_data.id
-	root.custom_minimum_size = Vector2(200, 310)
-	root.size = Vector2(200, 310)
+	root.custom_minimum_size = Vector2(200, 270)
+	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_theme_constant_override("separation", 4)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
@@ -114,8 +114,8 @@ func _create_character_entry(char_data: CharacterData) -> Dictionary:
 	var button = Button.new()
 	button.name = "SelectButton_" + char_data.id
 	button.text = "%s\n(%s)" % [char_data.display_name, char_data.role]
-	button.custom_minimum_size = Vector2(200, 60)
-	button.size = Vector2(200, 60)
+	button.custom_minimum_size = Vector2(0, 60)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.pressed.connect(_on_character_selected.bind(char_data.id))
 	button.mouse_filter = Control.MOUSE_FILTER_STOP
 	root.add_child(button)

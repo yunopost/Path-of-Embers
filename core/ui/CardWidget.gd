@@ -301,7 +301,7 @@ func _update_display():
 		else:
 			card_panel.modulate = Color.WHITE
 
-func _generate_effect_description(effect: EffectData, card_data: CardData) -> String:
+func _generate_effect_description(effect: EffectData, _card_data: CardData) -> String:
 	## Generate human-readable description from EffectData
 	if not effect:
 		return ""
@@ -402,5 +402,3 @@ func _generate_effect_description(effect: EffectData, card_data: CardData) -> St
 		_:
 			# Unknown effect type - return basic info
 			return "Effect: %s" % effect.effect_type
-	
-	return ""
