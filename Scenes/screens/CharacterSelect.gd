@@ -17,7 +17,7 @@ func _ready():
 	
 	# Get node references safely
 	selection_count_label = get_node_or_null("VBoxContainer/SelectionCountLabel")
-	character_grid = get_node_or_null("VBoxContainer/CharacterGrid")
+	character_grid = get_node_or_null("VBoxContainer/ScrollContainer/CharacterGrid")
 	confirm_button = get_node_or_null("VBoxContainer/ConfirmButton")
 	party_summary_label = get_node_or_null("VBoxContainer/PartySummaryLabel")
 	
@@ -72,331 +72,12 @@ func _ensure_visible():
 		show()
 
 func _create_placeholder_characters():
-	## Create placeholder CharacterData resources for testing
-	## In a real game, these would be loaded from .tres files
-	
+	## Populate available_characters from DataRegistry.
+	## Characters are created once in DataRegistry._ready() so CharacterSelect
+	## simply reads what already exists - no duplicate creation.
 	available_characters.clear()
-	
-	# Warrior characters
-	for i in range(2):
-		var char_data = CharacterData.new()
-		char_data.id = "warrior_%d" % (i + 1)
-		# First warrior is "Monster Hunter", second is "Shadowfoot"
-		if i == 0:
-			char_data.display_name = "Monster Hunter"
-		else:
-			char_data.display_name = "Shadowfoot"
-		char_data.role = "Warrior"
-		char_data.portrait_path = ""
-		
-		# Create 2 unique starter cards
-		if i == 0:
-			# Monster Hunter specific cards
-			# Full Attack - Big damage card with Slow keyword
-			var full_attack = CardData.new()
-			full_attack.id = "monster_hunter_full_attack"
-			full_attack.name = "Full Attack"
-			full_attack.cost = 2
-			full_attack.card_type = CardData.CardType.ATTACK
-			full_attack.targeting_mode = CardData.TargetingMode.ENEMY
-			full_attack.owner_character_id = "warrior_1"
-			full_attack.rarity = CardData.Rarity.COMMON
-			full_attack.keywords.append("Slow")
-			var damage_effect = EffectData.new("damage", {"amount": 14})
-			full_attack.base_effects.append(damage_effect)
-			char_data.starter_unique_cards.append(full_attack)
-			
-			# Shoulder Tackle - Free card that enables next card
-			var shoulder_tackle = CardData.new()
-			shoulder_tackle.id = "monster_hunter_shoulder_tackle"
-			shoulder_tackle.name = "Shoulder Tackle"
-			shoulder_tackle.cost = 0
-			shoulder_tackle.card_type = CardData.CardType.SKILL
-			shoulder_tackle.targeting_mode = CardData.TargetingMode.SELF
-			shoulder_tackle.owner_character_id = "warrior_1"
-			shoulder_tackle.rarity = CardData.Rarity.COMMON
-			var haste_effect = EffectData.new("grant_haste_next_card", {})
-			shoulder_tackle.base_effects.append(haste_effect)
-			char_data.starter_unique_cards.append(shoulder_tackle)
-		else:
-			# Warrior 2 (Shadowfoot) specific cards
-			# Dark Knife - Deal 6 damage, gains double damage from Strength
-			var dark_knife = CardData.new()
-			dark_knife.id = "shadowfoot_dark_knife"
-			dark_knife.name = "Dark Knife"
-			dark_knife.cost = 1
-			dark_knife.card_type = CardData.CardType.ATTACK
-			dark_knife.targeting_mode = CardData.TargetingMode.ENEMY
-			dark_knife.owner_character_id = "warrior_2"
-			dark_knife.rarity = CardData.Rarity.COMMON
-			var dark_knife_damage = EffectData.new("damage", {"amount": 6, "double_strength": true})
-			dark_knife.base_effects.append(dark_knife_damage)
-			char_data.starter_unique_cards.append(dark_knife)
-			
-			# Fade Step - Gain 4 Block, if no damage this turn gain 1 Strength
-			var fade_step = CardData.new()
-			fade_step.id = "shadowfoot_fade_step"
-			fade_step.name = "Fade Step"
-			fade_step.cost = 1
-			fade_step.card_type = CardData.CardType.SKILL
-			fade_step.targeting_mode = CardData.TargetingMode.SELF
-			fade_step.owner_character_id = "warrior_2"
-			fade_step.rarity = CardData.Rarity.COMMON
-			var fade_step_block = EffectData.new("block", {"amount": 4})
-			fade_step.base_effects.append(fade_step_block)
-			# Conditional Strength effect will be handled in card-specific mechanics
-			var fade_step_strength = EffectData.new("conditional_strength_if_no_damage", {"amount": 1})
-			fade_step.base_effects.append(fade_step_strength)
-			char_data.starter_unique_cards.append(fade_step)
-		
-		# Create 22 reward pool cards (7 Common, 12 Uncommon, 3 Rare)
-		_generate_reward_pool_cards(char_data)
-		
-		# Create quest
-		var quest = QuestData.new()
-		quest.id = "quest_warrior_%d" % (i + 1)
-		if i == 0:
-			# Monster Hunter quest (placeholder)
-			quest.title = "Monster Hunter Quest"
-			quest.description = "Complete %d nodes" % (10)
-			quest.progress_max = 10
-			quest.tracking_type = "complete_nodes"
-		else:
-			# Shadowfoot quest: Complete combat without taking damage 6 times
-			quest.title = "Shadowfoot Quest"
-			quest.description = "Complete combat without taking damage %d times" % (6)
-			quest.progress_max = 6
-			quest.tracking_type = "combat_no_damage"
-		char_data.quest = quest
-		
-		available_characters.append(char_data)
-		# Register with DataRegistry
-		if DataRegistry:
-			DataRegistry.register_character(char_data)
-	
-	# Healer characters
-	for i in range(2):
-		var char_data = CharacterData.new()
-		char_data.id = "healer_%d" % (i + 1)
-		# First healer is "Witch", second is "Wanderer"
-		if i == 0:
-			char_data.display_name = "Witch"
-		else:
-			char_data.display_name = "Wanderer"
-		char_data.role = "Healer"
-		char_data.portrait_path = ""
-		
-		if i == 0:
-			# Healer 1 (Witch) specific cards
-			# Hexbound Ritual - Add temporary Curse to hand, Apply 2 Vulnerable to ALL enemies
-			var hexbound_ritual = CardData.new()
-			hexbound_ritual.id = "witch_hexbound_ritual"
-			hexbound_ritual.name = "Hexbound Ritual"
-			hexbound_ritual.cost = 0
-			hexbound_ritual.card_type = CardData.CardType.SKILL
-			hexbound_ritual.targeting_mode = CardData.TargetingMode.SELF
-			hexbound_ritual.owner_character_id = "healer_1"
-			hexbound_ritual.rarity = CardData.Rarity.COMMON
-			var add_curse_effect = EffectData.new("add_curse_to_hand", {"is_temporary": true})
-			hexbound_ritual.base_effects.append(add_curse_effect)
-			var vulnerable_all_effect = EffectData.new("vulnerable_all_enemies", {"duration": 2})
-			hexbound_ritual.base_effects.append(vulnerable_all_effect)
-			char_data.starter_unique_cards.append(hexbound_ritual)
-			
-			# Malediction Lash - Deal 2 damage to each enemy, +2 per Curse in hand/discard
-			var malediction_lash = CardData.new()
-			malediction_lash.id = "witch_malediction_lash"
-			malediction_lash.name = "Malediction Lash"
-			malediction_lash.cost = 1
-			malediction_lash.card_type = CardData.CardType.ATTACK
-			malediction_lash.targeting_mode = CardData.TargetingMode.ALL_ENEMIES
-			malediction_lash.owner_character_id = "healer_1"
-			malediction_lash.rarity = CardData.Rarity.COMMON
-			var malediction_damage = EffectData.new("damage_per_curse", {"base_amount": 2, "per_curse": 2})
-			malediction_lash.base_effects.append(malediction_damage)
-			char_data.starter_unique_cards.append(malediction_lash)
-		else:
-			# Healer 2 (Wanderer) specific cards
-			# Clear the way - Deal 10 damage, can only be played if first card this turn
-			var clear_the_way = CardData.new()
-			clear_the_way.id = "wanderer_clear_the_way"
-			clear_the_way.name = "Clear the way"
-			clear_the_way.cost = 1
-			clear_the_way.card_type = CardData.CardType.ATTACK
-			clear_the_way.targeting_mode = CardData.TargetingMode.ENEMY
-			clear_the_way.owner_character_id = "healer_2"
-			clear_the_way.rarity = CardData.Rarity.COMMON
-			var clear_damage = EffectData.new("damage", {"amount": 10})
-			clear_the_way.base_effects.append(clear_damage)
-			# First card only restriction will be handled in card-specific mechanics
-			clear_the_way.keywords.append("FirstCardOnly")
-			char_data.starter_unique_cards.append(clear_the_way)
-			
-			# Survey the Path - Power, whenever enemy acts gain 1 block
-			var survey_path = CardData.new()
-			survey_path.id = "wanderer_survey_path"
-			survey_path.name = "Survey the Path"
-			survey_path.cost = 2
-			survey_path.card_type = CardData.CardType.POWER
-			survey_path.targeting_mode = CardData.TargetingMode.SELF
-			survey_path.owner_character_id = "healer_2"
-			survey_path.rarity = CardData.Rarity.COMMON
-			var survey_effect = EffectData.new("block_on_enemy_act", {"amount": 1})
-			survey_path.base_effects.append(survey_effect)
-			char_data.starter_unique_cards.append(survey_path)
-		
-		# Create 22 reward pool cards (7 Common, 12 Uncommon, 3 Rare)
-		_generate_reward_pool_cards(char_data)
-		
-		var quest = QuestData.new()
-		quest.id = "quest_healer_%d" % (i + 1)
-		if i == 0:
-			# Witch quest: Gain 6 Curse cards
-			quest.title = "Witch Quest"
-			quest.description = "Gain %d Curse cards" % (6)
-			quest.progress_max = 6
-			quest.tracking_type = "gain_curse_cards"
-		else:
-			# Wanderer quest: Take the explore action at rest sites 3 times (placeholder)
-			quest.title = "Wanderer Quest"
-			quest.description = "Take the explore action at rest sites %d times" % (3)
-			quest.progress_max = 3
-			quest.tracking_type = "rest_site_explore"
-		char_data.quest = quest
-		
-		available_characters.append(char_data)
-		# Register with DataRegistry
-		if DataRegistry:
-			DataRegistry.register_character(char_data)
-	
-	# Defender characters
-	for i in range(2):
-		var char_data = CharacterData.new()
-		char_data.id = "defender_%d" % (i + 1)
-		# First defender is "Golemancer", second is "Living Armor"
-		if i == 0:
-			char_data.display_name = "Golemancer"
-		else:
-			char_data.display_name = "Living Armor"
-		char_data.role = "Defender"
-		char_data.portrait_path = ""
-		
-		if i == 0:
-			# Defender 1 (Golemancer) specific cards
-			# Stonebound Strike - Deal 6 damage, Gain 3 Block
-			var stonebound_strike = CardData.new()
-			stonebound_strike.id = "golemancer_stonebound_strike"
-			stonebound_strike.name = "Stonebound Strike"
-			stonebound_strike.cost = 1
-			stonebound_strike.card_type = CardData.CardType.ATTACK
-			stonebound_strike.targeting_mode = CardData.TargetingMode.ENEMY
-			stonebound_strike.owner_character_id = "defender_1"
-			stonebound_strike.rarity = CardData.Rarity.COMMON
-			var stonebound_damage = EffectData.new("damage", {"amount": 6})
-			stonebound_strike.base_effects.append(stonebound_damage)
-			var stonebound_block = EffectData.new("block", {"amount": 3})
-			stonebound_strike.base_effects.append(stonebound_block)
-			char_data.starter_unique_cards.append(stonebound_strike)
-			
-			# Reinforce - Add temporary upgrade to random card in hand, Gain 4 Block
-			var reinforce = CardData.new()
-			reinforce.id = "golemancer_reinforce"
-			reinforce.name = "Reinforce"
-			reinforce.cost = 1
-			reinforce.card_type = CardData.CardType.SKILL
-			reinforce.targeting_mode = CardData.TargetingMode.SELF
-			reinforce.owner_character_id = "defender_1"
-			reinforce.rarity = CardData.Rarity.COMMON
-			var reinforce_block = EffectData.new("block", {"amount": 4})
-			reinforce.base_effects.append(reinforce_block)
-			var add_temp_upgrade = EffectData.new("add_temporary_upgrade_to_random_hand_card", {})
-			reinforce.base_effects.append(add_temp_upgrade)
-			char_data.starter_unique_cards.append(reinforce)
-		else:
-			# Defender 2 (Living Armor) specific cards
-			# Plated Guard - Gain 8 Block, do not lose block at end of turn
-			var plated_guard = CardData.new()
-			plated_guard.id = "living_armor_plated_guard"
-			plated_guard.name = "Plated Guard"
-			plated_guard.cost = 1
-			plated_guard.card_type = CardData.CardType.SKILL
-			plated_guard.targeting_mode = CardData.TargetingMode.SELF
-			plated_guard.owner_character_id = "defender_2"
-			plated_guard.rarity = CardData.Rarity.COMMON
-			var plated_block = EffectData.new("block", {"amount": 8})
-			plated_guard.base_effects.append(plated_block)
-			var retain_block_effect = EffectData.new("retain_block_this_turn", {})
-			plated_guard.base_effects.append(retain_block_effect)
-			char_data.starter_unique_cards.append(plated_guard)
-			
-			# Resonant Frame - Power, whenever you gain Block deal 1 damage to random enemy
-			var resonant_frame = CardData.new()
-			resonant_frame.id = "living_armor_resonant_frame"
-			resonant_frame.name = "Resonant Frame"
-			resonant_frame.cost = 1
-			resonant_frame.card_type = CardData.CardType.POWER
-			resonant_frame.targeting_mode = CardData.TargetingMode.SELF
-			resonant_frame.owner_character_id = "defender_2"
-			resonant_frame.rarity = CardData.Rarity.COMMON
-			var resonant_effect = EffectData.new("damage_on_block_gain", {"amount": 1})
-			resonant_frame.base_effects.append(resonant_effect)
-			char_data.starter_unique_cards.append(resonant_frame)
-		
-		# Create 22 reward pool cards (7 Common, 12 Uncommon, 3 Rare)
-		_generate_reward_pool_cards(char_data)
-		
-		var quest = QuestData.new()
-		quest.id = "quest_defender_%d" % (i + 1)
-		if i == 0:
-			# Golemancer quest: Have a card with 6 upgrades (placeholder)
-			quest.title = "Golemancer Quest"
-			quest.description = "Have a card with %d upgrades" % (6)
-			quest.progress_max = 6
-			quest.tracking_type = "card_upgrades"
-		else:
-			# Living Armor quest: Buy 6 relics (placeholder)
-			quest.title = "Living Armor Quest"
-			quest.description = "Buy %d relics" % (6)
-			quest.progress_max = 6
-			quest.tracking_type = "buy_relics"
-		char_data.quest = quest
-		
-		available_characters.append(char_data)
-		# Register with DataRegistry
-		if DataRegistry:
-			DataRegistry.register_character(char_data)
-
-func _generate_reward_pool_cards(char_data: CharacterData):
-	## Generate 22 placeholder reward pool cards for a character
-	## 7 Common, 12 Uncommon, 3 Rare
-	var char_id = char_data.id
-	
-	# Generate 7 Common cards
-	for i in range(1, 8):
-		var card = CardData.new()
-		card.id = "%s_common_%d" % [char_id, i]
-		card.name = "%s Common %d" % [char_data.display_name, i]
-		card.rarity = CardData.Rarity.COMMON
-		card.cost = 1
-		char_data.reward_card_pool.append(card)
-	
-	# Generate 12 Uncommon cards
-	for i in range(1, 13):
-		var card = CardData.new()
-		card.id = "%s_uncommon_%d" % [char_id, i]
-		card.name = "%s Uncommon %d" % [char_data.display_name, i]
-		card.rarity = CardData.Rarity.UNCOMMON
-		card.cost = 1
-		char_data.reward_card_pool.append(card)
-	
-	# Generate 3 Rare cards
-	for i in range(1, 4):
-		var card = CardData.new()
-		card.id = "%s_rare_%d" % [char_id, i]
-		card.name = "%s Rare %d" % [char_data.display_name, i]
-		card.rarity = CardData.Rarity.RARE
-		card.cost = 2
-		char_data.reward_card_pool.append(card)
+	if DataRegistry:
+		available_characters = DataRegistry.get_all_characters()
 
 func _populate_character_grid():
 	## Create character entry cards for each available character
@@ -421,11 +102,11 @@ func _create_character_entry(char_data: CharacterData) -> Dictionary:
 	## Create a character entry card with quest info
 	## Returns dictionary with references to UI elements
 	
-	# Root container (VBoxContainer)
+	# Root container (VBoxContainer) — fills the grid cell width, fixed height
 	var root = VBoxContainer.new()
 	root.name = "Entry_" + char_data.id
-	root.custom_minimum_size = Vector2(200, 200)
-	root.size = Vector2(200, 200)
+	root.custom_minimum_size = Vector2(200, 270)
+	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_theme_constant_override("separation", 4)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
@@ -433,8 +114,8 @@ func _create_character_entry(char_data: CharacterData) -> Dictionary:
 	var button = Button.new()
 	button.name = "SelectButton_" + char_data.id
 	button.text = "%s\n(%s)" % [char_data.display_name, char_data.role]
-	button.custom_minimum_size = Vector2(200, 60)
-	button.size = Vector2(200, 60)
+	button.custom_minimum_size = Vector2(0, 60)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.pressed.connect(_on_character_selected.bind(char_data.id))
 	button.mouse_filter = Control.MOUSE_FILTER_STOP
 	root.add_child(button)
@@ -472,13 +153,56 @@ func _create_character_entry(char_data: CharacterData) -> Dictionary:
 	
 	root.add_child(quest_title)
 	root.add_child(quest_desc)
-	
+
+	# ── Themes section ──
+	var themes_sep = Label.new()
+	themes_sep.name = "ThemesSep_" + char_data.id
+	themes_sep.text = "── Themes ──"
+	themes_sep.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	themes_sep.add_theme_font_size_override("font_size", 10)
+	themes_sep.modulate = Color(0.7, 0.7, 0.7)
+	themes_sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(themes_sep)
+
+	var theme1_label = _create_theme_label(char_data.id, 1, char_data.theme_1, false)
+	var theme2_label = _create_theme_label(char_data.id, 2, char_data.theme_2, false)
+	var theme3_label = _create_theme_label(char_data.id, 3, char_data.theme_3, true)
+	root.add_child(theme1_label)
+	root.add_child(theme2_label)
+	root.add_child(theme3_label)
+
 	return {
 		"button": button,
 		"root": root,
 		"quest_title": quest_title,
-		"quest_desc": quest_desc
+		"quest_desc": quest_desc,
+		"theme1_label": theme1_label,
+		"theme2_label": theme2_label,
+		"theme3_label": theme3_label,
 	}
+
+func _create_theme_label(char_id: String, theme_num: int, theme_name: String, is_advanced: bool) -> Label:
+	## Create a label for one theme row in a character entry card.
+	## is_advanced marks theme 3 with an "Advanced:" prefix and gold colour.
+	var label = Label.new()
+	label.name = "Theme%d_%s" % [theme_num, char_id]
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 11)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.clip_contents = true
+	label.custom_minimum_size.y = 18
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	if theme_name.is_empty():
+		label.visible = false
+	elif is_advanced:
+		label.text = "⚡ %s" % theme_name
+		label.modulate = Color(1.0, 0.85, 0.3)  # Gold tint for advanced theme
+	else:
+		label.text = "◆ %s" % theme_name
+		label.modulate = Color(0.85, 0.95, 1.0)  # Light blue tint for standard themes
+
+	return label
 
 func _on_character_selected(character_id: String):
 	## Handle character selection/deselection
@@ -543,9 +267,9 @@ func _update_party_summary():
 			if DataRegistry:
 				char_data = DataRegistry.get_character(char_id)
 			if char_data:
-				summary_lines.append("  • %s (%s)" % [char_data.display_name, char_data.role])
+				summary_lines.append("  â€¢ %s (%s)" % [char_data.display_name, char_data.role])
 			else:
-				summary_lines.append("  • %s" % char_id)
+				summary_lines.append("  â€¢ %s" % char_id)
 		party_summary_label.text = "\n".join(summary_lines)
 		party_summary_label.visible = true
 	else:
@@ -570,20 +294,24 @@ func _on_confirm_pressed():
 		push_error("Failed to find CharacterData for all selected characters")
 		return
 	
-	# Set party in RunState
+	# Set party
+	if PartyManager:
+		PartyManager.set_party(selected_character_ids)
+	
+	# Generate starter deck
 	if RunState:
-		RunState.set_party(selected_character_ids)
-		
-		# Generate starter deck
 		RunState.generate_starter_deck(selected_char_data)
-		
+	
 	# Initialize quests
-	RunState.initialize_quests(selected_char_data)
+	if QuestManager:
+		QuestManager.initialize_quests(selected_char_data)
 	
 	# Generate initial map
 	var map_gen = MapGenerator.new()
-	var map_data = map_gen.generate_map(RunState.act)
-	RunState.set_map_data(map_data)
+	var act = MapManager.act if MapManager else 1
+	var map_data = map_gen.generate_map(act)
+	if MapManager:
+		MapManager.set_map_data(map_data)
 	
 	# Force save new run (before navigating to map)
 	if AutoSaveManager:

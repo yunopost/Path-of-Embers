@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=5 format=3 uid="uid://ccukpxlasg4x"]
+
+[ext_resource type="Script" uid="uid://cm5usdev23wxo" path="res://Path-of-Embers/data/CardData.gd" id="1_carddata"]
+[ext_resource type="Script" uid="uid://ddxkhacxafjly" path="res://Path-of-Embers/data/EffectData.gd" id="2_effectdata"]
+[ext_resource type="Script" uid="uid://b7cuf84obq4b2" path="res://Path-of-Embers/data/UpgradeData.gd" id="3_14yjs"]
+
+[sub_resource type="Resource" id="EffectData_1"]
+script = ExtResource("2_effectdata")
+effect_type = "block"
+params = {
+"amount": 5
+}
+
+[resource]
+script = ExtResource("1_carddata")
+id = "defend_1"
+name = "Defend"
+card_type = 1
+targeting_mode = 4
+base_effects = Array[ExtResource("2_effectdata")]([SubResource("EffectData_1")])

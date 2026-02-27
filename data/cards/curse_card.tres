@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/CardData.gd" id="1_carddata"]
+
+[resource]
+script = ExtResource("1_carddata")
+id = "curse_card"
+name = "Curse"
+cost = 0
+card_type = 3
+targeting_mode = 0
+base_effects = []
+

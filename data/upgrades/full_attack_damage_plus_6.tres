@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/UpgradeData.gd" id="1_upgradedata"]
+
+[resource]
+script = ExtResource("1_upgradedata")
+id = "full_attack_damage_plus_6"
+name = "Damage+6"
+description = "Increase damage by 6"
+rarity = "common"
+weight = 1.0
+is_keyword = false
+effects_dict = {
+"damage_delta": 6
+}
+applies_to_cards = ["monster_hunter_full_attack"]
+

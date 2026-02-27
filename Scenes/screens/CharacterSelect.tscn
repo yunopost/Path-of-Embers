@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://fld01qrdutey"]
 
-[ext_resource type="Script" uid="uid://wj4ed33833sn" path="res://Path-of-Embers/Scenes/screens/CharacterSelect.gd" id="1_charselect"]
+[ext_resource type="Script" uid="uid://wj4ed33833sn" path="res://Path-of-Embers/scenes/screens/CharacterSelect.gd" id="1_charselect"]
 
 [node name="CharacterSelect" type="Control"]
 layout_mode = 3
@@ -17,11 +17,12 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 40.0
-offset_top = 40.0
+offset_top = 20.0
 offset_right = -40.0
-offset_bottom = -40.0
+offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="VBoxContainer"]
 layout_mode = 2
@@ -33,10 +34,16 @@ layout_mode = 2
 text = "Selected: 0 / 3"
 horizontal_alignment = 1
 
-[node name="CharacterGrid" type="GridContainer" parent="VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="CharacterGrid" type="GridContainer" parent="VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
 columns = 3
 
 [node name="PartySummaryLabel" type="Label" parent="VBoxContainer"]
@@ -45,6 +52,7 @@ layout_mode = 2
 autowrap_mode = 3
 
 [node name="ConfirmButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 disabled = true
 text = "Confirm Party"

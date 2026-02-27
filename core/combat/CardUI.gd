@@ -67,7 +67,8 @@ func _can_play() -> bool:
 	if not deck_card_data or not deck_card_data.instance_id:
 		return false
 	var effective_cost = RunState.get_effective_cost(deck_card_data.instance_id)
-	return RunState.energy >= effective_cost
+	var current_energy = ResourceManager.energy if ResourceManager else 0
+	return current_energy >= effective_cost
 
 func _is_targeting_card() -> bool:
 	# For now, assume cards with "attack" or "strike" in name need targets

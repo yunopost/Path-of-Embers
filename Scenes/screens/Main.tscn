@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://c8x7k2nav1n4p"]
 
-[ext_resource type="Script" uid="uid://bnciref12xnam" path="res://Path-of-Embers/Scenes/screens/Main.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://bnciref12xnam" path="res://Path-of-Embers/scenes/screens/Main.gd" id="1_main"]
 [ext_resource type="Texture2D" uid="uid://fgggi4qea61w" path="res://Path-of-Embers/Art Assets/Start Menu/Main Menu background.png" id="2_lgc7k"]
 [ext_resource type="Texture2D" uid="uid://c1ghi80aehv5t" path="res://Path-of-Embers/Art Assets/Start Menu/NEW GAME FINAL.png" id="3_4ut7r"]
 [ext_resource type="Texture2D" uid="uid://mnb87brpajag" path="res://Path-of-Embers/Art Assets/Start Menu/QUIT FINAL.png" id="4_lgc7k"]

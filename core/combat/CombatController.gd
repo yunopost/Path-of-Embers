@@ -23,8 +23,24 @@ var block_at_start_of_turn: int = 0  # Track block for block gain detection
 var player_start_hp: int = 50  # Track starting HP for damage detection
 var min_hp_this_turn: int = 50  # Track minimum HP this turn
 
+# Combat-wide tracking
+var damage_taken_this_combat: bool = false  # Track if any damage taken this entire combat (Revenant)
+
+# Last-card tracking (for sequencing effects)
+var last_card_type_played: int = -1  # CardData.CardType value; -1 = no card yet (Tempest, Echo)
+var last_card_played: DeckCardData = null  # Last card played instance (Echo MIRROR)
+var last_card_target_node: Node = null  # Target Node of last card (Echo MIRROR)
+
+# Pending state flags (set during effect resolution, consumed after card fully resolves)
+var _mirror_active: bool = false  # Prevent infinite MIRROR recursion
+var _regrowth_pending: bool = false  # Grove: return played card to draw pile instead of discard
+var _end_turn_pending: bool = false  # Hollow: end turn after this card fully resolves
+
 func _ready():
-	player_stats = EntityStats.new(RunState.current_hp, RunState.max_hp)
+	# Get HP from ResourceManager if available, otherwise RunState (backward compatibility)
+	var init_hp: int = ResourceManager.current_hp if ResourceManager else RunState.current_hp
+	var init_max_hp: int = ResourceManager.max_hp if ResourceManager else RunState.max_hp
+	player_stats = EntityStats.new(init_hp, init_max_hp)
 	
 	# Track HP changes for Fade Step damage detection
 	player_stats.hp_changed.connect(_on_player_hp_changed)
@@ -40,7 +56,11 @@ func start_combat(enemy_data: Array):
 	## Initialize combat with enemies
 	## enemy_data can be Array of enemy_info Dicts with "enemy_id" and "count" OR legacy format with "id", "name", "max_hp", "time_max"
 	combat_active = true
-	
+	damage_taken_this_combat = false
+	last_card_type_played = -1
+	last_card_played = null
+	last_card_target_node = null
+
 	# Initialize deck piles (ensure fresh state for combat)
 	RunState._initialize_deck_piles()
 	# Shuffle draw pile for randomized starting hand
@@ -87,9 +107,9 @@ func start_combat(enemy_data: Array):
 	# Register enemies with time system
 	enemy_time_system.register_enemies(enemies)
 	
-	# Sync player HP with RunState
-	player_stats.current_hp = RunState.current_hp
-	player_stats.max_hp = RunState.max_hp
+	# Sync player HP with ResourceManager (via RunState for backward compatibility)
+	player_stats.current_hp = ResourceManager.current_hp if ResourceManager else RunState.current_hp
+	player_stats.max_hp = ResourceManager.max_hp if ResourceManager else RunState.max_hp
 	
 	# Start player turn
 	start_player_turn()
@@ -116,18 +136,20 @@ func start_player_turn():
 			enemy.stats.expire_status_effects()
 	
 	# Reset block at start of turn (combat rule) - unless retain_block_this_turn is active
-	if player_stats.get_status("retain_block_this_turn") == null:
+	if player_stats.get_status(StatusEffectType.RETAIN_BLOCK_THIS_TURN) == null:
 		player_stats.reset_block()
-		RunState.set_block(0)
+		if ResourceManager:
+			ResourceManager.set_block(0)
 	else:
 		# Remove the status after using it (it only applies once)
-		player_stats.status_effects.erase("retain_block_this_turn")
+		player_stats.status_effects.erase(StatusEffectType.RETAIN_BLOCK_THIS_TURN)
 		player_stats.status_effects_changed.emit()
 	
 	# Refill energy
 	current_energy = max_energy
 	# Use set_energy() which will emit the signal if value changed
-	RunState.set_energy(current_energy, max_energy)
+	if ResourceManager:
+		ResourceManager.set_energy(current_energy, max_energy)
 	
 	# Draw 5 cards
 	RunState.draw_cards(5)
@@ -201,7 +223,8 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	if card_data.cost_type != CardData.CostType.DISCARD:
 		current_energy -= card_cost
 		# Use set_energy() which will emit the signal if value changed
-		RunState.set_energy(current_energy, max_energy)
+		if ResourceManager:
+			ResourceManager.set_energy(current_energy, max_energy)
 	
 	# Determine timer tick amount BEFORE resolving effects
 	# This ensures haste_next_card applies to the NEXT card, not the current one
@@ -212,7 +235,7 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	if card_data.cost_type == CardData.CostType.DISCARD and cards_discarded > 0:
 		# Modify effects to set hit_count to cards_discarded
 		for effect in effects:
-			if effect is EffectData and effect.effect_type == "damage":
+			if effect is EffectData and effect.effect_type == EffectType.DAMAGE:
 				effect.params["hit_count"] = cards_discarded
 	
 	# Handle Power cards - set up persistent effects
@@ -221,25 +244,42 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	
 	# Resolve card effects (this may set haste_next_card status for the NEXT card)
 	_resolve_card_effects_with_effects(deck_card, target, effects)
-	
+
+	# Update last-card tracking AFTER effects resolve so sequencing effects on the
+	# CURRENT card see the PREVIOUS card's type, while the NEXT card sees this card's type
+	last_card_type_played = card_data.card_type
+	last_card_played = deck_card
+	last_card_target_node = target
+
 	# Tick all enemies with the timer amount for THIS card
 	enemy_time_system.tick_all_enemies(timer_tick_amount)
 	
 	# Resolve any enemies that hit 0
 	enemy_time_system.resolve_enemy_time_triggers("card_played")
 	
-	# Move card to discard pile using instance_id
+	# Move card to discard pile (or draw pile if REGROWTH is pending)
 	# Re-fetch instance_id with explicit String conversion to ensure type safety
 	var discard_instance_id: String = str(deck_card.instance_id)
 	if discard_instance_id.is_empty():
 		push_warning("CombatController.play_card: instance_id is empty, cannot add to discard")
 	else:
-		# Add to deck_model discard pile
-		var discard_index = RunState.deck_model.discard_pile.find(discard_instance_id)
-		if discard_index < 0:  # Not found, add it
-			RunState.deck_model.discard_pile.append(discard_instance_id)
-			RunState.deck_model.discard_pile_changed.emit()
-	
+		if _regrowth_pending:
+			# REGROWTH: insert card at a random position in the draw pile instead of discarding
+			_regrowth_pending = false
+			var insert_pos = randi() % (RunState.deck_model.draw_pile.size() + 1)
+			RunState.deck_model.draw_pile.insert(insert_pos, discard_instance_id)
+		else:
+			# Normal path: add to discard pile
+			var discard_index = RunState.deck_model.discard_pile.find(discard_instance_id)
+			if discard_index < 0:  # Not found, add it
+				RunState.deck_model.discard_pile.append(discard_instance_id)
+				RunState.deck_model.discard_pile_changed.emit()
+
+	# FORCE_END_TURN: card is now fully resolved and discarded — safe to end the turn
+	if _end_turn_pending:
+		_end_turn_pending = false
+		end_player_turn()
+
 	return true
 
 func _pay_discard_cost(discard_amount: int, exclude_instance_id: String = "") -> int:
@@ -333,10 +373,12 @@ func _resolve_card_effects_with_effects(deck_card: DeckCardData, target: Node = 
 		draw_count = EffectResolver.resolve_effects(effects, player_stats, target_stats, enemy_context, self)
 	
 	# Update RunState block
-	RunState.set_block(player_stats.block)
+	if ResourceManager:
+		ResourceManager.set_block(player_stats.block)
 	
 	# Update RunState HP
-	RunState.set_hp(player_stats.current_hp, player_stats.max_hp)
+	if ResourceManager:
+		ResourceManager.set_hp(player_stats.current_hp, player_stats.max_hp)
 	
 	if draw_count > 0:
 		RunState.draw_cards(draw_count)
@@ -371,7 +413,7 @@ func _get_card_effects(deck_card: DeckCardData) -> Array:
 			var damage_delta = upgrade_effects["damage_delta"]
 			# Find damage effects and modify them
 			for effect in effects:
-				if effect is EffectData and effect.effect_type == "damage":
+				if effect is EffectData and effect.effect_type == EffectType.DAMAGE:
 					var current_amount = effect.params.get("amount", 0)
 					effect.params["amount"] = current_amount + damage_delta
 		
@@ -380,7 +422,7 @@ func _get_card_effects(deck_card: DeckCardData) -> Array:
 			var multiplier = upgrade_effects["damage_multiply"]
 			if multiplier is float or multiplier is int:
 				for effect in effects:
-					if effect is EffectData and effect.effect_type == "damage":
+					if effect is EffectData and effect.effect_type == EffectType.DAMAGE:
 						var current_amount = effect.params.get("amount", 0)
 						effect.params["amount"] = int(current_amount * float(multiplier))
 		
@@ -389,13 +431,13 @@ func _get_card_effects(deck_card: DeckCardData) -> Array:
 			var hit_count = upgrade_effects["hit_count_set"]
 			if hit_count is int:
 				for effect in effects:
-					if effect is EffectData and effect.effect_type == "damage":
+					if effect is EffectData and effect.effect_type == EffectType.DAMAGE:
 						effect.params["hit_count"] = hit_count
 		
 		# Apply ignore_block flag
 		if upgrade_effects.has("ignore_block") and upgrade_effects["ignore_block"] == true:
 			for effect in effects:
-				if effect is EffectData and effect.effect_type == "damage":
+				if effect is EffectData and effect.effect_type == EffectType.DAMAGE:
 					effect.params["ignore_block"] = true
 		
 		# Apply block modifications
@@ -403,7 +445,7 @@ func _get_card_effects(deck_card: DeckCardData) -> Array:
 			var block_delta = upgrade_effects["block_delta"]
 			# Find block effects and modify them
 			for effect in effects:
-				if effect is EffectData and effect.effect_type == "block":
+				if effect is EffectData and effect.effect_type == EffectType.BLOCK:
 					var current_amount = effect.params.get("amount", 0)
 					effect.params["amount"] = current_amount + block_delta
 		
@@ -411,7 +453,7 @@ func _get_card_effects(deck_card: DeckCardData) -> Array:
 		if upgrade_effects.has("add_block"):
 			var block_amount = upgrade_effects["add_block"]
 			if block_amount is int:
-				var block_effect = EffectData.new("block", {"amount": block_amount})
+				var block_effect = EffectData.new(EffectType.BLOCK, {"amount": block_amount})
 				effects.append(block_effect)
 		
 		# Apply heal modifications
@@ -419,7 +461,7 @@ func _get_card_effects(deck_card: DeckCardData) -> Array:
 			var heal_delta = upgrade_effects["heal_delta"]
 			# Find heal effects and modify them
 			for effect in effects:
-				if effect is EffectData and effect.effect_type == "heal":
+				if effect is EffectData and effect.effect_type == EffectType.HEAL:
 					var current_amount = effect.params.get("amount", 0)
 					effect.params["amount"] = current_amount + heal_delta
 		
@@ -460,13 +502,13 @@ func end_player_turn():
 func _check_end_of_turn_effects():
 	## Check effects that trigger at end of turn
 	# Fade Step: gain Strength if no damage was taken
-	var pending_strength = player_stats.get_status("pending_strength_if_no_damage")
+	var pending_strength = player_stats.get_status(StatusEffectType.PENDING_STRENGTH_IF_NO_DAMAGE)
 	if pending_strength != null:
 		if not damage_taken_this_turn:
 			var amount = int(pending_strength)
-			player_stats.apply_status("strength", amount)
+			player_stats.apply_status(StatusEffectType.STRENGTH, amount)
 		# Remove pending status
-		player_stats.status_effects.erase("pending_strength_if_no_damage")
+		player_stats.status_effects.erase(StatusEffectType.PENDING_STRENGTH_IF_NO_DAMAGE)
 		player_stats.status_effects_changed.emit()
 
 func get_player_stats() -> EntityStats:
@@ -495,6 +537,7 @@ func _on_player_hp_changed(new_hp: int):
 		min_hp_this_turn = new_hp
 		if min_hp_this_turn < player_start_hp:
 			damage_taken_this_turn = true
+			damage_taken_this_combat = true  # Never resets during combat (Revenant)
 
 var previous_block: int = 0  # Track previous block value for block gain detection
 
@@ -502,7 +545,7 @@ func _on_player_block_changed(new_block: int):
 	## Handle Resonant Frame: deal damage to random enemy when block increases
 	if new_block > previous_block:
 		# Check if Resonant Frame power is active
-		var resonant_damage = player_stats.get_status("resonant_frame_active")
+		var resonant_damage = player_stats.get_status(StatusEffectType.RESONANT_FRAME_ACTIVE)
 		if resonant_damage != null and int(resonant_damage) > 0:
 			# Deal damage to a random enemy
 			var alive_enemies: Array[Enemy] = []
@@ -535,23 +578,57 @@ func _add_curse_to_hand(is_temporary: bool):
 	RunState.deck_changed.emit()
 
 
-func _setup_power_card_effects(deck_card: DeckCardData, card_data: CardData, effects: Array):
+func _replay_last_card_effects(enemy_override: Enemy = null):
+	## Replay the last played card's effects without paying its cost (Echo MIRROR).
+	## enemy_override: if non-null, target this enemy; otherwise use stored last_card_target_node.
+	if _mirror_active:
+		push_warning("MIRROR: recursion prevented")
+		return
+	if not last_card_played:
+		push_warning("MIRROR: no last card to replay")
+		return
+
+	_mirror_active = true
+
+	# Build effects list, stripping any MIRROR effects to prevent infinite recursion
+	var raw_effects = _get_card_effects(last_card_played)
+	var filtered_effects: Array = []
+	for e in raw_effects:
+		if e is EffectData and e.effect_type != EffectType.MIRROR:
+			filtered_effects.append(e)
+
+	if enemy_override != null:
+		# Resolve directly against a specific enemy
+		var draw_count = EffectResolver.resolve_effects(filtered_effects, player_stats, enemy_override.stats, enemy_override, self)
+		if ResourceManager:
+			ResourceManager.set_block(player_stats.block)
+			ResourceManager.set_hp(player_stats.current_hp, player_stats.max_hp)
+		if draw_count > 0:
+			RunState.draw_cards(draw_count)
+	else:
+		# Re-use the stored target node (handles ALL_ENEMIES, self-targeting, etc.)
+		_resolve_card_effects_with_effects(last_card_played, last_card_target_node, filtered_effects)
+
+	_mirror_active = false
+
+
+func _setup_power_card_effects(_deck_card: DeckCardData, _card_data: CardData, effects: Array):
 	## Set up persistent effects for Power cards
 	for effect in effects:
 		if not effect is EffectData:
 			continue
 		
-		if effect.effect_type == "block_on_enemy_act":
+		if effect.effect_type == EffectType.BLOCK_ON_ENEMY_ACT:
 			# Survey the Path: whenever enemy acts, gain block
 			# Set status to track this power
-			player_stats.apply_status("block_on_enemy_act", effect.params.get("amount", 1))
-		elif effect.effect_type == "damage_on_block_gain":
+			player_stats.apply_status(StatusEffectType.BLOCK_ON_ENEMY_ACT, effect.params.get("amount", 1))
+		elif effect.effect_type == EffectType.DAMAGE_ON_BLOCK_GAIN:
 			# Resonant Frame: whenever you gain Block, deal damage to random enemy
 			# Set status to track this power
-			player_stats.apply_status("resonant_frame_active", effect.params.get("amount", 1))
+			player_stats.apply_status(StatusEffectType.RESONANT_FRAME_ACTIVE, effect.params.get("amount", 1))
 
 func _on_enemy_acted():
 	## Called when an enemy performs an action - check for block_on_enemy_act
-	var block_amount = player_stats.get_status("block_on_enemy_act")
+	var block_amount = player_stats.get_status(StatusEffectType.BLOCK_ON_ENEMY_ACT)
 	if block_amount != null and int(block_amount) > 0:
 		player_stats.add_block(int(block_amount))

@@ -2,6 +2,8 @@ extends Control
 
 ## Deck view popup - shows all cards in deck with counts
 
+signal popup_closed(popup_name: String)
+
 @onready var close_button: Button = $VBoxContainer/CloseButton
 @onready var total_cards_label: Label = $VBoxContainer/HeaderContainer/TotalCardsLabel
 @onready var counts_label: Label = $VBoxContainer/CountsLabel
@@ -107,9 +109,8 @@ func _update_counts():
 
 func _on_close_pressed():
 	visible = false
-	# Notify UIRoot if needed
-	if get_parent().has_method("close_popup"):
-		get_parent().close_popup("deck")
+	# Emit signal to notify parent (UIRoot)
+	popup_closed.emit("deck")
 
 func _input(event):
 	# Close on escape

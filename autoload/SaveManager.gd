@@ -94,16 +94,17 @@ func _serialize_run_state() -> Dictionary:
 	
 	# Convert quests to serializable format (QuestState objects)
 	var quests_data = {}
-	for character_id in RunState.quests:
-		var quest_state = RunState.quests[character_id]
-		if quest_state and quest_state is QuestState:
-			quests_data[character_id] = quest_state.to_dict()
-		elif quest_state is Dictionary:
-			# Legacy format - keep as-is for backward compatibility
-			quests_data[character_id] = quest_state
-		else:
-			# Fallback
-			quests_data[character_id] = {"id": str(quest_state)}
+	if QuestManager:
+		for character_id in QuestManager.quests:
+			var quest_state = QuestManager.quests[character_id]
+			if quest_state and quest_state is QuestState:
+				quests_data[character_id] = quest_state.to_dict()
+			elif quest_state is Dictionary:
+				# Legacy format - keep as-is for backward compatibility
+				quests_data[character_id] = quest_state
+			else:
+				# Fallback
+				quests_data[character_id] = {"id": str(quest_state)}
 	
 	# Convert reward_card_pool to serializable format
 	var reward_pool_data = []
@@ -118,8 +119,8 @@ func _serialize_run_state() -> Dictionary:
 	
 	# Serialize map data if present
 	var map_data_serialized = null
-	if RunState.current_map != null:
-		map_data_serialized = RunState.current_map.to_dict()
+	if MapManager and MapManager.current_map != null:
+		map_data_serialized = MapManager.current_map.to_dict()
 	
 	# Serialize pending rewards if present
 	var pending_rewards_serialized = null
@@ -128,23 +129,22 @@ func _serialize_run_state() -> Dictionary:
 	
 	return {
 		"version": 5,  # Bump version for rare_pity_counter and rarity in reward_card_pool
-		"party": RunState.party,
-		"party_ids": RunState.party_ids,
+		"party_ids": PartyManager.party_ids.duplicate() if PartyManager else [],
 		"deck": deck_dict,  # Dictionary keyed by instance_id
 		"deck_order": deck_order_data,  # Stable ordering array
 		"relics": RunState.relics,
-		"gold": RunState.gold,
-		"current_hp": RunState.current_hp,
-		"max_hp": RunState.max_hp,
-		"block": RunState.block,
-		"energy": RunState.energy,
-		"max_energy": RunState.max_energy,
-		"act": RunState.act,
-		"map": RunState.map,
-		"node_position": RunState.node_position,
+		"gold": ResourceManager.gold if ResourceManager else 0,
+		"current_hp": ResourceManager.current_hp if ResourceManager else 50,
+		"max_hp": ResourceManager.max_hp if ResourceManager else 50,
+		"block": ResourceManager.block if ResourceManager else 0,
+		"energy": ResourceManager.energy if ResourceManager else 3,
+		"max_energy": ResourceManager.max_energy if ResourceManager else 3,
+		"act": MapManager.act if MapManager else 1,
+		"map": MapManager.map if MapManager else "Act1",
+		"node_position": MapManager.node_position if MapManager else 0,
 		"current_map": map_data_serialized,
-		"current_node_id": RunState.current_node_id,
-		"available_next_node_ids": RunState.available_next_node_ids,
+		"current_node_id": MapManager.current_node_id if MapManager else "",
+		"available_next_node_ids": MapManager.available_next_node_ids.duplicate() if MapManager else [],
 		"quests": quests_data,
 		"reward_card_pool": reward_pool_data,
 		"rare_pity_counter": RunState.rare_pity_counter,
@@ -155,9 +155,31 @@ func _serialize_run_state() -> Dictionary:
 
 func _deserialize_run_state(save_data: Dictionary):
 	# Restore party
-	if save_data.has("party"):
-		RunState.party = save_data["party"]
+	if save_data.has("party_ids"):
+		var party_ids_data = save_data["party_ids"]
+		if party_ids_data is Array:
+			# Convert to typed array
+			var typed_party_ids: Array[String] = []
+			for id in party_ids_data:
+				typed_party_ids.append(str(id))
+			if PartyManager:
+				PartyManager.set_party(typed_party_ids)
+	elif save_data.has("party"):
+		# Legacy format - convert to party_ids if possible
+		var party_data = save_data["party"]
+		if party_data is Array:
+			var typed_party_ids: Array[String] = []
+			for id in party_data:
+				typed_party_ids.append(str(id))
+			if PartyManager:
+				PartyManager.set_party(typed_party_ids)
 	
+	# Rebuild reward_card_pool from party character data now that party_ids are restored.
+	# Characters are always registered in DataRegistry._ready(), so this works even when
+	# loading a save that bypasses the CharacterSelect screen.
+	if RunState:
+		RunState.rebuild_reward_pool_from_party()
+
 	# Restore deck with DeckCardData (new instance_id-based structure)
 	if save_data.has("deck"):
 		RunState.deck.clear()
@@ -225,57 +247,44 @@ func _deserialize_run_state(save_data: Dictionary):
 		RunState.relics_changed.emit()
 	
 	# Restore resources
-	if save_data.has("gold"):
-		RunState.set_gold(save_data["gold"])
-	if save_data.has("current_hp"):
-		RunState.current_hp = save_data["current_hp"]
-	if save_data.has("max_hp"):
-		RunState.max_hp = save_data["max_hp"]
-	if save_data.has("block"):
-		RunState.set_block(save_data["block"])
-	if save_data.has("energy"):
-		RunState.energy = save_data["energy"]
-	if save_data.has("max_energy"):
-		RunState.max_energy = save_data["max_energy"]
+	if ResourceManager:
+		if save_data.has("gold"):
+			ResourceManager.set_gold(save_data["gold"])
+		if save_data.has("current_hp") and save_data.has("max_hp"):
+			ResourceManager.set_hp(save_data["current_hp"], save_data["max_hp"])
+		elif save_data.has("current_hp"):
+			ResourceManager.set_hp(save_data["current_hp"])
+		if save_data.has("block"):
+			ResourceManager.set_block(save_data["block"])
+		if save_data.has("energy") and save_data.has("max_energy"):
+			ResourceManager.set_energy(save_data["energy"], save_data["max_energy"])
+		elif save_data.has("energy"):
+			ResourceManager.set_energy(save_data["energy"])
 	
 	# Restore map/progress
-	if save_data.has("act"):
-		RunState.set_act(save_data["act"])
-	if save_data.has("map"):
-		RunState.set_map(save_data["map"])
-	if save_data.has("node_position"):
-		RunState.set_node_position(save_data["node_position"])
-	
-	# Restore map data (version 3+)
-	if save_data.has("current_map") and save_data["current_map"] != null:
-		var map_data = MapData.from_dict(save_data["current_map"])
-		RunState.set_map_data(map_data)
-	if save_data.has("current_node_id"):
-		RunState.current_node_id = save_data["current_node_id"]
-	if save_data.has("available_next_node_ids"):
-		# Convert to typed array
-		var next_nodes_array = save_data["available_next_node_ids"]
-		RunState.available_next_node_ids.clear()
-		for item in next_nodes_array:
-			RunState.available_next_node_ids.append(str(item))
-	
-	# Restore party_ids (new in version 2) - convert to typed array
-	if save_data.has("party_ids"):
-		var party_ids_array = save_data["party_ids"]
-		RunState.party_ids.clear()
-		for item in party_ids_array:
-			RunState.party_ids.append(str(item))
-	else:
-		# Legacy: convert party array to party_ids
-		if save_data.has("party"):
-			RunState.party_ids.clear()
-			for item in save_data["party"]:
-				RunState.party_ids.append(str(item))
-		RunState.party_changed.emit()
+	if MapManager:
+		if save_data.has("act"):
+			MapManager.set_act(save_data["act"])
+		if save_data.has("map"):
+			MapManager.set_map(save_data["map"])
+		if save_data.has("node_position"):
+			MapManager.set_node_position(save_data["node_position"])
+		
+		# Restore map data (version 3+)
+		if save_data.has("current_map") and save_data["current_map"] != null:
+			var map_data = MapData.from_dict(save_data["current_map"])
+			MapManager.set_map_data(map_data)
+		if save_data.has("current_node_id"):
+			MapManager.set_current_node(save_data["current_node_id"])
+		if save_data.has("available_next_node_ids"):
+			var next_nodes_array = save_data["available_next_node_ids"]
+			MapManager.available_next_node_ids.clear()
+			for item in next_nodes_array:
+				MapManager.available_next_node_ids.append(str(item))
 	
 	# Restore quests (convert dictionaries to QuestState objects)
-	if save_data.has("quests"):
-		RunState.quests.clear()
+	if save_data.has("quests") and QuestManager:
+		QuestManager.quests.clear()
 		if save_data["quests"] is Dictionary:
 			# New format: Dictionary keyed by character_id
 			for character_id in save_data["quests"]:
@@ -283,10 +292,10 @@ func _deserialize_run_state(save_data: Dictionary):
 				if quest_data is Dictionary:
 					# Convert dictionary to QuestState (handles both new and legacy formats)
 					var quest_state = QuestState.from_dict(quest_data)
-					RunState.quests[character_id] = quest_state
+					QuestManager.quests[character_id] = quest_state
 				elif quest_data is QuestState:
 					# Already a QuestState (shouldn't happen in saves, but handle it)
-					RunState.quests[character_id] = quest_data
+					QuestManager.quests[character_id] = quest_data
 		elif save_data["quests"] is Array:
 			# Legacy: convert Array to Dictionary of QuestState objects
 			for quest in save_data["quests"]:
@@ -294,8 +303,8 @@ func _deserialize_run_state(save_data: Dictionary):
 					var character_id = quest.get("character_id", quest.get("id", ""))
 					if not character_id.is_empty():
 						var quest_state = QuestState.from_dict(quest)
-						RunState.quests[character_id] = quest_state
-		RunState.quests_changed.emit()
+						QuestManager.quests[character_id] = quest_state
+		QuestManager.quests_changed.emit()
 	
 	# Restore reward_card_pool (new in version 2)
 	if save_data.has("reward_card_pool"):
@@ -339,7 +348,3 @@ func _deserialize_run_state(save_data: Dictionary):
 			RunState.pending_rewards = null
 	else:
 		RunState.pending_rewards = null
-	
-	# Emit signals for UI updates
-	RunState.hp_changed.emit()
-	RunState.energy_changed.emit()
