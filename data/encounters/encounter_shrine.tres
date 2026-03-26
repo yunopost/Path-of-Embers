@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="EncounterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EncounterData.gd" id="1_encounterdata"]
+
+[resource]
+script = ExtResource("1_encounterdata")
+id = "encounter_shrine"
+title = "Ancient Shrine"
+body = "An old shrine pulses with faint warmth. Strange symbols glow along its surface. You feel pulled toward it."
+min_act = 1
+max_act = 3
+choices = [{
+"id": "pray",
+"label": "Pray at the shrine",
+"effects_text": "The shrine's warmth flows through you, mending wounds.",
+"reward_gold": 0,
+"reward_heal": 20,
+"reward_card_choices": 0,
+"reward_upgrade_count": 0
+}, {
+"id": "offer_strength",
+"label": "Offer your strength",
+"effects_text": "You channel your power into the shrine. It returns a focused upgrade.",
+"reward_gold": 0,
+"reward_heal": 0,
+"reward_card_choices": 0,
+"reward_upgrade_count": 1
+}, {
+"id": "leave_undisturbed",
+"label": "Leave it undisturbed",
+"effects_text": "Showing respect, you back away. A coin appears at the base of the shrine.",
+"reward_gold": 10,
+"reward_heal": 0,
+"reward_card_choices": 0,
+"reward_upgrade_count": 0
+}]

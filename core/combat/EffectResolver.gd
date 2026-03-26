@@ -4,10 +4,11 @@ class_name EffectResolver
 ## Resolves EffectData into actual game actions
 ## Generic effect system - not hardcoded per card
 
-static func resolve_effect(effect: EffectData, source: EntityStats, target: EntityStats = null, enemy_context: Enemy = null, combat_controller: Node = null):
+static func resolve_effect(effect: EffectData, source: EntityStats, target: EntityStats = null, enemy_context: Enemy = null, combat_controller: Node = null, owner_stats: EntityStats = null):
 	## Resolve a single effect
 	## enemy_context: Optional Enemy reference for conditional effects
 	## combat_controller: Optional CombatController reference for complex effects
+	## owner_stats: Per-character base-stat EntityStats (str_base/def_base/spirit_base) for the card owner
 	if not effect:
 		return
 	
@@ -17,8 +18,8 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 			var hit_count = effect.params.get("hit_count", 1)  # Multi-hit support
 			var ignore_block = effect.params.get("ignore_block", false)  # Ignore block flag
 			var double_strength = effect.params.get("double_strength", false)  # Dark Knife special: double Strength bonus
-			
-			# Apply Strength bonus
+
+			# Apply Strength bonus (in-combat status from player_stats)
 			var strength_amount = 0
 			if source:
 				var strength_value = source.get_status(StatusEffectType.STRENGTH)
@@ -26,16 +27,25 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 					strength_amount = int(strength_value)
 					if double_strength:
 						strength_amount *= 2  # Dark Knife doubles Strength bonus
-			
+
+			# Add owner character's base STR (Phase 2.5)
+			var owner_str = 0
+			if owner_stats:
+				var sv = owner_stats.get_status(StatusEffectType.STRENGTH)
+				if sv != null:
+					owner_str = int(sv)
+					if double_strength:
+						owner_str *= 2  # Dark Knife doubles base STR too
+
 			# Apply Weakness reduction (25% reduction = multiply by 0.75)
 			var weakness_active = false
 			if source:
 				var weakness_value = source.get_status(StatusEffectType.WEAKNESS)
 				if weakness_value != null and int(weakness_value) > 0:
 					weakness_active = true
-			
-			# Calculate final damage: (base + strength) * (0.75 if weakness, else 1.0)
-			var damage_before_weakness = base_damage + strength_amount
+
+			# Calculate final damage: (base + strength + owner_str) * (0.75 if weakness, else 1.0)
+			var damage_before_weakness = base_damage + strength_amount + owner_str
 			var final_damage = damage_before_weakness
 			if weakness_active:
 				final_damage = int(ceil(float(damage_before_weakness) * 0.75))
@@ -47,29 +57,43 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 		
 		EffectType.BLOCK:
 			var base_block = effect.params.get("amount", 0)
-			
-			# Apply Dexterity bonus
+
+			# Apply Dexterity bonus (in-combat status from player_stats)
 			var dexterity_amount = 0
 			if source:
 				var dexterity_value = source.get_status(StatusEffectType.DEXTERITY)
 				if dexterity_value != null:
 					dexterity_amount = int(dexterity_value)
-			
-			var final_block = base_block + dexterity_amount
+
+			# Add owner character's base DEF (Phase 2.5)
+			var owner_dex = 0
+			if owner_stats:
+				var dv = owner_stats.get_status(StatusEffectType.DEXTERITY)
+				if dv != null:
+					owner_dex = int(dv)
+
+			var final_block = base_block + dexterity_amount + owner_dex
 			if source:
 				source.add_block(final_block)
 		
 		EffectType.HEAL:
 			var base_heal = effect.params.get("amount", 0)
-			
-			# Apply Faith bonus
+
+			# Apply Faith bonus (in-combat status from player_stats)
 			var faith_amount = 0
 			if source:
 				var faith_value = source.get_status(StatusEffectType.FAITH)
 				if faith_value != null:
 					faith_amount = int(faith_value)
-			
-			var final_heal = base_heal + faith_amount
+
+			# Add owner character's base SPIRIT (Phase 2.5)
+			var owner_faith = 0
+			if owner_stats:
+				var fv = owner_stats.get_status(StatusEffectType.FAITH)
+				if fv != null:
+					owner_faith = int(fv)
+
+			var final_heal = base_heal + faith_amount + owner_faith
 			if source:
 				source.heal(final_heal)
 		
@@ -123,55 +147,53 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 				source.apply_status(StatusEffectType.FAITH, amount)
 		
 		EffectType.WEAKNESS:
-			var duration = effect.params.get("duration", 1)
+			# Accept both "duration" (preferred) and "amount" (legacy/enemy format)
+			var duration = effect.params.get("duration", effect.params.get("amount", 1))
 			if target:
 				target.apply_status(StatusEffectType.WEAKNESS, duration)
 		
 		EffectType.DAMAGE_PER_CURSE:
 			var base_amount = effect.params.get("base_amount", 0)
 			var per_curse = effect.params.get("per_curse", 0)
-			
+
 			# Count curses in hand and discard pile
 			var curse_count = 0
 			if RunState and RunState.deck_model:
-				# Count in hand
 				for instance_id in RunState.deck_model.hand:
 					var card = RunState.deck.get(instance_id)
 					if card:
 						var card_data = DataRegistry.get_card_data(card.card_id)
 						if card_data and card_data.card_type == CardData.CardType.CURSE:
 							curse_count += 1
-				# Count in discard pile
 				for instance_id in RunState.deck_model.discard_pile:
 					var card = RunState.deck.get(instance_id)
 					if card:
 						var card_data = DataRegistry.get_card_data(card.card_id)
 						if card_data and card_data.card_type == CardData.CardType.CURSE:
 							curse_count += 1
-			
+
 			var total_damage = base_amount + (per_curse * curse_count)
-			
-			# For ALL_ENEMIES targeting, this will be handled per enemy in resolve_effects
-			# For single target, apply damage directly
+
 			if target:
-				# Apply Strength and Weakness modifiers
 				var strength_amount = 0
 				if source:
 					var strength_value = source.get_status(StatusEffectType.STRENGTH)
 					if strength_value != null:
 						strength_amount = int(strength_value)
-				
+				var owner_str_curse = 0
+				if owner_stats:
+					var sv = owner_stats.get_status(StatusEffectType.STRENGTH)
+					if sv != null:
+						owner_str_curse = int(sv)
 				var weakness_active = false
 				if source:
 					var weakness_value = source.get_status(StatusEffectType.WEAKNESS)
 					if weakness_value != null and int(weakness_value) > 0:
 						weakness_active = true
-				
-				var damage_before_weakness = total_damage + strength_amount
+				var damage_before_weakness = total_damage + strength_amount + owner_str_curse
 				var final_damage = damage_before_weakness
 				if weakness_active:
 					final_damage = int(ceil(float(damage_before_weakness) * 0.75))
-				
 				target.take_damage(final_damage, false)
 		
 		EffectType.ADD_CURSE_TO_HAND:
@@ -240,12 +262,17 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 				var sv = source.get_status(StatusEffectType.STRENGTH)
 				if sv != null:
 					strength_amount_spite = int(sv)
+			var owner_str_spite = 0
+			if owner_stats:
+				var sv = owner_stats.get_status(StatusEffectType.STRENGTH)
+				if sv != null:
+					owner_str_spite = int(sv)
 			var weakness_active_spite = false
 			if source:
 				var wv = source.get_status(StatusEffectType.WEAKNESS)
 				if wv != null and int(wv) > 0:
 					weakness_active_spite = true
-			var damage_bw_spite = total_damage + strength_amount_spite
+			var damage_bw_spite = total_damage + strength_amount_spite + owner_str_spite
 			var final_damage_spite = damage_bw_spite
 			if weakness_active_spite:
 				final_damage_spite = int(ceil(float(damage_bw_spite) * 0.75))
@@ -274,12 +301,17 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 				var sv = source.get_status(StatusEffectType.STRENGTH)
 				if sv != null:
 					strength_seq = int(sv)
+			var owner_str_seq = 0
+			if owner_stats:
+				var sv = owner_stats.get_status(StatusEffectType.STRENGTH)
+				if sv != null:
+					owner_str_seq = int(sv)
 			var weakness_seq = false
 			if source:
 				var wv = source.get_status(StatusEffectType.WEAKNESS)
 				if wv != null and int(wv) > 0:
 					weakness_seq = true
-			var damage_bw_seq = total_seq + strength_seq
+			var damage_bw_seq = total_seq + strength_seq + owner_str_seq
 			var final_seq = damage_bw_seq
 			if weakness_seq:
 				final_seq = int(ceil(float(damage_bw_seq) * 0.75))
@@ -346,6 +378,11 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 				var sv = source.get_status(StatusEffectType.STRENGTH)
 				if sv != null:
 					strength_cond = int(sv)
+			var owner_str_cond = 0
+			if owner_stats:
+				var sv = owner_stats.get_status(StatusEffectType.STRENGTH)
+				if sv != null:
+					owner_str_cond = int(sv)
 			var weakness_cond = false
 			if source:
 				var wv = source.get_status(StatusEffectType.WEAKNESS)
@@ -353,7 +390,7 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 					weakness_cond = true
 
 			var raw_dmg_cond = attack_dmg if top_is_attack else default_dmg
-			var dmg_bw_cond = raw_dmg_cond + strength_cond
+			var dmg_bw_cond = raw_dmg_cond + strength_cond + owner_str_cond
 			var final_dmg_cond = dmg_bw_cond
 			if weakness_cond:
 				final_dmg_cond = int(ceil(float(dmg_bw_cond) * 0.75))
@@ -385,14 +422,19 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 			var res_bonus = bonus_res if last_type_res == CardData.CardType.SKILL else 0
 			var total_res = base_res + res_bonus
 
-			# Apply Dexterity
+			# Apply Dexterity (in-combat status) + owner base DEF (Phase 2.5)
 			var dex_res = 0
 			if source:
 				var dv = source.get_status(StatusEffectType.DEXTERITY)
 				if dv != null:
 					dex_res = int(dv)
+			var owner_dex_res = 0
+			if owner_stats:
+				var dv = owner_stats.get_status(StatusEffectType.DEXTERITY)
+				if dv != null:
+					owner_dex_res = int(dv)
 			if source:
-				source.add_block(total_res + dex_res)
+				source.add_block(total_res + dex_res + owner_dex_res)
 
 		# ── Hollow ────────────────────────────────────────────────────────────────
 		EffectType.BLOCK_TO_ENERGY:
@@ -417,18 +459,97 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 			if combat_controller:
 				combat_controller.set("_end_turn_pending", true)
 
+		EffectType.DAMAGE_EQUAL_TO_BLOCK:
+			# Deal damage equal to the player's current block value
+			var block_value = 0
+			if source:
+				block_value = source.block
+			if block_value > 0 and target:
+				# Apply Strength / Weakness scaling same as normal DAMAGE
+				var strength_amount_etb = 0
+				if source:
+					var sv = source.get_status(StatusEffectType.STRENGTH)
+					if sv != null:
+						strength_amount_etb = int(sv)
+				var owner_str_etb = 0
+				if owner_stats:
+					var sv = owner_stats.get_status(StatusEffectType.STRENGTH)
+					if sv != null:
+						owner_str_etb = int(sv)
+				var weakness_active_etb = false
+				if source:
+					var wv = source.get_status(StatusEffectType.WEAKNESS)
+					if wv != null and int(wv) > 0:
+						weakness_active_etb = true
+				var raw_etb = block_value + strength_amount_etb + owner_str_etb
+				var final_etb = raw_etb
+				if weakness_active_etb:
+					final_etb = int(ceil(float(raw_etb) * 0.75))
+				target.take_damage(final_etb, false)
+
+		# ── Golemancer / Pet System ────────────────────────────────────────────
+		EffectType.SUMMON_PET:
+			## Summon a pet by def id.  hp_bonus is 0 by default; upgrades may override.
+			var pet_def_id_str: String = effect.params.get("pet_def_id", "")
+			var hp_bonus: int = int(effect.params.get("hp_bonus", 0))
+			if not pet_def_id_str.is_empty():
+				if combat_controller and combat_controller.has_method("get_pet_board"):
+					var pb = combat_controller.get_pet_board()
+					if pb:
+						pb.summon_pet(pet_def_id_str, hp_bonus)
+				else:
+					push_warning("EffectResolver.SUMMON_PET: combat_controller has no get_pet_board()")
+
+		EffectType.REINFORCE_PET:
+			## Give the oldest alive pet +max_hp / heal; mark for Reinforced Frame draw check.
+			var max_hp_bonus: int = int(effect.params.get("max_hp_bonus", 4))
+			var heal_amount:   int = int(effect.params.get("heal_amount", 4))
+			var draw_count:    int = int(effect.params.get("draw_if_survives", 1))
+			if combat_controller and combat_controller.has_method("get_pet_board"):
+				var pb = combat_controller.get_pet_board()
+				if pb:
+					var target_pet: PetInstance = pb.get_oldest_alive()
+					if target_pet:
+						target_pet.max_hp += max_hp_bonus
+						target_pet.hp = min(target_pet.hp + heal_amount, target_pet.max_hp)
+						target_pet.reinforced_this_turn = true
+						target_pet.stacks["draw_if_survives"] = draw_count
+					else:
+						push_warning("EffectResolver.REINFORCE_PET: no alive pets to reinforce")
+
+		EffectType.GRAND_ASSEMBLY_POWER:
+			## Power card: apply GRAND_ASSEMBLY_ACTIVE stacking status and trigger assembly check.
+			var hp_bonus: int = int(effect.params.get("hp_bonus", 3))
+			if source:
+				source.apply_status(StatusEffectType.GRAND_ASSEMBLY_ACTIVE, hp_bonus)
+			# Immediate assembly check (in case Core+Arm+Armor already in play)
+			if combat_controller and combat_controller.has_method("get_pet_board"):
+				var pb = combat_controller.get_pet_board()
+				if pb:
+					pb.check_assembly()
+
+		EffectType.DELAYED_DAMAGE:
+			## Queue damage to a random enemy to fire at the START_OF_NEXT_PLAYER_TURN.
+			var amount: int = int(effect.params.get("amount", 8))
+			if combat_controller and combat_controller.has("_pending_next_turn_effects"):
+				combat_controller._pending_next_turn_effects.append({
+					"type": "damage_random_enemy",
+					"amount": amount
+				})
+
 		_:
 			push_warning("Unknown effect type: " + effect.effect_type)
 
-static func resolve_effects(effects: Array, source: EntityStats, target: EntityStats = null, enemy_context: Enemy = null, combat_controller: Node = null) -> int:
+static func resolve_effects(effects: Array, source: EntityStats, target: EntityStats = null, enemy_context: Enemy = null, combat_controller: Node = null, owner_stats: EntityStats = null) -> int:
 	## Resolve multiple effects, returns number of cards to draw (if any)
 	## enemy_context: Optional Enemy reference for conditional effects
 	## combat_controller: Optional CombatController reference for complex effects
+	## owner_stats: Per-character base-stat EntityStats for the card owner (Phase 2.5)
 	var draw_cards = 0
 	for effect in effects:
 		if effect is EffectData:
 			if effect.effect_type == EffectType.DRAW or effect.effect_type == EffectType.DRAW_IF_TOOK_DAMAGE:
-				var result = resolve_effect(effect, source, target, enemy_context, combat_controller)
+				var result = resolve_effect(effect, source, target, enemy_context, combat_controller, owner_stats)
 				if result is int:
 					draw_cards += result
 			elif effect.effect_type == EffectType.DAMAGE_PER_CURSE:
@@ -437,7 +558,7 @@ static func resolve_effects(effects: Array, source: EntityStats, target: EntityS
 					var all_enemies = combat_controller.get_enemies()
 					for enemy in all_enemies:
 						if enemy.stats.is_alive():
-							resolve_effect(effect, source, enemy.stats, enemy, combat_controller)
+							resolve_effect(effect, source, enemy.stats, enemy, combat_controller, owner_stats)
 			else:
-				resolve_effect(effect, source, target, enemy_context, combat_controller)
+				resolve_effect(effect, source, target, enemy_context, combat_controller, owner_stats)
 	return draw_cards

@@ -98,10 +98,18 @@ func _populate_character_grid():
 		# Force entry to be in tree and visible
 		entry["root"].set_owner(character_grid)
 
+func _is_character_locked(char_id: String) -> bool:
+	## Returns true if this character has not been unlocked yet.
+	if not MilestoneManager:
+		return false
+	return not MilestoneManager.is_unlocked("character", char_id)
+
 func _create_character_entry(char_data: CharacterData) -> Dictionary:
 	## Create a character entry card with quest info
 	## Returns dictionary with references to UI elements
-	
+
+	var locked: bool = _is_character_locked(char_data.id)
+
 	# Root container (VBoxContainer) — fills the grid cell width, fixed height
 	var root = VBoxContainer.new()
 	root.name = "Entry_" + char_data.id
@@ -109,7 +117,7 @@ func _create_character_entry(char_data: CharacterData) -> Dictionary:
 	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_theme_constant_override("separation", 4)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
+
 	# Select button (handles selection click)
 	var button = Button.new()
 	button.name = "SelectButton_" + char_data.id
@@ -118,8 +126,10 @@ func _create_character_entry(char_data: CharacterData) -> Dictionary:
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.pressed.connect(_on_character_selected.bind(char_data.id))
 	button.mouse_filter = Control.MOUSE_FILTER_STOP
+	if locked:
+		button.disabled = true
 	root.add_child(button)
-	
+
 	# Quest title label
 	var quest_title = Label.new()
 	quest_title.name = "QuestTitle_" + char_data.id
@@ -129,7 +139,7 @@ func _create_character_entry(char_data: CharacterData) -> Dictionary:
 	quest_title.clip_contents = true
 	quest_title.custom_minimum_size.y = 20
 	quest_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
+
 	# Quest description label
 	var quest_desc = Label.new()
 	quest_desc.name = "QuestDesc_" + char_data.id
@@ -139,18 +149,33 @@ func _create_character_entry(char_data: CharacterData) -> Dictionary:
 	quest_desc.clip_contents = true
 	quest_desc.custom_minimum_size.y = 40
 	quest_desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
-	# Set quest info
-	if char_data.quest:
-		quest_title.text = char_data.quest.title
-		quest_desc.text = char_data.quest.description
-		# Optional: show progress_max as "Goal: X"
-		if char_data.quest.progress_max > 0:
-			quest_desc.text += "\nGoal: %d" % char_data.quest.progress_max
+
+	if locked:
+		# Show unlock hint instead of quest info
+		quest_title.text = "Locked"
+		var hint: String = ""
+		# Find the milestone that unlocks this character for its hint text
+		if DataRegistry:
+			for milestone in DataRegistry.get_all_milestones():
+				if milestone.unlock_type == "character" and milestone.unlock_target == char_data.id:
+					hint = milestone.unlock_hint if not milestone.unlock_hint.is_empty() else milestone.description
+					break
+		quest_desc.text = hint if not hint.is_empty() else "Complete milestones to unlock."
 	else:
-		quest_title.text = "No Quest"
-		quest_desc.text = "(This character has no quest assigned.)"
-	
+		# Set quest info — show the pool so players can evaluate co-completion risk
+		if not char_data.quests.is_empty():
+			var lines: Array[String] = []
+			for q in char_data.quests:
+				var entry_text = q.title
+				if q.progress_max > 0:
+					entry_text += " (×%d)" % q.progress_max
+				lines.append(entry_text)
+			quest_title.text = "Quest Pool (%d)" % char_data.quests.size()
+			quest_desc.text = "\n".join(lines)
+		else:
+			quest_title.text = "No Quest"
+			quest_desc.text = "(This character has no quest assigned.)"
+
 	root.add_child(quest_title)
 	root.add_child(quest_desc)
 
@@ -206,6 +231,8 @@ func _create_theme_label(char_id: String, theme_num: int, theme_name: String, is
 
 func _on_character_selected(character_id: String):
 	## Handle character selection/deselection
+	if _is_character_locked(character_id):
+		return  # Locked characters cannot be selected
 	if character_id in selected_character_ids:
 		# Deselect
 		selected_character_ids.erase(character_id)
@@ -216,7 +243,7 @@ func _on_character_selected(character_id: String):
 		else:
 			# Already at max, can't select more
 			return
-	
+
 	_update_ui()
 
 func _update_ui():
@@ -230,16 +257,19 @@ func _update_ui():
 		var entry = character_entries[char_id]
 		if not entry or not entry.has("button"):
 			continue
-		
+
 		var button = entry["button"]
 		if not is_instance_valid(button):
 			continue
-		
+
+		var is_locked = _is_character_locked(char_id)
 		var is_selected = char_id in selected_character_ids
-		
-		if is_selected:
+
+		if is_locked:
+			if entry.has("root") and is_instance_valid(entry["root"]):
+				entry["root"].modulate = Color(0.45, 0.45, 0.45)  # Dark grey for locked
+		elif is_selected:
 			button.modulate = Color(0.7, 1.0, 0.7)  # Green tint
-			# Optionally tint root container as well
 			if entry.has("root") and is_instance_valid(entry["root"]):
 				entry["root"].modulate = Color(0.9, 1.0, 0.9)  # Light green tint
 		else:
@@ -277,11 +307,13 @@ func _update_party_summary():
 		party_summary_label.visible = false
 
 func _on_confirm_pressed():
-	## Confirm party selection and initialize run
+	## Confirm party selection and proceed to loadout screen.
+	## Starter deck generation and map creation are deferred to LoadoutScreen
+	## so the player can configure equipment before the run begins.
 	if selected_character_ids.size() != 3:
 		push_error("Cannot confirm party: must select exactly 3 characters")
 		return
-	
+
 	# Get CharacterData for selected characters
 	var selected_char_data: Array[CharacterData] = []
 	for char_id in selected_character_ids:
@@ -289,33 +321,23 @@ func _on_confirm_pressed():
 			if char_data.id == char_id:
 				selected_char_data.append(char_data)
 				break
-	
+
 	if selected_char_data.size() != 3:
 		push_error("Failed to find CharacterData for all selected characters")
 		return
-	
+
 	# Set party
 	if PartyManager:
 		PartyManager.set_party(selected_character_ids)
-	
-	# Generate starter deck
-	if RunState:
-		RunState.generate_starter_deck(selected_char_data)
-	
+
 	# Initialize quests
 	if QuestManager:
 		QuestManager.initialize_quests(selected_char_data)
-	
-	# Generate initial map
-	var map_gen = MapGenerator.new()
-	var act = MapManager.act if MapManager else 1
-	var map_data = map_gen.generate_map(act)
-	if MapManager:
-		MapManager.set_map_data(map_data)
-	
-	# Force save new run (before navigating to map)
-	if AutoSaveManager:
-		AutoSaveManager.force_save("new_run_started")
-	
-	# Navigate to map screen
-	ScreenManager.go_to_map()
+
+	# Reset equipment state for a fresh run (stash populated from meta save in LoadoutScreen)
+	if RunState:
+		RunState.equipment_slots.clear()
+		RunState.run_stash.clear()
+
+	# Navigate to loadout screen (LoadoutScreen finalises deck + map and starts the run)
+	ScreenManager.go_to_loadout()

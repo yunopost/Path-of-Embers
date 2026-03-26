@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/amkru/Documents/path-of-embers/Path-of-Embers/data -name *.tres)"
+    ]
+  }
+}

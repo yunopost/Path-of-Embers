@@ -9,7 +9,9 @@ enum NodeType {
 	ELITE,
 	SHOP,
 	ENCOUNTER,
-	BOSS
+	BOSS,
+	FINAL_BOSS,  # Act 3 only — end-of-run boss, requires all quests complete
+	STORY        # Special narrative node; placed mid-map in acts 2+
 }
 
 enum RewardType {

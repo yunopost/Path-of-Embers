@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EquipmentData.gd" id="1_equipdata"]
+
+[resource]
+script = ExtResource("1_equipdata")
+id = "ember_crystal"
+name = "Ember Crystal"
+description = "A crystal suffused with dormant fire. +2 SPIRIT, +1 STR."
+slot_type = 5
+rarity = 1
+stat_modifiers = {"spirit": 2, "str": 1}
+shop_price = 120

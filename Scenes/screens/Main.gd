@@ -8,6 +8,7 @@ extends Control
 @onready var quit_button: TextureButton = null
 
 var settings_popup: Control = null
+var _boss_rush_button: Button = null  # Created in code; only shown when builds exist
 
 func _ready():
 	# Debug: Confirm Main menu is loading
@@ -45,6 +46,7 @@ func initialize():
 func refresh_from_state():
 	## Refresh UI from RunState (architecture rule 11.2)
 	_update_continue_button()
+	_update_boss_rush_button()
 
 func _setup_ui():
 	## Setup UI buttons
@@ -72,11 +74,30 @@ func _update_continue_button():
 	## Enable/disable Continue button based on save file existence
 	if not is_instance_valid(continue_button):
 		return
-	
+
 	if SaveManager and SaveManager.has_save():
 		continue_button.disabled = false
 	else:
 		continue_button.disabled = true
+
+func _update_boss_rush_button():
+	## Create or show/hide the Boss Rush button depending on saved builds.
+	var has_builds: bool = SaveManager != null and SaveManager.has_any_boss_rush_build()
+
+	if has_builds and not is_instance_valid(_boss_rush_button):
+		_boss_rush_button = Button.new()
+		_boss_rush_button.text = "Boss Rush"
+		_boss_rush_button.custom_minimum_size = Vector2(200, 50)
+		_boss_rush_button.pressed.connect(_on_boss_rush_pressed)
+		# Add after the continue button if found, otherwise just add to root
+		var parent = continue_button.get_parent() if is_instance_valid(continue_button) else self
+		var insert_idx: int = continue_button.get_index() + 1 if is_instance_valid(continue_button) else -1
+		parent.add_child(_boss_rush_button)
+		if insert_idx >= 0:
+			parent.move_child(_boss_rush_button, insert_idx)
+
+	if is_instance_valid(_boss_rush_button):
+		_boss_rush_button.visible = has_builds
 
 func _on_new_game_pressed():
 	## Start a new game - reset state and go to character select
@@ -118,6 +139,10 @@ func _on_settings_pressed():
 	else:
 		# Fallback: create minimal settings popup
 		_create_minimal_settings_popup()
+
+func _on_boss_rush_pressed():
+	## Open the Boss Rush screen
+	ScreenManager.go_to_boss_rush()
 
 func _on_quit_pressed():
 	## Quit the game

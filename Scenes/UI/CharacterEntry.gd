@@ -166,12 +166,16 @@ func _update_quest_info(quest_title: Label = null, quest_desc: Label = null) -> 
 	var desc = quest_desc if quest_desc else quest_desc_label
 	
 	if is_instance_valid(title) and is_instance_valid(desc):
-		if character_data.quest:
-			title.text = character_data.quest.title
-			desc.text = character_data.quest.description
-			# Optional: show progress_max as "Goal: X"
-			if character_data.quest.progress_max > 0:
-				desc.text += "\nGoal: %d" % character_data.quest.progress_max
+		if not character_data.quests.is_empty():
+			# Show the full quest pool so players can evaluate co-completion risk
+			var lines: Array[String] = []
+			for q in character_data.quests:
+				var entry = q.title
+				if q.progress_max > 0:
+					entry += " (×%d)" % q.progress_max
+				lines.append(entry)
+			title.text = "Quest Pool (%d)" % character_data.quests.size()
+			desc.text = "\n".join(lines)
 		else:
 			title.text = "No Quest"
 			desc.text = "(This character has no quest assigned.)"

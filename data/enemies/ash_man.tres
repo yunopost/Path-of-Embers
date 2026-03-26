@@ -46,8 +46,8 @@ display_name = "Ash Man"
 name = "Ash Man"
 act = 1
 enemy_type = 0
-min_hp = 6
-max_hp = 6
+min_hp = 38
+max_hp = 44
 moves = [{
 "effects": [SubResource("EffectData_1")],
 "id": "move_1",

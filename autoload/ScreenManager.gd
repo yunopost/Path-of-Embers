@@ -14,11 +14,14 @@ var screen_scenes: Dictionary = {
 	"main": "res://Path-of-Embers/scenes/screens/Main.tscn",
 	"main_menu": "res://Path-of-Embers/scenes/screens/Main.tscn",  # Alias for main
 	"character_select": "res://Path-of-Embers/scenes/screens/CharacterSelect.tscn",
+	"loadout": "res://Path-of-Embers/scenes/screens/LoadoutScreen.tscn",
 	"map": "res://Path-of-Embers/scenes/screens/MapScreen.tscn",
 	"combat": "res://Path-of-Embers/scenes/screens/CombatScreen.tscn",
 	"rewards": "res://Path-of-Embers/scenes/screens/RewardsScreen.tscn",
 	"encounter": "res://Path-of-Embers/scenes/screens/EncounterScreen.tscn",
-	"shop": "res://Path-of-Embers/scenes/screens/ShopScreen.tscn"
+	"shop": "res://Path-of-Embers/scenes/screens/ShopScreen.tscn",
+	"boss_rush": "res://Path-of-Embers/scenes/screens/BossRushScreen.tscn",
+	"game_over": "res://Path-of-Embers/scenes/screens/GameOverScreen.tscn",
 }
 
 func _ready():
@@ -66,9 +69,21 @@ func go_to_character_select():
 	## Navigate to character selection screen
 	_change_screen("character_select", {})
 
+func go_to_loadout():
+	## Navigate to loadout screen (pre-run equipment configuration)
+	_change_screen("loadout", {})
+
 func go_to_main_menu():
 	## Navigate to main menu screen
 	_change_screen("main_menu", {})
+
+func go_to_game_over():
+	## Navigate to game over screen
+	_change_screen("game_over", {})
+
+func go_to_boss_rush():
+	## Navigate to Boss Rush screen
+	_change_screen("boss_rush", {})
 
 func _change_screen(screen_name: String, data: Dictionary):
 	## Internal method to change screens
@@ -125,7 +140,7 @@ func _change_screen(screen_name: String, data: Dictionary):
 	if ui_root:
 		get_tree().root.move_child(ui_root, get_tree().root.get_child_count() - 1)
 		# Hide UI on Main and CharacterSelect screens
-		if screen_name == "main" or screen_name == "main_menu" or screen_name == "character_select":
+		if screen_name in ["main", "main_menu", "character_select", "loadout", "boss_rush"]:
 			ui_root.visible = false
 		else:
 			ui_root.visible = true

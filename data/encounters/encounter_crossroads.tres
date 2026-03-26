@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="EncounterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EncounterData.gd" id="1_encounterdata"]
+
+[resource]
+script = ExtResource("1_encounterdata")
+id = "encounter_crossroads"
+title = "Shadowed Crossroads"
+body = "Three paths diverge before you. A signpost stands at the centre, but the inscriptions have been worn away by time and weather."
+min_act = 1
+max_act = 3
+choices = [{
+"id": "upper_road",
+"label": "Take the upper road",
+"effects_text": "Merchant camps line the upper road. You find some coin.",
+"reward_gold": 30,
+"reward_heal": 0,
+"reward_card_choices": 0,
+"reward_upgrade_count": 0
+}, {
+"id": "lower_road",
+"label": "Take the lower road",
+"effects_text": "The lower road is quieter. You find a useful card and recover slightly.",
+"reward_gold": 0,
+"reward_heal": 15,
+"reward_card_choices": 1,
+"reward_upgrade_count": 0
+}, {
+"id": "rest",
+"label": "Rest at the crossroads",
+"effects_text": "You camp for a short while and recover your strength.",
+"reward_gold": 0,
+"reward_heal": 25,
+"reward_card_choices": 0,
+"reward_upgrade_count": 0
+}]

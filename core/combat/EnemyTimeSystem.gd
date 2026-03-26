@@ -54,6 +54,10 @@ func resolve_enemy_time_triggers(_reason: String):
 	
 	# Execute all enemies that hit 0
 	for enemy in enemies_to_act:
+		# Notify CombatController (and PetBoard) which enemy is about to act
+		if combat_controller and combat_controller.has_method("_pre_enemy_act"):
+			combat_controller._pre_enemy_act(enemy)
+
 		# Enemy performs its intent
 		enemy.perform_intent(combat_controller)
 		

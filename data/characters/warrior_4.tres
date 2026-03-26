@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/CharacterData.gd" id="1_chardata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/CardData.gd" id="2_carddata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/QuestData.gd" id="3_questdata"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/arc_strike.tres" id="4_c1"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/swift_guard.tres" id="5_c2"]
+
+[sub_resource type="Resource" id="QuestData_1" script_class="QuestData"]
+script = ExtResource("3_questdata")
+id = "warrior_4_quest_1"
+title = "Storm's Fury"
+description = "Deal 200 damage."
+progress_max = 200
+tracking_type = "deal_damage"
+reward = {"gold": 35}
+
+[sub_resource type="Resource" id="QuestData_2" script_class="QuestData"]
+script = ExtResource("3_questdata")
+id = "warrior_4_quest_2"
+title = "In Sequence"
+description = "Play 25 cards."
+progress_max = 25
+tracking_type = "play_cards"
+reward = {"gold": 20}
+
+[resource]
+script = ExtResource("1_chardata")
+id = "warrior_4"
+display_name = "Tempest"
+role = "Warrior"
+str_base = 2
+def_base = 1
+spirit_base = 1
+hp_base = 25
+theme_1 = "Cantrips"
+theme_2 = "Sequencing"
+theme_3 = "Storm Payoffs"
+starter_unique_cards = Array[ExtResource("2_carddata")]([ExtResource("4_c1"), ExtResource("5_c2")])
+quests = Array[ExtResource("3_questdata")]([SubResource("QuestData_1"), SubResource("QuestData_2")])

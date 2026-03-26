@@ -8,6 +8,10 @@ const DATA_DIR_CARDS = "res://Path-of-Embers/data/cards/"
 const DATA_DIR_CHARACTERS = "res://Path-of-Embers/data/characters/"
 const DATA_DIR_ENEMIES = "res://Path-of-Embers/data/enemies/"
 const DATA_DIR_UPGRADES = "res://Path-of-Embers/data/upgrades/"
+const DATA_DIR_RELICS = "res://Path-of-Embers/data/relics/"
+const DATA_DIR_EQUIPMENT = "res://Path-of-Embers/data/equipment/"
+const DATA_DIR_MILESTONES = "res://Path-of-Embers/data/milestones/"
+const DATA_DIR_ENCOUNTERS = "res://Path-of-Embers/data/encounters/"
 
 var character_cache: Dictionary = {}  # Maps character_id -> CharacterData
 
@@ -18,11 +22,26 @@ var enemy_cache: Dictionary = {}  # Maps enemy_id -> EnemyData
 var upgrade_resource_cache: Dictionary = {}  # Maps upgrade_id -> UpgradeData Resource
 var card_upgrade_pools: Dictionary = {}  # Maps card_id -> Array[upgrade_id]
 
+# Relic cache
+var relic_cache: Dictionary = {}  # Maps relic_id -> RelicData
+
+# Equipment cache
+var equipment_cache: Dictionary = {}  # Maps equipment_id -> EquipmentData
+
+# Milestone cache
+var milestone_cache: Dictionary = {}  # Maps milestone_id -> MilestoneData
+
+# Encounter cache
+var encounter_cache: Dictionary = {}  # Maps encounter_id -> EncounterData
+
 # Transcendent placeholder cards cache
 var transcendent_card_cache: Dictionary = {}  # Maps card_id -> CardData for transcendent placeholders
 
 # Generic card cache (for cards like strike_1, defend_1, heal_1)
 var generic_card_cache: Dictionary = {}  # Maps card_id -> CardData for generic cards
+
+# Pet definition cache (populated at startup; equipment/relics may add entries at run start)
+var pet_definition_cache: Dictionary = {}  # Maps pet_def_id -> PetDefinition
 
 func register_character(char_data: CharacterData):
 	## Register a CharacterData resource
@@ -53,7 +72,11 @@ func _load_all_resources():
 	var loaded_enemies = _load_resources_from_directory(DATA_DIR_ENEMIES, "EnemyData")
 	var loaded_characters = _load_resources_from_directory(DATA_DIR_CHARACTERS, "CharacterData")
 	var loaded_upgrades = _load_resources_from_directory(DATA_DIR_UPGRADES, "UpgradeData")
-	
+	var loaded_relics = _load_resources_from_directory(DATA_DIR_RELICS, "RelicData")
+	var loaded_equipment = _load_resources_from_directory(DATA_DIR_EQUIPMENT, "EquipmentData")
+	var loaded_milestones = _load_resources_from_directory(DATA_DIR_MILESTONES, "MilestoneData")
+	var loaded_encounters = _load_resources_from_directory(DATA_DIR_ENCOUNTERS, "EncounterData")
+
 	# Cache loaded cards
 	for card in loaded_cards:
 		if card and card is CardData and not card.id.is_empty():
@@ -83,13 +106,39 @@ func _load_all_resources():
 						card_upgrade_pools[card_id] = []
 					if not card_upgrade_pools[card_id].has(upgrade.id):
 						card_upgrade_pools[card_id].append(upgrade.id)
-	
+
+	# Cache loaded relics
+	for relic in loaded_relics:
+		if relic and relic is RelicData and not relic.id.is_empty():
+			relic_cache[relic.id] = relic
+
+	# Cache loaded equipment
+	for equip in loaded_equipment:
+		if equip and equip is EquipmentData and not equip.id.is_empty():
+			equipment_cache[equip.id] = equip
+
+	# Cache loaded milestones
+	for milestone in loaded_milestones:
+		if milestone and milestone is MilestoneData and not milestone.id.is_empty():
+			milestone_cache[milestone.id] = milestone
+
+	# Cache loaded encounters
+	for encounter in loaded_encounters:
+		if encounter and encounter is EncounterData and not encounter.id.is_empty():
+			encounter_cache[encounter.id] = encounter
+
 	# Log loading summary
-	var total_loaded = loaded_cards.size() + loaded_enemies.size() + loaded_characters.size() + loaded_upgrades.size()
+	var total_loaded = (loaded_cards.size() + loaded_enemies.size()
+			+ loaded_characters.size() + loaded_upgrades.size() + loaded_relics.size()
+			+ loaded_equipment.size() + loaded_milestones.size() + loaded_encounters.size())
 	if total_loaded == 0:
 		push_error("DataRegistry: No resource files found! Please create .tres files in data directories.")
 	else:
-		print("DataRegistry: Loaded %d cards, %d enemies, %d characters, %d upgrades" % [loaded_cards.size(), loaded_enemies.size(), loaded_characters.size(), loaded_upgrades.size()])
+		print("DataRegistry: Loaded %d cards, %d enemies, %d characters, %d upgrades, %d relics, %d equipment, %d milestones, %d encounters" % [
+			loaded_cards.size(), loaded_enemies.size(), loaded_characters.size(),
+			loaded_upgrades.size(), loaded_relics.size(), loaded_equipment.size(),
+			loaded_milestones.size(), loaded_encounters.size()
+		])
 
 func _load_resources_from_directory(path: String, resource_type_name: String) -> Array:
 	## Load all .tres files of the specified resource type from a directory
@@ -193,9 +242,72 @@ func get_enemy(enemy_id: String) -> EnemyData:
 	## Get EnemyData by ID, returns null if not found
 	return enemy_cache.get(enemy_id, null)
 
+func register_relic(relic_data: RelicData) -> void:
+	## Register a RelicData resource manually (e.g. for testing or runtime-created relics).
+	if relic_data and not relic_data.id.is_empty():
+		relic_cache[relic_data.id] = relic_data
+
+func get_relic(relic_id: String) -> RelicData:
+	## Get RelicData by ID. Returns null if not found.
+	return relic_cache.get(relic_id, null)
+
+func get_all_relics() -> Array[RelicData]:
+	## Return all registered RelicData resources.
+	var result: Array[RelicData] = []
+	for relic in relic_cache.values():
+		result.append(relic)
+	return result
+
+func get_equipment(equipment_id: String) -> EquipmentData:
+	## Get EquipmentData by ID. Returns null if not found.
+	return equipment_cache.get(equipment_id, null)
+
+func get_all_equipment() -> Array[EquipmentData]:
+	## Return all registered EquipmentData resources.
+	var result: Array[EquipmentData] = []
+	for equip in equipment_cache.values():
+		result.append(equip)
+	return result
+
+func get_milestone(milestone_id: String) -> MilestoneData:
+	## Get MilestoneData by ID. Returns null if not found.
+	return milestone_cache.get(milestone_id, null)
+
+func get_all_milestones() -> Array[MilestoneData]:
+	## Return all registered MilestoneData resources.
+	var result: Array[MilestoneData] = []
+	for milestone in milestone_cache.values():
+		result.append(milestone)
+	return result
+
+func get_encounter(encounter_id: String) -> EncounterData:
+	## Get EncounterData by ID. Returns null if not found.
+	return encounter_cache.get(encounter_id, null)
+
+func get_random_encounter(act: int = 1) -> EncounterData:
+	## Return a random EncounterData valid for the given act. Returns null if none found.
+	var valid: Array = []
+	for enc in encounter_cache.values():
+		if enc is EncounterData and act >= enc.min_act and act <= enc.max_act:
+			valid.append(enc)
+	if valid.is_empty():
+		return null
+	return valid[randi() % valid.size()]
+
+func register_pet_def(def: PetDefinition) -> void:
+	## Register a PetDefinition so any system (equipment, relics, cards) can summon it by id.
+	if def and not def.pet_def_id.is_empty():
+		pet_definition_cache[def.pet_def_id] = def
+
+func get_pet_def(pet_def_id: String) -> PetDefinition:
+	## Get a PetDefinition by id. Returns null if not found.
+	return pet_definition_cache.get(pet_def_id, null)
+
 func _ready():
 	## Load all resources from .tres files
 	_load_all_resources()
+	## Register all built-in pet definitions (Golemancer constructs + any future pets)
+	_register_pet_definitions()
 	## Register placeholder characters if no .tres characters were loaded
 	## (Placeholder logic runs until real CharacterData .tres files exist)
 	if character_cache.is_empty():
@@ -323,6 +435,12 @@ func _create_placeholder_characters():
 			afterburn.base_effects.append(EffectData.new(EffectType.DAMAGE_SEQUENCING, {"base_amount": 5, "bonus_if_last_was_attack": 4}))
 			char_data.starter_unique_cards.append(afterburn)
 
+		# Base stats — Warriors: STR 2 / DEF 1 / SPIRIT 1 / HP 25 (role default)
+		char_data.str_base = 2
+		char_data.def_base = 1
+		char_data.spirit_base = 1
+		char_data.hp_base = 25
+
 		# Set themes
 		if i == 0:  # Monster Hunter
 			char_data.theme_1 = "Timer Manipulation"
@@ -365,7 +483,7 @@ func _create_placeholder_characters():
 			quest.description = "Play 5+ cards in a single turn %d times" % 8
 			quest.progress_max = 8
 			quest.tracking_type = "high_volume_turn_5"
-		char_data.quest = quest
+		char_data.quests = [quest]
 		register_character(char_data)
 
 	# ---- Healers ----
@@ -478,6 +596,12 @@ func _create_placeholder_characters():
 			augurs_strike.base_effects.append(EffectData.new(EffectType.DAMAGE_CONDITIONAL_TOP_CARD, {"attack_amount": 10, "default_amount": 5, "default_block": 3}))
 			char_data.starter_unique_cards.append(augurs_strike)
 
+		# Base stats — Healers: STR 1 / DEF 1 / SPIRIT 2 / HP 22 (role default)
+		char_data.str_base = 1
+		char_data.def_base = 1
+		char_data.spirit_base = 2
+		char_data.hp_base = 22
+
 		# Set themes
 		if i == 0:  # Witch
 			char_data.theme_1 = "Curse Generation"
@@ -520,7 +644,7 @@ func _create_placeholder_characters():
 			quest.description = "Use Scry or Foresight effects %d times" % 15
 			quest.progress_max = 15
 			quest.tracking_type = "foresight_uses"
-		char_data.quest = quest
+		char_data.quests = [quest]
 		register_character(char_data)
 
 	# ---- Defenders ----
@@ -532,30 +656,36 @@ func _create_placeholder_characters():
 
 		if i == 0:
 			char_data.display_name = "Golemancer"
-			# Golemancer starter 1: Earthshatter — Slow heavy attack (Heavy Strikes)
-			var earthshatter = CardData.new()
-			earthshatter.id = "golemancer_earthshatter"
-			earthshatter.name = "Earthshatter"
-			earthshatter.cost = 2
-			earthshatter.card_type = CardData.CardType.ATTACK
-			earthshatter.targeting_mode = CardData.TargetingMode.ENEMY
-			earthshatter.owner_character_id = "defender_1"
-			earthshatter.rarity = CardData.Rarity.COMMON
-			earthshatter.keywords.append("Slow")
-			earthshatter.base_effects.append(EffectData.new(EffectType.DAMAGE, {"amount": 18}))
-			char_data.starter_unique_cards.append(earthshatter)
 
-			# Golemancer starter 2: Iron Ward — solid block (Damage Reduction)
-			var iron_ward = CardData.new()
-			iron_ward.id = "golemancer_iron_ward"
-			iron_ward.name = "Iron Ward"
-			iron_ward.cost = 1
-			iron_ward.card_type = CardData.CardType.SKILL
-			iron_ward.targeting_mode = CardData.TargetingMode.SELF
-			iron_ward.owner_character_id = "defender_1"
-			iron_ward.rarity = CardData.Rarity.COMMON
-			iron_ward.base_effects.append(EffectData.new(EffectType.BLOCK, {"amount": 9}))
-			char_data.starter_unique_cards.append(iron_ward)
+			# ── Golemancer starter 1: Clay Homunculus ────────────────────────
+			# Summon a 6-HP Construct pet that absorbs damage.
+			# ON_PET_DESTROYED: Gain 6 Block.
+			var clay_homunculus = CardData.new()
+			clay_homunculus.id = "golemancer_clay_homunculus"
+			clay_homunculus.name = "Clay Homunculus"
+			clay_homunculus.cost = 1
+			clay_homunculus.card_type = CardData.CardType.SKILL
+			clay_homunculus.targeting_mode = CardData.TargetingMode.SELF
+			clay_homunculus.owner_character_id = "defender_1"
+			clay_homunculus.rarity = CardData.Rarity.COMMON
+			clay_homunculus.base_effects.append(
+				EffectData.new(EffectType.SUMMON_PET, {"pet_def_id": "clay_homunculus", "hp_bonus": 0})
+			)
+			char_data.starter_unique_cards.append(clay_homunculus)
+
+			# ── Golemancer starter 2: Delayed Slam ───────────────────────────
+			# Deal 4 damage now; deal 8 more at the start of next turn.
+			var delayed_slam = CardData.new()
+			delayed_slam.id = "golemancer_delayed_slam"
+			delayed_slam.name = "Delayed Slam"
+			delayed_slam.cost = 1
+			delayed_slam.card_type = CardData.CardType.ATTACK
+			delayed_slam.targeting_mode = CardData.TargetingMode.ENEMY
+			delayed_slam.owner_character_id = "defender_1"
+			delayed_slam.rarity = CardData.Rarity.COMMON
+			delayed_slam.base_effects.append(EffectData.new(EffectType.DAMAGE, {"amount": 4}))
+			delayed_slam.base_effects.append(EffectData.new(EffectType.DELAYED_DAMAGE, {"amount": 8}))
+			char_data.starter_unique_cards.append(delayed_slam)
 		elif i == 1:
 			char_data.display_name = "Living Armor"
 			var plated_guard = CardData.new()
@@ -633,11 +763,17 @@ func _create_placeholder_characters():
 			iron_curtain.base_effects.append(EffectData.new(EffectType.FORCE_END_TURN, {}))
 			char_data.starter_unique_cards.append(iron_curtain)
 
+		# Base stats — Defenders: STR 1 / DEF 2 / SPIRIT 1 / HP 28 (role default)
+		char_data.str_base = 1
+		char_data.def_base = 2
+		char_data.spirit_base = 1
+		char_data.hp_base = 28
+
 		# Set themes
 		if i == 0:  # Golemancer
-			char_data.theme_1 = "Damage Reduction"
-			char_data.theme_2 = "Heavy Strikes"
-			char_data.theme_3 = "Augury"
+			char_data.theme_1 = "Construct Pets"
+			char_data.theme_2 = "Grand Assembly"
+			char_data.theme_3 = "Attrition Defence"
 		elif i == 1:  # Living Armor
 			char_data.theme_1 = "Defense into Offense"
 			char_data.theme_2 = "Escalation"
@@ -651,15 +787,18 @@ func _create_placeholder_characters():
 			char_data.theme_2 = "Dominance"
 			char_data.theme_3 = "Compression"
 
-		_generate_placeholder_reward_pool(char_data)
+		if i == 0:
+			_generate_golemancer_reward_pool(char_data)
+		else:
+			_generate_placeholder_reward_pool(char_data)
 
 		var quest = QuestData.new()
 		quest.id = "quest_defender_%d" % (i + 1)
 		if i == 0:
 			quest.title = "Golemancer Quest"
-			quest.description = "Have a card with %d upgrades" % 6
-			quest.progress_max = 6
-			quest.tracking_type = "card_upgrades"
+			quest.description = "Assemble the Ultimate Golem %d times" % 5
+			quest.progress_max = 5
+			quest.tracking_type = "ultimate_golem_assembled"
 		elif i == 1:
 			quest.title = "Living Armor Quest"
 			quest.description = "Buy %d relics" % 6
@@ -675,8 +814,123 @@ func _create_placeholder_characters():
 			quest.description = "Convert %d total Block into Energy" % 50
 			quest.progress_max = 50
 			quest.tracking_type = "block_converted_to_energy"
-		char_data.quest = quest
+		char_data.quests = [quest]
 		register_character(char_data)
+
+func _generate_golemancer_reward_pool(char_data: CharacterData):
+	## Build the real Golemancer reward card pool.
+	## Named cards first, then generic filler to reach 22 cards (7 Common, 12 Uncommon, 3 Rare).
+
+	# ── Named reward cards ────────────────────────────────────────────────────
+
+	# Iron Puppet (Common) – 5-HP Construct; WHEN_ENEMY_ACTS: deal 2 damage
+	var iron_puppet = CardData.new()
+	iron_puppet.id = "golemancer_iron_puppet"
+	iron_puppet.name = "Iron Puppet"
+	iron_puppet.cost = 1
+	iron_puppet.card_type = CardData.CardType.SKILL
+	iron_puppet.targeting_mode = CardData.TargetingMode.SELF
+	iron_puppet.owner_character_id = "defender_1"
+	iron_puppet.rarity = CardData.Rarity.COMMON
+	iron_puppet.base_effects.append(
+		EffectData.new(EffectType.SUMMON_PET, {"pet_def_id": "iron_puppet", "hp_bonus": 0})
+	)
+	char_data.reward_card_pool.append(iron_puppet)
+
+	# Golem Core (Common) – 4-HP Core piece for assembly
+	var golem_core = CardData.new()
+	golem_core.id = "golemancer_golem_core"
+	golem_core.name = "Golem Core"
+	golem_core.cost = 1
+	golem_core.card_type = CardData.CardType.SKILL
+	golem_core.targeting_mode = CardData.TargetingMode.SELF
+	golem_core.owner_character_id = "defender_1"
+	golem_core.rarity = CardData.Rarity.COMMON
+	golem_core.base_effects.append(
+		EffectData.new(EffectType.SUMMON_PET, {"pet_def_id": "golem_core", "hp_bonus": 0})
+	)
+	char_data.reward_card_pool.append(golem_core)
+
+	# Golem Arm (Common) – 3-HP Arm piece; ON_PET_DESTROYED: deal 6 damage
+	var golem_arm = CardData.new()
+	golem_arm.id = "golemancer_golem_arm"
+	golem_arm.name = "Golem Arm"
+	golem_arm.cost = 1
+	golem_arm.card_type = CardData.CardType.SKILL
+	golem_arm.targeting_mode = CardData.TargetingMode.SELF
+	golem_arm.owner_character_id = "defender_1"
+	golem_arm.rarity = CardData.Rarity.COMMON
+	golem_arm.base_effects.append(
+		EffectData.new(EffectType.SUMMON_PET, {"pet_def_id": "golem_arm", "hp_bonus": 0})
+	)
+	char_data.reward_card_pool.append(golem_arm)
+
+	# Golem Plating (Common) – 5-HP Armor piece; WHEN_ENEMY_ACTS: gain 2 Block
+	var golem_plating = CardData.new()
+	golem_plating.id = "golemancer_golem_plating"
+	golem_plating.name = "Golem Plating"
+	golem_plating.cost = 1
+	golem_plating.card_type = CardData.CardType.SKILL
+	golem_plating.targeting_mode = CardData.TargetingMode.SELF
+	golem_plating.owner_character_id = "defender_1"
+	golem_plating.rarity = CardData.Rarity.COMMON
+	golem_plating.base_effects.append(
+		EffectData.new(EffectType.SUMMON_PET, {"pet_def_id": "golem_plating", "hp_bonus": 0})
+	)
+	char_data.reward_card_pool.append(golem_plating)
+
+	# Reinforced Frame (Uncommon) – +4 max_hp / heal 4 oldest pet; draw 1 if it survives action
+	var reinforced_frame = CardData.new()
+	reinforced_frame.id = "golemancer_reinforced_frame"
+	reinforced_frame.name = "Reinforced Frame"
+	reinforced_frame.cost = 1
+	reinforced_frame.card_type = CardData.CardType.SKILL
+	reinforced_frame.targeting_mode = CardData.TargetingMode.SELF
+	reinforced_frame.owner_character_id = "defender_1"
+	reinforced_frame.rarity = CardData.Rarity.UNCOMMON
+	reinforced_frame.base_effects.append(
+		EffectData.new(EffectType.REINFORCE_PET, {"max_hp_bonus": 4, "heal_amount": 4, "draw_if_survives": 1})
+	)
+	char_data.reward_card_pool.append(reinforced_frame)
+
+	# Grand Assembly (Rare) – Power; Construct pets get +3 max_hp on summon; triggers assembly now
+	var grand_assembly = CardData.new()
+	grand_assembly.id = "golemancer_grand_assembly"
+	grand_assembly.name = "Grand Assembly"
+	grand_assembly.cost = 2
+	grand_assembly.card_type = CardData.CardType.POWER
+	grand_assembly.targeting_mode = CardData.TargetingMode.SELF
+	grand_assembly.owner_character_id = "defender_1"
+	grand_assembly.rarity = CardData.Rarity.RARE
+	grand_assembly.base_effects.append(
+		EffectData.new(EffectType.GRAND_ASSEMBLY_POWER, {"hp_bonus": 3, "heal_amount": 3})
+	)
+	char_data.reward_card_pool.append(grand_assembly)
+
+	# ── Filler to reach 22-card pool (7C / 12U / 3R target) ──────────────────
+	# Named: 4 Common, 1 Uncommon, 1 Rare → need 3C, 11U, 2R more
+	var char_id = char_data.id
+	for i in range(1, 4):   # 3 more Common
+		var card = CardData.new()
+		card.id = "%s_common_%d" % [char_id, i]
+		card.name = "%s Common %d" % [char_data.display_name, i]
+		card.rarity = CardData.Rarity.COMMON
+		card.cost = 1
+		char_data.reward_card_pool.append(card)
+	for i in range(1, 12):  # 11 more Uncommon
+		var card = CardData.new()
+		card.id = "%s_uncommon_%d" % [char_id, i]
+		card.name = "%s Uncommon %d" % [char_data.display_name, i]
+		card.rarity = CardData.Rarity.UNCOMMON
+		card.cost = 1
+		char_data.reward_card_pool.append(card)
+	for i in range(1, 3):   # 2 more Rare
+		var card = CardData.new()
+		card.id = "%s_rare_%d" % [char_id, i]
+		card.name = "%s Rare %d" % [char_data.display_name, i]
+		card.rarity = CardData.Rarity.RARE
+		card.cost = 2
+		char_data.reward_card_pool.append(card)
 
 func _generate_placeholder_reward_pool(char_data: CharacterData):
 	## Generate 22 placeholder reward pool cards (7 Common, 12 Uncommon, 3 Rare)
@@ -806,3 +1060,48 @@ func get_transcendent_card_ids() -> Array[String]:
 func get_transcendent_card(card_id: String) -> CardData:
 	## Get a transcendent card by ID
 	return transcendent_card_cache.get(card_id, null)
+
+func _register_pet_definitions() -> void:
+	## Register all built-in pet definitions.
+	## Equipment and relics may call register_pet_def() at run start to add more.
+	## Mirrors the old PetBoard._build_registry() — moved here so no character/system
+	## hardcodes definitions inside the pet board itself.
+
+	# ── Golemancer starter ────────────────────────────────────────────────────
+	register_pet_def(PetDefinition.new(
+		"clay_homunculus", "Clay Homunculus",
+		["Construct"], 6, "SHARED_POOL",
+		[{"hook": "ON_PET_DESTROYED", "action": "gain_block", "amount": 6}]
+	))
+
+	# ── Golemancer reward cards ───────────────────────────────────────────────
+	register_pet_def(PetDefinition.new(
+		"iron_puppet", "Iron Puppet",
+		["Construct"], 5, "SHARED_POOL",
+		[{"hook": "WHEN_ENEMY_ACTS", "action": "damage_acting_enemy", "amount": 2}]
+	))
+	register_pet_def(PetDefinition.new(
+		"golem_core", "Golem Core",
+		["Construct", "Core"], 4, "SHARED_POOL",
+		[]
+	))
+	register_pet_def(PetDefinition.new(
+		"golem_arm", "Golem Arm",
+		["Construct", "Arm"], 3, "SHARED_POOL",
+		[{"hook": "ON_PET_DESTROYED", "action": "damage_attacker_or_random", "amount": 6}]
+	))
+	register_pet_def(PetDefinition.new(
+		"golem_plating", "Golem Plating",
+		["Construct", "Armor"], 5, "SHARED_POOL",
+		[{"hook": "WHEN_ENEMY_ACTS", "action": "gain_block", "amount": 2}]
+	))
+
+	# ── Grand Assembly reward (summoned by check_assembly, not directly by cards) ──
+	register_pet_def(PetDefinition.new(
+		"ultimate_golem", "Ultimate Golem",
+		["Construct", "Ultimate"], 20, "SHARED_POOL",
+		[
+			{"hook": "WHEN_ENEMY_ACTS",  "action": "damage_acting_enemy", "amount": 6},
+			{"hook": "ON_PET_DESTROYED", "action": "gain_block",          "amount": 12},
+		]
+	))

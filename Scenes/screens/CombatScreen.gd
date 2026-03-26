@@ -171,8 +171,6 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 	enemy.time_changed.connect(func(current, max_time): timer_label.text = "Timer: %d/%d" % [current, max_time])
 	enemy.intent_changed.connect(func(new_intent): intent_label.text = "Intent: %s" % (new_intent.telegraph_text if new_intent else "None"))
 	
-	# Store enemy reference in metadata for targeting
-	
 	return enemy_panel
 
 func _update_hand():
@@ -260,6 +258,19 @@ func _update_player_hp():
 		player_hp_label.text = "HP: %d/%d" % [ResourceManager.current_hp, ResourceManager.max_hp]
 	if combat_controller and combat_controller.player_stats:
 		combat_controller.player_stats.current_hp = ResourceManager.current_hp
+	# Check for player defeat
+	if ResourceManager.current_hp <= 0 and combat_controller and combat_controller.combat_active:
+		_on_player_defeated()
+
+func _on_player_defeated():
+	## Handle player HP reaching zero — end combat and go to game over.
+	if combat_ending:
+		return
+	combat_ending = true
+	if combat_controller:
+		combat_controller.combat_active = false
+		combat_controller.end_combat(false)
+	ScreenManager.go_to_game_over()
 
 func _on_combat_started():
 	_update_player_hp()
@@ -317,12 +328,12 @@ func _check_combat_end():
 		_end_combat_and_transition()
 
 func _end_combat_and_transition():
-	## End combat and transition to rewards screen
+	## End combat and transition to rewards screen (or back to Boss Rush screen).
 	if combat_ending:
 		return  # Guard against duplicate calls
-	
+
 	combat_ending = true
-	
+
 	# Stop combat in controller, clear combat status effects, and remove temporary cards
 	if combat_controller:
 		combat_controller.combat_active = false
@@ -330,34 +341,41 @@ func _end_combat_and_transition():
 		combat_controller.player_stats.clear_combat_status_effects()
 		# Remove temporary cards
 		combat_controller._remove_temporary_cards()
-	
+
+	# Boss Rush: score is computed and submitted inside end_combat(); just navigate back
+	if RunState and RunState.is_boss_rush:
+		if combat_controller:
+			combat_controller.end_combat(true)  # emits boss_rush_combat_finished + scores
+		ScreenManager.go_to_boss_rush()
+		return
+
 	# Emit COMBAT_VICTORY event for quest system (before marking node completed)
 	if QuestManager:
 		QuestManager.emit_game_event("COMBAT_VICTORY", {
 			"node_id": MapManager.current_node_id if MapManager else "",
 			"node_type": MapManager.get_current_node_type() if MapManager else MapNodeData.NodeType.FIGHT
 		})
-	
+
 	# Mark node as completed (this also emits NODE_COMPLETED event)
 	if MapManager:
 		MapManager.mark_current_node_completed()
-	
+
 	# Compute rewards based on node's reward flags
 	var current_node = null
 	if MapManager and MapManager.current_map:
 		current_node = MapManager.current_map.get_node(MapManager.current_node_id)
 	var bundle = RewardResolver.build_rewards_for_node(current_node)
-	
+
 	var node_type_str = "Unknown"
 	if current_node:
 		node_type_str = MapNodeData.NodeType.keys()[current_node.node_type]
-	
+
 	print("Combat ended: all enemies dead. NodeType=%s, Rewards: gold=%d, cards=%d, upgrades=%d, relic=%s" % [
 		node_type_str, bundle.gold, bundle.card_choices.size(), bundle.upgrade_count, bundle.relic_id
 	])
-	
+
 	# Set pending rewards
 	RunState.set_pending_rewards(bundle)
-	
+
 	# Transition to rewards screen
 	ScreenManager.go_to_rewards(bundle)

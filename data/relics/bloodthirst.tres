@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/RelicData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "bloodthirst"
+name = "Bloodthirst"
+description = "Whenever you take damage, gain 1 Strength."
+rarity = 1
+icon_path = ""
+triggers = [{"hook": "ON_PLAYER_DAMAGED", "action": "gain_strength", "amount": 1}]

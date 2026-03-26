@@ -7,6 +7,8 @@ signal map_changed
 signal node_position_changed
 signal current_node_changed
 signal available_next_node_ids_changed(node_ids: Array)
+signal act_transition_started(from_act: int, to_act: int)
+signal run_completed
 
 var act: int = 1
 var map: String = ""
@@ -116,7 +118,14 @@ func _update_available_nodes():
 	
 	# Filter out completed nodes (can't go back)
 	available_next_node_ids = available_next_node_ids.filter(func(id): return not current_map.get_node(id).is_completed)
-	
+
+	# Boss gate (Phase 3): BOSS and FINAL_BOSS nodes are only accessible when all party quests are complete
+	if QuestManager and not QuestManager.are_all_party_quests_complete():
+		available_next_node_ids = available_next_node_ids.filter(func(id):
+			var t = current_map.get_node(id).node_type
+			return t != MapNodeData.NodeType.BOSS and t != MapNodeData.NodeType.FINAL_BOSS
+		)
+
 	# Emit signal if changed
 	if available_next_node_ids != old_available:
 		available_next_node_ids_changed.emit(available_next_node_ids)
@@ -125,6 +134,34 @@ func set_node_position(value: int):
 	if node_position != value:
 		node_position = value
 		node_position_changed.emit()
+
+func transition_to_next_act() -> void:
+	## Advance to the next act: increment act counter, generate a new map, reset node progression.
+	## Emits act_transition_started(from_act, to_act).
+	## Call this after the boss rewards screen is closed.
+	var from_act := act
+	var to_act := act + 1
+	set_act(to_act)
+	set_map("Act%d" % to_act)
+
+	# Reset progression for new act
+	current_node_id = ""
+	node_position = 0
+	available_next_node_ids.clear()
+
+	# Generate new map for the next act
+	var map_gen := MapGenerator.new()
+	var new_map := map_gen.generate_map(to_act)
+	set_map_data(new_map)  # emits map_changed and calls _update_available_nodes
+
+	current_node_changed.emit("")
+	node_position_changed.emit()
+
+	act_transition_started.emit(from_act, to_act)
+
+	# Auto-save after act transition
+	if AutoSaveManager:
+		AutoSaveManager.force_save("act_transition")
 
 func reset_map_state():
 	## Reset map state to initial values

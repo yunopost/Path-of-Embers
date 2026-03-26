@@ -513,6 +513,21 @@ Each unique Rare card already in the deck applies -10% to that **specific** Rare
 
 ## Development Status
 
+### Development Phases
+
+| Phase | Name | Status | Key Deliverables |
+|-------|------|--------|-----------------|
+| 1 | Core Combat Engine | ✅ Complete | Combat loop, timer system, energy, hand/draw/discard, turn flow |
+| 2 | Card & Character System | ✅ Complete | CardData, DeckCardData, CharacterData, keywords (Haste, Slow, Exhaust, Vulnerable), starter decks |
+| 3 | Map & Progression | ✅ Complete | Procedural map generation, node types (combat, shop, encounter, rest), reward screen, rarity + pity |
+| 4 | Enemy System | ✅ Complete | EnemyData, move patterns, weighted AI with anti-repetition, act 1 enemies, telegraph UI |
+| 5 | Status Effects & Upgrades | ✅ Complete | Full status effect set (Strength, Dexterity, Weakness, Vulnerable, Faith, Bloom, Regrowth, Scry…), card upgrade pool system, upgrade roll UI |
+| 6 | Save/Load, Relics & Quests | ✅ Complete | JSON save/load, DataRegistry character registration fix, RelicData + relic hooks, QuestData + QuestManager + 12 tracking types |
+| 7 | Acts 2 & 3 + Final Boss | ✅ Complete | Act transition nodes, FINAL_BOSS/STORY node types, per-act scaling, boss_act2 + boss_act3, new enemies (Char Sentinel, Ashen Knight) |
+| 8 | Equipment System | ✅ Complete | EquipmentData (6 slot types, 3 rarities), LoadoutScreen, stat modifiers, card injection, ShopScreen integration, meta stash, persistent stash |
+| 9 | Milestones, Boss Rush & Content | ✅ Complete | MilestoneData + MilestoneManager, meta.json v2, locked character display, BuildData snapshots, 3 Boss Rush save slots, LeaderboardManager, BossRushScreen, 24 starter cards, 12 characters, 9 enemies + 3 bosses, 5 encounters, 12 equipment |
+| 10 | Difficulty Modifiers & Polish | ✅ Complete | ModifierManager autoload (6 modifiers, score ×0.10 each), modifier toggle UI in LoadoutScreen with live score preview, equipment drop weights (Common 50% / Uncommon 35% / Rare 15%), quest event wiring (CARD_PLAYED, ENEMY_KILLED, GOLD_SPENT, DAMAGE_DEALT, BLOCK_GAINED), data bug fixes (dark_pact params, WEAKNESS dual-format, DAMAGE_EQUAL_TO_BLOCK resolver) |
+
 ### Completed Systems
 
 - ✅ Core combat loop with timer system
@@ -524,23 +539,43 @@ Each unique Rare card already in the deck applies -10% to that **specific** Rare
 - ✅ Status effects (Vulnerable)
 - ✅ Card upgrade system (upgrade pool per card)
 - ✅ Save/load system with DataRegistry character registration fix
+- ✅ Relic system (RelicData resource, DataRegistry loading, reward integration)
+- ✅ Quest system (QuestData, QuestState, QuestManager, QuestSystem evaluator)
+- ✅ Acts 2 and 3 + final boss (FINAL_BOSS/STORY node types, act transitions, per-act scaling)
+- ✅ Equipment system (6 slots per character, LoadoutScreen, stat modifiers, card injection, ShopScreen, meta stash)
+- ✅ Milestone system (MilestoneData, MilestoneManager, meta.json v2 unlocks, locked character display)
+- ✅ Boss Rush mode (BuildData snapshots, 3 save slots, LeaderboardManager scoring, BossRushScreen, post-run save dialog)
+- ✅ Content first pass (24 starter cards, 12 character .tres files, 9 enemies + 3 bosses, 5 encounters, 12 equipment, death messages, shop prices corrected, all 12 quest tracking types wired)
+- ✅ Difficulty modifiers (ModifierManager autoload, 6 modifiers, score multiplier, LoadoutScreen UI, drop weight calibration)
+
+### Difficulty Modifiers
+
+Six modifiers are available before each run via the LoadoutScreen panel. Each active modifier adds ×0.10 to the final score multiplier.
+
+| ID | Name | Effect |
+|----|------|--------|
+| `reduced_hp` | Reduced HP Pool | Player max HP −25% |
+| `tougher_enemies` | Tougher Enemies | Non-boss HP +25% |
+| `tougher_bosses` | Tougher Bosses | Boss HP +50% |
+| `advanced_enemies_1` | Advanced Enemies I | Enemy timer intervals −20% (faster) |
+| `advanced_enemies_2` | Advanced Enemies II | Enemy damage +25% |
+| `advanced_enemies_3` | Advanced Enemies III | Enemy damage +50%, HP +25% |
+
+Modifier selection is persisted to `user://modifier_settings.json`. Active modifiers are locked in at run start via `ModifierManager.begin_run()`.
 
 ### In Progress
 
-- 🚧 Card content creation (starter cards first)
-- 🚧 Enemy content (Act 1)
-- 🚧 Full card pools (22 cards per character)
+- 🚧 Full reward card pools (22 cards per character beyond starter 2)
 - 🚧 Mechanist Legacy card implementation
-- 🚧 Character select screen theme display
-- 🚧 6 new characters (Revenant, Tempest, Grove, Sibyl, Echo, Hollow) — designed, awaiting implementation
+- 🚧 Complex effect resolver implementations (mirror, resonance, regrowth, bloom, scry, etc.)
 
 ### Planned
 
-- ⏳ Transcendence system implementation
-- ⏳ Relic system
-- ⏳ Quest system
-- ⏳ Acts 2 and 3 + final boss
+- ⏳ Apply `ModifierManager.get_enemy_hp_multiplier()` / `get_enemy_damage_multiplier()` in enemy spawn logic
+- ⏳ Apply `ModifierManager.get_player_hp_multiplier()` to ResourceManager at run start
+- ⏳ Milestone .tres data files (to gate modifier unlocks and track run completions)
 - ⏳ Balance tuning
+- ⏳ Art assets (character portraits, card art, enemy sprites)
 
 ---
 

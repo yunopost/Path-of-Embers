@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="EncounterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EncounterData.gd" id="1_encounterdata"]
+
+[resource]
+script = ExtResource("1_encounterdata")
+id = "encounter_merchant"
+title = "The Wandering Merchant"
+body = "A hooded figure steps from the shadows, their pack heavy with curious trinkets. \"Perhaps we can make a deal,\" they murmur."
+min_act = 1
+max_act = 3
+choices = [{
+"id": "barter",
+"label": "Barter for goods",
+"effects_text": "Trade what you have for something useful.",
+"reward_gold": 0,
+"reward_heal": 0,
+"reward_card_choices": 2,
+"reward_upgrade_count": 0
+}, {
+"id": "ask_deal",
+"label": "Ask for a fair deal",
+"effects_text": "They offer a modest sum and a card.",
+"reward_gold": 15,
+"reward_heal": 0,
+"reward_card_choices": 1,
+"reward_upgrade_count": 0
+}, {
+"id": "ignore",
+"label": "Ignore them",
+"effects_text": "You press on. They call after you, leaving a small offering.",
+"reward_gold": 0,
+"reward_heal": 5,
+"reward_card_choices": 0,
+"reward_upgrade_count": 0
+}]

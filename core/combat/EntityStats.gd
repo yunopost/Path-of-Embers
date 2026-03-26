@@ -14,6 +14,11 @@ var max_hp: int = 50
 var block: int = 0
 var status_effects: Dictionary = {}  # Effect type -> amount/value
 
+## Optional Callable set by PetBoard when SHARED_POOL pets are in play.
+## Signature: func(raw_damage: int) -> int
+## Intercepts post-vulnerable, pre-block damage; returns remaining damage.
+var damage_interceptor: Callable = Callable()
+
 func _init(initial_hp: int = 50, initial_max_hp: int = 50):
 	current_hp = initial_hp
 	max_hp = initial_max_hp
@@ -29,6 +34,13 @@ func take_damage(amount: int, ignore_block: bool = false):
 	if vulnerable_duration != null and vulnerable_duration > 0:
 		base_damage = int(base_damage * 1.5)
 	
+	## Pet interception: after vulnerable calc, before block/hp
+	if damage_interceptor.is_valid():
+		base_damage = damage_interceptor.call(base_damage)
+
+	if base_damage <= 0:
+		return
+
 	var actual_damage = base_damage
 	if not ignore_block and block > 0:
 		if base_damage <= block:

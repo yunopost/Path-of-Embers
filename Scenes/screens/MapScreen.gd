@@ -539,8 +539,8 @@ func _on_node_clicked(node_id: String):
 	if not node:
 		return
 	
-	# Boss gate: check if all quests are complete before allowing boss entry
-	if node.node_type == MapNodeData.NodeType.BOSS:
+	# Boss gate: check if all quests are complete before allowing boss/final-boss entry
+	if node.node_type == MapNodeData.NodeType.BOSS or node.node_type == MapNodeData.NodeType.FINAL_BOSS:
 		if not QuestManager.are_all_party_quests_complete():
 			_show_boss_gate_popup()
 			return  # Block entry
@@ -551,11 +551,12 @@ func _on_node_clicked(node_id: String):
 	
 	# Transition to appropriate screen based on node type
 	match node.node_type:
-		MapNodeData.NodeType.FIGHT, MapNodeData.NodeType.ELITE, MapNodeData.NodeType.BOSS:
+		MapNodeData.NodeType.FIGHT, MapNodeData.NodeType.ELITE, \
+		MapNodeData.NodeType.BOSS, MapNodeData.NodeType.FINAL_BOSS:
 			ScreenManager.go_to_combat({})
 		MapNodeData.NodeType.SHOP:
 			ScreenManager.go_to_shop({})
-		MapNodeData.NodeType.ENCOUNTER:
+		MapNodeData.NodeType.ENCOUNTER, MapNodeData.NodeType.STORY:
 			ScreenManager.go_to_encounter({})
 
 func _show_boss_gate_popup():

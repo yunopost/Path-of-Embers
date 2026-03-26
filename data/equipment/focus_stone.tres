@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EquipmentData.gd" id="1_equipdata"]
+
+[resource]
+script = ExtResource("1_equipdata")
+id = "focus_stone"
+name = "Focus Stone"
+description = "A polished stone that sharpens the mind. +1 SPIRIT."
+slot_type = 5
+rarity = 0
+stat_modifiers = {"spirit": 1}
+shop_price = 80

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/CardData.gd" id="1_carddata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/EffectData.gd" id="2_effectdata"]
+
+[sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "heal"
+params = {"amount": 4}
+
+[resource]
+script = ExtResource("1_carddata")
+id = "flourish"
+name = "Flourish"
+cost = 1
+card_type = 1
+targeting_mode = 4
+owner_character_id = "grove"
+base_effects = [SubResource("EffectData_1")]

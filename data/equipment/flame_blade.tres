@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EquipmentData.gd" id="1_equipdata"]
+
+[resource]
+script = ExtResource("1_equipdata")
+id = "flame_blade"
+name = "Flame Blade"
+description = "A sword that burns with ember-fire. +3 STR, +1 DEF."
+slot_type = 4
+rarity = 1
+stat_modifiers = {"str": 3, "def": 1}
+shop_price = 120

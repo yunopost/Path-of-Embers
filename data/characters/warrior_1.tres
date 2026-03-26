@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/CharacterData.gd" id="1_chardata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/CardData.gd" id="2_carddata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/QuestData.gd" id="3_questdata"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/hunters_mark.tres" id="4_c1"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/pursuit.tres" id="5_c2"]
+
+[sub_resource type="Resource" id="QuestData_1" script_class="QuestData"]
+script = ExtResource("3_questdata")
+id = "warrior_1_quest_1"
+title = "Hunter's Prey"
+description = "Defeat 2 elite enemies."
+progress_max = 2
+tracking_type = "win_elites"
+reward = {"gold": 30}
+
+[sub_resource type="Resource" id="QuestData_2" script_class="QuestData"]
+script = ExtResource("3_questdata")
+id = "warrior_1_quest_2"
+title = "On the Hunt"
+description = "Kill 10 enemies."
+progress_max = 10
+tracking_type = "kill_enemies"
+reward = {"gold": 25}
+
+[resource]
+script = ExtResource("1_chardata")
+id = "warrior_1"
+display_name = "Monster Hunter"
+role = "Warrior"
+str_base = 2
+def_base = 1
+spirit_base = 1
+hp_base = 25
+theme_1 = "Timer Control"
+theme_2 = "Vulnerability"
+theme_3 = "Haste Setup"
+starter_unique_cards = Array[ExtResource("2_carddata")]([ExtResource("4_c1"), ExtResource("5_c2")])
+quests = Array[ExtResource("3_questdata")]([SubResource("QuestData_1"), SubResource("QuestData_2")])

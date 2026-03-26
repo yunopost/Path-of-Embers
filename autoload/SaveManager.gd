@@ -1,9 +1,11 @@
 extends Node
 
 ## Autoload singleton - Handles save/load of game state
-## Serializes RunState to JSON and saves/loads from user://save_run.json
+## Run save:  user://save_run.json  — full current-run state
+## Meta save: user://meta.json      — persistent cross-run data (equipment stash)
 
 const SAVE_PATH = "user://save_run.json"
+const META_SAVE_PATH = "user://meta.json"
 
 signal save_completed
 signal load_completed
@@ -128,7 +130,7 @@ func _serialize_run_state() -> Dictionary:
 		pending_rewards_serialized = RunState.pending_rewards.to_dict()
 	
 	return {
-		"version": 5,  # Bump version for rare_pity_counter and rarity in reward_card_pool
+		"version": 10,  # v10: Phase 6 equipment system. equipment_slots + run_stash added to run save.
 		"party_ids": PartyManager.party_ids.duplicate() if PartyManager else [],
 		"deck": deck_dict,  # Dictionary keyed by instance_id
 		"deck_order": deck_order_data,  # Stable ordering array
@@ -139,6 +141,7 @@ func _serialize_run_state() -> Dictionary:
 		"block": ResourceManager.block if ResourceManager else 0,
 		"energy": ResourceManager.energy if ResourceManager else 3,
 		"max_energy": ResourceManager.max_energy if ResourceManager else 3,
+		"upgrade_points": ResourceManager.upgrade_points if ResourceManager else 0,
 		"act": MapManager.act if MapManager else 1,
 		"map": MapManager.map if MapManager else "Act1",
 		"node_position": MapManager.node_position if MapManager else 0,
@@ -150,7 +153,9 @@ func _serialize_run_state() -> Dictionary:
 		"rare_pity_counter": RunState.rare_pity_counter,
 		"buffs": RunState.buffs,
 		"tap_to_play": RunState.tap_to_play,
-		"pending_rewards": pending_rewards_serialized
+		"pending_rewards": pending_rewards_serialized,
+		"equipment_slots": RunState.equipment_slots,
+		"run_stash": RunState.run_stash.duplicate()
 	}
 
 func _deserialize_run_state(save_data: Dictionary):
@@ -260,6 +265,10 @@ func _deserialize_run_state(save_data: Dictionary):
 			ResourceManager.set_energy(save_data["energy"], save_data["max_energy"])
 		elif save_data.has("energy"):
 			ResourceManager.set_energy(save_data["energy"])
+		if save_data.has("upgrade_points"):
+			ResourceManager.set_upgrade_points(int(save_data["upgrade_points"]))
+		else:
+			ResourceManager.set_upgrade_points(0)  # Legacy saves start with 0 pts
 	
 	# Restore map/progress
 	if MapManager:
@@ -323,7 +332,8 @@ func _deserialize_run_state(save_data: Dictionary):
 					card.rarity = CardData.Rarity.COMMON
 				RunState.reward_card_pool.append(card)
 	
-	# Restore rare_pity_counter (new in version 5)
+	# Restore rare_pity_counter (added in version 5; per-character stats are derived from
+	# CharacterData at combat start — no extra fields needed for version 6 upgrade)
 	if save_data.has("rare_pity_counter"):
 		RunState.rare_pity_counter = int(save_data["rare_pity_counter"])
 	else:
@@ -348,3 +358,155 @@ func _deserialize_run_state(save_data: Dictionary):
 			RunState.pending_rewards = null
 	else:
 		RunState.pending_rewards = null
+
+	# Restore equipment state (Phase 6)
+	RunState.equipment_slots.clear()
+	if save_data.has("equipment_slots") and save_data["equipment_slots"] is Dictionary:
+		for char_id in save_data["equipment_slots"]:
+			var slots_data = save_data["equipment_slots"][char_id]
+			if slots_data is Dictionary:
+				RunState.equipment_slots[str(char_id)] = {}
+				for slot_name in slots_data:
+					RunState.equipment_slots[str(char_id)][str(slot_name)] = str(slots_data[slot_name])
+
+	RunState.run_stash.clear()
+	if save_data.has("run_stash") and save_data["run_stash"] is Array:
+		for item in save_data["run_stash"]:
+			RunState.run_stash.append(str(item))
+
+	RunState.equipment_changed.emit()
+
+# ── Meta save (user://meta.json) ──────────────────────────────────────────────
+# Stores persistent cross-run data: equipment stash, milestones, and unlocks.
+# v1: { "version": 1, "persistent_stash": [...] }
+# v2: adds "completed_milestones", "unlocked_characters", "unlocked_modifiers",
+#     "unlocked_boss_rush_bosses", "story_progress", "milestone_progress"
+
+func save_meta_game() -> bool:
+	## Write the full meta save preserving all fields.
+	var meta_data = _load_raw_meta()
+	meta_data["version"] = 2
+	return _write_raw_meta(meta_data)
+
+func load_persistent_stash() -> Array[String]:
+	## Return the persistent equipment stash from meta.json (or empty array if none).
+	var data = _load_raw_meta()
+	var raw = data.get("persistent_stash", [])
+	var result: Array[String] = []
+	for item in raw:
+		result.append(str(item))
+	return result
+
+func add_to_persistent_stash(equipment_id: String) -> void:
+	## Append an equipment_id to the persistent stash and immediately save meta.
+	if equipment_id.is_empty():
+		return
+	var meta_data = _load_raw_meta()
+	var stash: Array = meta_data.get("persistent_stash", [])
+	if not stash.has(equipment_id):
+		stash.append(equipment_id)
+	meta_data["persistent_stash"] = stash
+	meta_data["version"] = 2
+	_write_raw_meta(meta_data)
+
+func load_milestone_meta() -> Dictionary:
+	## Return all milestone-related fields from meta.json.
+	var data = _load_raw_meta()
+	return {
+		"completed_milestones":    data.get("completed_milestones", []),
+		"unlocked_characters":     data.get("unlocked_characters", []),
+		"unlocked_modifiers":      data.get("unlocked_modifiers", []),
+		"unlocked_boss_rush_bosses": data.get("unlocked_boss_rush_bosses", []),
+		"story_progress":          data.get("story_progress", []),
+		"milestone_progress":      data.get("milestone_progress", {}),
+	}
+
+func save_milestone_meta(milestone_data: Dictionary) -> void:
+	## Merge milestone fields into meta.json and write to disk.
+	var meta_data = _load_raw_meta()
+	for key in milestone_data:
+		meta_data[key] = milestone_data[key]
+	meta_data["version"] = 2
+	_write_raw_meta(meta_data)
+
+func _load_raw_meta() -> Dictionary:
+	## Internal helper — returns the full meta.json dictionary, or {} if missing/corrupt.
+	if not FileAccess.file_exists(META_SAVE_PATH):
+		return {}
+	var file = FileAccess.open(META_SAVE_PATH, FileAccess.READ)
+	if file == null:
+		return {}
+	var json_string = file.get_as_text()
+	file.close()
+	var json = JSON.new()
+	if json.parse(json_string) != OK:
+		return {}
+	var data = json.data
+	if data is Dictionary:
+		return data
+	return {}
+
+func _write_raw_meta(meta_data: Dictionary) -> bool:
+	## Internal helper — write meta_data to META_SAVE_PATH as JSON.
+	var file = FileAccess.open(META_SAVE_PATH, FileAccess.WRITE)
+	if file == null:
+		push_error("SaveManager: Failed to open meta save for writing: " + META_SAVE_PATH)
+		return false
+	file.store_string(JSON.stringify(meta_data))
+	file.close()
+	return true
+
+# ── Boss Rush build slots (user://boss_rush_builds.json) ──────────────────────
+# Stores up to 3 BuildData snapshots from completed runs.
+
+const BOSS_RUSH_SAVE_PATH = "user://boss_rush_builds.json"
+const MAX_BUILD_SLOTS: int = 3
+
+func load_boss_rush_builds() -> Array:
+	## Returns an Array[BuildData] of length MAX_BUILD_SLOTS.
+	## Empty slots are null.
+	var result: Array = []
+	for i in range(MAX_BUILD_SLOTS):
+		result.append(null)
+
+	if not FileAccess.file_exists(BOSS_RUSH_SAVE_PATH):
+		return result
+	var file = FileAccess.open(BOSS_RUSH_SAVE_PATH, FileAccess.READ)
+	if file == null:
+		return result
+	var json = JSON.new()
+	if json.parse(file.get_as_text()) != OK:
+		file.close()
+		return result
+	file.close()
+	var data = json.data
+	if not data is Array:
+		return result
+	for entry in data:
+		if entry is Dictionary:
+			var b = BuildData.from_dict(entry)
+			var idx: int = clamp(b.slot_index, 0, MAX_BUILD_SLOTS - 1)
+			result[idx] = b
+	return result
+
+func save_boss_rush_build(build: BuildData) -> void:
+	## Write a BuildData into its slot, persisting all 3 slots.
+	var builds: Array = load_boss_rush_builds()
+	var idx: int = clamp(build.slot_index, 0, MAX_BUILD_SLOTS - 1)
+	builds[idx] = build
+
+	var arr: Array = []
+	for b in builds:
+		if b != null:
+			arr.append(b.to_dict())
+	var file = FileAccess.open(BOSS_RUSH_SAVE_PATH, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(arr))
+		file.close()
+
+func has_any_boss_rush_build() -> bool:
+	## Returns true if at least one build slot is occupied.
+	for b in load_boss_rush_builds():
+		if b != null:
+			return true
+	return false

@@ -9,6 +9,7 @@ signal buffs_changed
 signal hand_changed
 signal draw_pile_changed
 signal discard_pile_changed
+signal equipment_changed
 
 # Deck
 var deck: Dictionary = {}  # instance_id -> DeckCardData (authoritative registry)
@@ -18,8 +19,11 @@ var deck_order: Array[String] = []  # Stable ordering for deck view / upgrades U
 # Models (architecture rule 4.1, 8.1)
 var deck_model: DeckModel = null
 
+# Relic system
+var relic_system: RelicSystem = null  # Hook dispatcher — see core/relics/RelicSystem.gd
+
 # Relics
-var relics: Array = []  # Will contain relic data
+var relics: Array = []  # Array of { id: String, is_boss: bool }
 
 # Combat status effects
 var haste_next_card: bool = false  # Next card played doesn't advance enemy timer
@@ -39,6 +43,20 @@ var buffs: Array = []  # Will contain buff/debuff data
 # Settings
 var tap_to_play: bool = false
 
+# Equipment state (Phase 6)
+## Per-character equipped items: { "char_id": { "SLOT_NAME": "equipment_id" } }
+var equipment_slots: Dictionary = {}
+## Items in the current run stash (max 9 equipment_ids)
+var run_stash: Array[String] = []
+const MAX_STASH_SIZE: int = 9
+
+# Boss Rush state (Phase 8)
+var is_boss_rush: bool = false          ## True while in a Boss Rush challenge
+var boss_rush_boss_id: String = ""      ## Which boss is being challenged
+## Combat stats accumulated during a Boss Rush fight for leaderboard scoring.
+## Keys: start_time (float), enemy_total_hp (int), cards_played (int)
+var boss_rush_stats: Dictionary = {}
+
 func _ready():
 	# Initialize with empty values (will be set by character selection)
 	deck = {}
@@ -48,9 +66,12 @@ func _ready():
 	reward_card_pool = []
 	rare_pity_counter = -2
 	buffs = []
+	equipment_slots = {}
+	run_stash = []
 	
-	# Initialize models
+	# Initialize systems
 	deck_model = DeckModel.new()
+	relic_system = RelicSystem.new()
 	
 	# Connect model signals to RunState signals
 	deck_model.deck_changed.connect(func(): deck_changed.emit())
@@ -186,7 +207,14 @@ func generate_starter_deck(character_data_list: Array[CharacterData]):
 	deck.clear()
 	deck_order.clear()
 	reward_card_pool.clear()
-	
+
+	# Seed shared HP pool from sum of all party members' hp_base
+	var party_max_hp: int = 0
+	for char_data in character_data_list:
+		party_max_hp += char_data.hp_base
+	if ResourceManager:
+		ResourceManager.reset_resources_for_party(party_max_hp)
+
 	# Generate deck: 3 generic + 2 unique per character = 15 cards total
 	for char_data in character_data_list:
 		# Add 3 generic cards based on role
@@ -225,11 +253,22 @@ func generate_starter_deck(character_data_list: Array[CharacterData]):
 			deck[instance_id] = deck_card
 			deck_order.append(instance_id)
 		
+		# Inject cards from equipped items (Phase 6)
+		var char_equip_slots: Dictionary = equipment_slots.get(char_data.id, {})
+		for slot_name in char_equip_slots:
+			var equipment_id: String = char_equip_slots[slot_name]
+			if equipment_id.is_empty():
+				continue
+			var equip_data = DataRegistry.get_equipment(equipment_id) if DataRegistry else null
+			if equip_data:
+				for card_id in equip_data.injected_cards:
+					add_card_to_deck(card_id, char_data.id)
+
 		# Merge reward card pool (22 cards per character = 66 total)
 		for reward_card in char_data.reward_card_pool:
 			if reward_card:
 				reward_card_pool.append(reward_card)
-	
+
 	# Initialize deck piles
 	_initialize_deck_piles()
 	deck_changed.emit()
@@ -286,9 +325,15 @@ func apply_reward_bundle(bundle: RewardBundle):
 	# RewardsScreen calls add_card_to_deck/add_relic/etc. individually
 
 func add_card_to_deck_from_reward(card_id: String, owner_character_id: String = ""):
-	## Add a card to deck from reward (wrapper for add_card_to_deck)
-	## Uses "Shared Deck" owner if no owner specified
-	add_card_to_deck(card_id, owner_character_id)
+	## Add a card to deck from reward.
+	## If owner_character_id is empty, the owner is derived from CardData.owner_character_id
+	## so that stat scaling (STR/DEF/SPIRIT) works correctly for reward cards.
+	var resolved_owner = owner_character_id
+	if resolved_owner.is_empty():
+		var card_data = DataRegistry.get_card_data(card_id) if DataRegistry else null
+		if card_data and not card_data.owner_character_id.is_empty():
+			resolved_owner = card_data.owner_character_id
+	add_card_to_deck(card_id, resolved_owner)
 
 func can_upgrade_instance(instance_id: String) -> bool:
 	## Check if a card instance can be upgraded
@@ -431,17 +476,19 @@ func transcend_card(instance_id: String, new_card_id: String) -> bool:
 	return true
 
 func add_relic(relic_id: String, is_boss: bool = false) -> void:
-	## Add a relic to the player's collection
-	## Emits RELIC_GAINED event for quest system
-	## 
-	## PLACEHOLDER FOR FUTURE WORK: Relic storage exists for testing game loop,
-	## but relic effects are not implemented. Relics are stored but have no gameplay impact.
+	## Add a relic to the player's collection.
+	## Fires the ON_RELIC_GAINED hook for immediate relic effects (e.g. gain max HP on pickup).
+	## Also emits RELIC_GAINED to QuestManager for quest tracking.
 	if relic_id.is_empty():
 		return
-	
+
 	relics.append({ "id": relic_id, "is_boss": is_boss })
 	relics_changed.emit()
-	
+
+	# Fire ON_RELIC_GAINED hook — relic is now in the list so it fires itself
+	if relic_system:
+		relic_system.fire_hook("ON_RELIC_GAINED", { "relic_id": relic_id })
+
 	# Emit RELIC_GAINED event for quest system
 	if QuestManager:
 		QuestManager.emit_game_event("RELIC_GAINED", { "relic_id": relic_id, "is_boss": is_boss })
@@ -520,9 +567,10 @@ func reset_run() -> void:
 	if QuestManager:
 		QuestManager.clear_quests()
 	
-	# Clear relics
+	# Clear relics and reset hook system
 	relics.clear()
 	relics_changed.emit()
+	relic_system = RelicSystem.new()
 	
 	# Reset resources (delegates to ResourceManager)
 	if ResourceManager:
@@ -549,3 +597,103 @@ func reset_run() -> void:
 	
 	# Reset settings
 	tap_to_play = false
+
+	# Reset equipment state
+	equipment_slots.clear()
+	run_stash.clear()
+	equipment_changed.emit()
+
+	# Reset boss rush state
+	is_boss_rush = false
+	boss_rush_boss_id = ""
+	boss_rush_stats = {}
+
+# ── Boss Rush helpers (Phase 8) ───────────────────────────────────────────────
+
+func load_from_build_data(build: BuildData) -> void:
+	## Populate RunState from a BuildData snapshot for a Boss Rush challenge.
+	## Clears existing run state first (does not affect meta save).
+	reset_run()
+
+	is_boss_rush = true
+
+	# Restore party
+	if PartyManager:
+		PartyManager.set_party(build.party_ids)
+
+	# Restore deck
+	for entry in build.deck:
+		if entry is Dictionary:
+			var upgrades: Array[String] = []
+			for u in entry.get("upgrades", []):
+				upgrades.append(str(u))
+			add_card_to_deck(
+				str(entry.get("id", "")),
+				str(entry.get("owner", "")),
+				upgrades
+			)
+
+	# Restore equipment
+	equipment_slots = {}
+	for char_id in build.equipment_slots:
+		equipment_slots[str(char_id)] = {}
+		for slot_name in build.equipment_slots[char_id]:
+			equipment_slots[str(char_id)][str(slot_name)] = str(build.equipment_slots[char_id][slot_name])
+	run_stash = build.run_stash.duplicate()
+	equipment_changed.emit()
+
+	# Restore relics (metadata only — effects not reapplied for boss rush simplicity)
+	relics.clear()
+	for relic_id in build.relics:
+		relics.append({ "id": relic_id, "is_boss": false })
+	relics_changed.emit()
+
+# ── Equipment helpers (Phase 6) ───────────────────────────────────────────────
+
+func get_equipped_item(char_id: String, slot_name: String) -> String:
+	## Get the equipment_id in the given slot for a character, or "" if empty.
+	return equipment_slots.get(char_id, {}).get(slot_name, "")
+
+func equip_item(char_id: String, slot_name: String, equipment_id: String) -> bool:
+	## Equip an item into a character slot.
+	## If the slot is already occupied the old item is returned to the run stash.
+	## Returns false if the item is not in the run stash.
+	if not run_stash.has(equipment_id):
+		push_warning("RunState.equip_item: '%s' is not in run stash" % equipment_id)
+		return false
+	if not equipment_slots.has(char_id):
+		equipment_slots[char_id] = {}
+	var old_id: String = equipment_slots[char_id].get(slot_name, "")
+	if not old_id.is_empty():
+		run_stash.append(old_id)  # Return displaced item to stash
+	equipment_slots[char_id][slot_name] = equipment_id
+	run_stash.erase(equipment_id)
+	equipment_changed.emit()
+	return true
+
+func unequip_item(char_id: String, slot_name: String) -> void:
+	## Remove the item from a character slot and return it to the run stash.
+	if not equipment_slots.has(char_id):
+		return
+	var equipment_id: String = equipment_slots[char_id].get(slot_name, "")
+	if equipment_id.is_empty():
+		return
+	equipment_slots[char_id].erase(slot_name)
+	add_to_run_stash(equipment_id)
+
+func add_to_run_stash(equipment_id: String) -> bool:
+	## Add an equipment_id to the run stash (max 9).
+	## Returns false if the stash is full.
+	if equipment_id.is_empty():
+		return false
+	if run_stash.size() >= MAX_STASH_SIZE:
+		push_warning("RunState: Run stash is full (%d/%d), cannot add '%s'" % [run_stash.size(), MAX_STASH_SIZE, equipment_id])
+		return false
+	run_stash.append(equipment_id)
+	equipment_changed.emit()
+	return true
+
+func remove_from_run_stash(equipment_id: String) -> void:
+	## Remove an equipment_id from the run stash (e.g. after equipping it).
+	run_stash.erase(equipment_id)
+	equipment_changed.emit()

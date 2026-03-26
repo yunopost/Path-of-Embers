@@ -62,10 +62,11 @@ func _show_card_selection():
 	for child in card_grid.get_children():
 		child.queue_free()
 	
-	# Update title
+	# Update title — include upgrade point balance (Phase 4)
 	if title_label:
 		var upgrade_type_text = "transcend" if (reward_bundle and reward_bundle.is_transcendence_upgrade) else "upgrade"
-		title_label.text = "Choose a card to %s (%d remaining):" % [upgrade_type_text, reward_bundle.upgrade_count]
+		var pts = ResourceManager.upgrade_points if ResourceManager else 0
+		title_label.text = "Choose a card to %s (%d remaining) — Points: %d" % [upgrade_type_text, reward_bundle.upgrade_count, pts]
 	
 	# Load card widget scene
 	var card_widget_scene = load("res://Path-of-Embers/scenes/ui/cards/DeckCardWidget.tscn")
@@ -119,7 +120,9 @@ func _show_upgrade_selection():
 			if reward_bundle and reward_bundle.is_transcendence_upgrade:
 				title_label.text = "Choose transcendence for %s:" % card_name
 			else:
-				title_label.text = "Choose upgrade for %s:" % card_name
+				var cost = UpgradeService.compute_upgrade_cost(card_instance)
+				var pts = ResourceManager.upgrade_points if ResourceManager else 0
+				title_label.text = "Choose upgrade for %s (costs %d pts, you have %d):" % [card_name, cost, pts]
 	
 	# Handle transcendence upgrade flow
 	if reward_bundle and reward_bundle.is_transcendence_upgrade:
@@ -212,7 +215,16 @@ func _on_card_widget_clicked(instance_id: String):
 		# For transcendence, show transcendence options directly (no rolling)
 		_show_upgrade_selection()
 		return
-	
+
+	# Phase 4: check upgrade point affordability before proceeding
+	if not UpgradeService.can_afford_upgrade(card_instance):
+		var cost = UpgradeService.compute_upgrade_cost(card_instance)
+		var pts = ResourceManager.upgrade_points if ResourceManager else 0
+		push_warning("UpgradeFlowPanel: Cannot afford upgrade — need %d pts, have %d" % [cost, pts])
+		if title_label:
+			title_label.text = "Not enough points (need %d, have %d)" % [cost, pts]
+		return
+
 	# Normal upgrade flow - roll upgrade options
 	print("UpgradeFlowPanel._on_card_widget_clicked: Rolling upgrades for card ", card_instance.card_id)
 	current_upgrade_options = UpgradeService.roll_upgrade_options_for_card(card_instance, 3)

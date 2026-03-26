@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EnemyData.gd" id="1_enemydata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/EffectData.gd" id="2_effectdata"]
+
+[sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "damage"
+params = {"amount": 7}
+
+[sub_resource type="Resource" id="EffectData_2" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "block"
+params = {"amount": 8}
+
+[sub_resource type="Resource" id="EffectData_3" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "weakness"
+params = {"amount": 2}
+
+[resource]
+script = ExtResource("1_enemydata")
+id = "smolder_shade"
+display_name = "Smolder Shade"
+name = "Smolder Shade"
+act = 1
+enemy_type = 0
+min_hp = 28
+max_hp = 34
+moves = [{
+"effects": [SubResource("EffectData_1")],
+"id": "move_1",
+"telegraph_text": "Flame Touch 7",
+"timer": 4
+}, {
+"effects": [SubResource("EffectData_2")],
+"id": "move_2",
+"telegraph_text": "Ember Shield",
+"timer": 3
+}, {
+"effects": [SubResource("EffectData_3")],
+"id": "move_3",
+"telegraph_text": "Smother",
+"timer": 2
+}]

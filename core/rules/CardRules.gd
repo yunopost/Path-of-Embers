@@ -200,6 +200,17 @@ static func get_card_effects_for_display(card_data: CardData, card_inst: DeckCar
 	
 	return effects
 
+static func get_resolved_effects(card_inst: DeckCardData) -> Array:
+	## Canonical runtime method: returns a copy of a card's effects with all
+	## upgrade modifications applied.  Used by CombatController at play time
+	## and by get_card_effects_for_display (which wraps this).
+	if not card_inst:
+		return []
+	var card_data: CardData = DataRegistry.get_card_data(card_inst.card_id) if DataRegistry else null
+	if not card_data:
+		return []
+	return get_card_effects_for_display(card_data, card_inst)
+
 static func get_card_keywords(card_inst: DeckCardData) -> Array[String]:
 	## Get all keywords for a card instance
 	## Returns array of keyword strings to display on the card

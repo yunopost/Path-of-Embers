@@ -44,13 +44,18 @@ func initialize(reward_data: RewardBundle = null):
 	relic_claimed = reward_bundle.relic_id.is_empty()
 	upgrade_claimed = (reward_bundle.upgrade_count <= 0)
 	heal_applied = false  # Heal is auto-applied on display, so reset this
-	
+
+	# Auto-grant upgrade points from this bundle (Phase 4)
+	if reward_bundle.upgrade_points > 0 and ResourceManager:
+		ResourceManager.add_upgrade_points(reward_bundle.upgrade_points)
+		reward_bundle.upgrade_points = 0  # Consume so reloads don't double-grant
+
 	# Setup UI
 	_setup_ui()
-	
+
 	# Load and instantiate upgrade flow panel scene
 	_create_upgrade_flow_panel()
-	
+
 	# Display rewards
 	refresh_from_state()
 
@@ -350,7 +355,19 @@ func _on_upgrade_option_selected(upgrade_id: String):
 	if not success:
 		push_error("Failed to apply upgrade %s to card instance %s" % [upgrade_id, selected_instance_id])
 		return
-	
+
+	# Deduct upgrade point cost (Phase 4)
+	var card_instance = RunState.deck.get(selected_instance_id)
+	if card_instance and ResourceManager:
+		# Cost is computed BEFORE the upgrade was applied (size increased by apply_upgrade)
+		# so we subtract 1 from applied_upgrades.size() to get the pre-upgrade count
+		var pre_upgrade_count = card_instance.applied_upgrades.size() - 1
+		var card_data = DataRegistry.get_card_data(card_instance.card_id) if DataRegistry else null
+		if card_data:
+			var rarity_base: int = UpgradeService.RARITY_BASE_COST.get(card_data.rarity, 1)
+			var cost = rarity_base * (pre_upgrade_count + 1)
+			ResourceManager.spend_upgrade_points(cost)
+
 	# Decrement upgrade count
 	reward_bundle.upgrade_count -= 1
 	
@@ -408,17 +425,78 @@ func _on_continue_pressed():
 	_finish_rewards()
 
 func _finish_rewards():
-	## Complete reward flow: clear pending rewards, return to map
-	# Note: Node is already marked as completed when set_current_node was called in MapScreen
-	# Available nodes were already updated at that time
-	# We just need to clear pending rewards and return
-	
+	## Complete reward flow: clear pending rewards, then either transition act or return to map.
 	# Force save before clearing pending rewards (rewards finalized)
 	if AutoSaveManager:
 		AutoSaveManager.force_save("rewards_finalized")
-	
+
+	# Determine what node type was just completed before clearing state
+	var completed_node: MapNodeData = null
+	if MapManager and MapManager.current_map and not MapManager.current_node_id.is_empty():
+		completed_node = MapManager.current_map.get_node(MapManager.current_node_id)
+
 	# Clear pending rewards
 	RunState.clear_pending_rewards()
-	
-	# Return to map (map will show the node as completed and available next nodes updated)
+
+	# Act transition: completing a BOSS in acts 1-2 advances to the next act
+	if completed_node:
+		if completed_node.node_type == MapNodeData.NodeType.FINAL_BOSS:
+			# Run is over — emit event, offer build save, then go to main menu
+			MapManager.run_completed.emit()
+			QuestManager.emit_game_event("FINAL_BOSS_DEFEATED", {})
+			_offer_build_save()
+			return
+		elif completed_node.node_type == MapNodeData.NodeType.BOSS and MapManager.act < 3:
+			MapManager.transition_to_next_act()
+			ScreenManager.go_to_map()
+			return
+
+	# Default: return to map
 	ScreenManager.go_to_map()
+
+func _offer_build_save() -> void:
+	## Show a dialog offering to save the current build for Boss Rush, then go to main menu.
+	if not SaveManager:
+		ScreenManager.go_to_main_menu()
+		return
+
+	var builds: Array = SaveManager.load_boss_rush_builds()
+
+	# Find the oldest (or first empty) slot to offer
+	var target_slot: int = 0
+	var oldest_date: String = "9999"
+	for i in range(builds.size()):
+		if builds[i] == null:
+			target_slot = i
+			oldest_date = ""  # Empty slot found — stop searching
+			break
+		var b: BuildData = builds[i]
+		if b.saved_at < oldest_date:
+			oldest_date = b.saved_at
+			target_slot = i
+
+	var existing: BuildData = builds[target_slot]
+	var slot_desc: String = "Slot %d" % (target_slot + 1)
+	if existing != null:
+		slot_desc = "Slot %d (overwrites: %s)" % [target_slot + 1, existing.label]
+
+	var dialog = ConfirmationDialog.new()
+	dialog.title = "Run Complete!"
+	dialog.dialog_text = "Save this build to Boss Rush %s?" % slot_desc
+	dialog.ok_button_text = "Save & Exit"
+	dialog.cancel_button_text = "Exit Without Saving"
+	add_child(dialog)
+	dialog.popup_centered()
+
+	dialog.confirmed.connect(func():
+		var build = BuildData.new()
+		build.slot_index = target_slot
+		build.snapshot_from_run_state()
+		SaveManager.save_boss_rush_build(build)
+		dialog.queue_free()
+		ScreenManager.go_to_main_menu()
+	)
+	dialog.canceled.connect(func():
+		dialog.queue_free()
+		ScreenManager.go_to_main_menu()
+	)

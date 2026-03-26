@@ -6,6 +6,7 @@ class_name CombatController
 signal turn_ended
 signal combat_started
 signal combat_ended
+signal boss_rush_combat_finished(victory: bool, score: int)
 
 var player_stats: EntityStats
 var enemies: Array[Enemy] = []
@@ -13,8 +14,15 @@ var current_energy: int = 3
 var max_energy: int = 3
 var combat_active: bool = false
 
+# Per-character stat objects — keyed by character_id, seeded from CharacterData base stats.
+# STRENGTH = str_base, DEXTERITY = def_base, FAITH = spirit_base.
+# In-combat status effect cards that grant Strength/Dexterity/Faith apply to player_stats;
+# these objects carry the fixed base-stat bonuses for the owning character's cards only.
+var character_stats: Dictionary = {}  # String → EntityStats
+
 var enemy_time_system: EnemyTimeSystem
 var intent_system: IntentSystem
+var pet_board: PetBoard
 
 # Turn tracking
 var damage_taken_this_turn: bool = false  # Track if damage was taken this turn (for Fade Step)
@@ -36,6 +44,10 @@ var _mirror_active: bool = false  # Prevent infinite MIRROR recursion
 var _regrowth_pending: bool = false  # Grove: return played card to draw pile instead of discard
 var _end_turn_pending: bool = false  # Hollow: end turn after this card fully resolves
 
+# Delayed effects resolved at START_OF_NEXT_PLAYER_TURN (e.g. Delayed Slam)
+# Each entry: { "type": String, "amount": int }
+var _pending_next_turn_effects: Array = []
+
 func _ready():
 	# Get HP from ResourceManager if available, otherwise RunState (backward compatibility)
 	var init_hp: int = ResourceManager.current_hp if ResourceManager else RunState.current_hp
@@ -52,6 +64,9 @@ func _ready():
 	intent_system = IntentSystem.new()
 	enemy_time_system = EnemyTimeSystem.new(intent_system, self)
 
+	# Initialize pet board
+	pet_board = PetBoard.new(self)
+
 func start_combat(enemy_data: Array):
 	## Initialize combat with enemies
 	## enemy_data can be Array of enemy_info Dicts with "enemy_id" and "count" OR legacy format with "id", "name", "max_hp", "time_max"
@@ -60,6 +75,18 @@ func start_combat(enemy_data: Array):
 	last_card_type_played = -1
 	last_card_played = null
 	last_card_target_node = null
+
+	# Boss Rush: record start time and total enemy HP for leaderboard scoring
+	if RunState and RunState.is_boss_rush:
+		RunState.boss_rush_stats = {
+			"start_time":      Time.get_unix_time_from_system(),
+			"enemy_total_hp":  0,   # filled after enemies are created below
+			"cards_played":    0,
+		}
+
+	# Reset pet board and pending effects for fresh combat
+	pet_board = PetBoard.new(self)
+	_pending_next_turn_effects.clear()
 
 	# Initialize deck piles (ensure fresh state for combat)
 	RunState._initialize_deck_piles()
@@ -81,14 +108,15 @@ func start_combat(enemy_data: Array):
 				# Randomize HP from range
 				var random_hp = randi_range(enemy_data_def.min_hp, enemy_data_def.max_hp)
 				var display_name = enemy_data_def.display_name if enemy_data_def.display_name else enemy_data_def.name
-				
+
 				var enemy = Enemy.new(enemy_id, display_name, random_hp, 3)  # Default time_max, will be overridden by move timers
-				
+
 				# Generate initial intent
 				var initial_intent = intent_system.generate_intent(enemy)
 				enemy.set_intent(initial_intent, true)  # Update timer for initial intent
-				
+
 				enemies.append(enemy)
+				enemy.stats.died.connect(_on_enemy_died.bind(enemy))
 		else:
 			# Legacy system: create from enemy_info directly
 			var enemy = Enemy.new(
@@ -97,20 +125,72 @@ func start_combat(enemy_data: Array):
 				enemy_info.get("max_hp", 50),
 				enemy_info.get("time_max", 3)
 			)
-			
+
 			# Generate initial intent
 			var initial_intent = intent_system.generate_intent(enemy)
 			enemy.set_intent(initial_intent, true)  # Update timer for initial intent
-			
+
 			enemies.append(enemy)
-	
+			enemy.stats.died.connect(_on_enemy_died.bind(enemy))
+
 	# Register enemies with time system
 	enemy_time_system.register_enemies(enemies)
-	
+
+	# Boss Rush: capture total enemy HP now that enemies are built
+	if RunState and RunState.is_boss_rush and RunState.boss_rush_stats.has("enemy_total_hp"):
+		var total_hp: int = 0
+		for e in enemies:
+			total_hp += e.stats.max_hp
+		RunState.boss_rush_stats["enemy_total_hp"] = total_hp
+
 	# Sync player HP with ResourceManager (via RunState for backward compatibility)
 	player_stats.current_hp = ResourceManager.current_hp if ResourceManager else RunState.current_hp
 	player_stats.max_hp = ResourceManager.max_hp if ResourceManager else RunState.max_hp
-	
+
+	# Build per-character stat objects from CharacterData base stats (Phase 2.5)
+	# STRENGTH = str_base, DEXTERITY = def_base, FAITH = spirit_base
+	character_stats.clear()
+	var party_ids = PartyManager.party_ids if PartyManager else []
+	for char_id in party_ids:
+		var char_data = DataRegistry.get_character(char_id) if DataRegistry else null
+		if char_data:
+			var cstats = EntityStats.new(1, 1)
+			cstats.apply_status(StatusEffectType.STRENGTH, char_data.str_base)
+			cstats.apply_status(StatusEffectType.DEXTERITY, char_data.def_base)
+			cstats.apply_status(StatusEffectType.FAITH, char_data.spirit_base)
+			character_stats[char_id] = cstats
+
+	# Apply equipment stat_modifiers on top of base stats (Phase 6)
+	for char_id in character_stats:
+		var equip_slots: Dictionary = RunState.equipment_slots.get(char_id, {}) if RunState else {}
+		for slot_name in equip_slots:
+			var equipment_id: String = equip_slots[slot_name]
+			if equipment_id.is_empty():
+				continue
+			var equip_data = DataRegistry.get_equipment(equipment_id) if DataRegistry else null
+			if not equip_data:
+				continue
+			var mods: Dictionary = equip_data.stat_modifiers
+			var str_bonus: int = int(mods.get("str", 0))
+			var def_bonus: int = int(mods.get("def", 0))
+			var spirit_bonus: int = int(mods.get("spirit", 0))
+			var hp_bonus: int = int(mods.get("hp", 0))
+			if str_bonus > 0:
+				character_stats[char_id].apply_status(StatusEffectType.STRENGTH, str_bonus)
+			if def_bonus > 0:
+				character_stats[char_id].apply_status(StatusEffectType.DEXTERITY, def_bonus)
+			if spirit_bonus > 0:
+				character_stats[char_id].apply_status(StatusEffectType.FAITH, spirit_bonus)
+			if hp_bonus > 0:
+				player_stats.max_hp += hp_bonus
+				player_stats.current_hp = min(player_stats.current_hp + hp_bonus, player_stats.max_hp)
+				if ResourceManager:
+					ResourceManager.set_hp(player_stats.current_hp, player_stats.max_hp)
+
+	# Fire START_OF_COMBAT relic hooks (before first turn so effects apply to turn 1)
+	if RunState and RunState.relic_system:
+		RunState.relic_system.fire_hook("START_OF_COMBAT", {}, {"combat_controller": self})
+
 	# Start player turn
 	start_player_turn()
 	combat_started.emit()
@@ -119,7 +199,14 @@ func start_player_turn():
 	## Begin a new player turn
 	if not combat_active:
 		return
-	
+
+	# Advance pet board turn counter and fire START_OF_PLAYER_TURN hooks
+	if pet_board:
+		pet_board.on_start_player_turn()
+
+	# Resolve START_OF_NEXT_PLAYER_TURN pending effects (e.g. Delayed Slam)
+	_resolve_pending_next_turn_effects()
+
 	# Reset turn tracking
 	damage_taken_this_turn = false
 	cards_played_this_turn = 0
@@ -128,13 +215,13 @@ func start_player_turn():
 	# Store starting HP for damage tracking
 	player_start_hp = player_stats.current_hp
 	min_hp_this_turn = player_stats.current_hp
-	
+
 	# Expire status effects at start of turn
 	player_stats.expire_status_effects()
 	for enemy in enemies:
 		if enemy.stats.is_alive():
 			enemy.stats.expire_status_effects()
-	
+
 	# Reset block at start of turn (combat rule) - unless retain_block_this_turn is active
 	if player_stats.get_status(StatusEffectType.RETAIN_BLOCK_THIS_TURN) == null:
 		player_stats.reset_block()
@@ -144,13 +231,17 @@ func start_player_turn():
 		# Remove the status after using it (it only applies once)
 		player_stats.status_effects.erase(StatusEffectType.RETAIN_BLOCK_THIS_TURN)
 		player_stats.status_effects_changed.emit()
-	
+
 	# Refill energy
 	current_energy = max_energy
 	# Use set_energy() which will emit the signal if value changed
 	if ResourceManager:
 		ResourceManager.set_energy(current_energy, max_energy)
-	
+
+	# Fire START_OF_PLAYER_TURN relic hooks (before draw — relic-drawn cards join opening hand)
+	if RunState and RunState.relic_system:
+		RunState.relic_system.fire_hook("START_OF_PLAYER_TURN", {}, {"combat_controller": self})
+
 	# Draw 5 cards
 	RunState.draw_cards(5)
 
@@ -192,6 +283,8 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	
 	# Increment cards played counter
 	cards_played_this_turn += 1
+	if RunState and RunState.is_boss_rush and RunState.boss_rush_stats.has("cards_played"):
+		RunState.boss_rush_stats["cards_played"] += 1
 	
 	# Remove card from hand using instance_id
 	if not deck_card:
@@ -242,14 +335,49 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	if card_data.card_type == CardData.CardType.POWER:
 		_setup_power_card_effects(deck_card, card_data, effects)
 	
+	# Snapshot state for quest event tracking
+	var _q_block_before: int = player_stats.block if player_stats else 0
+	var _q_enemy_hp: Dictionary = {}
+	for _q_e in enemies:
+		if _q_e.stats.is_alive():
+			_q_enemy_hp[_q_e.enemy_id] = _q_e.stats.current_hp
+
 	# Resolve card effects (this may set haste_next_card status for the NEXT card)
 	_resolve_card_effects_with_effects(deck_card, target, effects)
+
+	# Quest events: BLOCK_GAINED and DAMAGE_DEALT
+	if QuestManager:
+		var _q_block_gained: int = (player_stats.block - _q_block_before) if player_stats else 0
+		if _q_block_gained > 0:
+			QuestManager.emit_game_event("BLOCK_GAINED", {"amount": _q_block_gained})
+		var _q_dmg: int = 0
+		for _q_e in enemies:
+			var _q_before: int = _q_enemy_hp.get(_q_e.enemy_id, 0)
+			var _q_delta: int = _q_before - _q_e.stats.current_hp
+			if _q_delta > 0:
+				_q_dmg += _q_delta
+		if _q_dmg > 0:
+			QuestManager.emit_game_event("DAMAGE_DEALT", {"amount": _q_dmg, "source": "player"})
 
 	# Update last-card tracking AFTER effects resolve so sequencing effects on the
 	# CURRENT card see the PREVIOUS card's type, while the NEXT card sees this card's type
 	last_card_type_played = card_data.card_type
 	last_card_played = deck_card
 	last_card_target_node = target
+
+	# Fire relic hooks for card played (after effects resolve, before timer ticks)
+	if RunState and RunState.relic_system:
+		var card_params := {"card_type": card_data.card_type, "card_id": deck_card.card_id}
+		RunState.relic_system.fire_hook("ON_CARD_PLAYED", card_params, {"combat_controller": self})
+		match card_data.card_type:
+			CardData.CardType.ATTACK:
+				RunState.relic_system.fire_hook("ON_ATTACK_PLAYED", card_params, {"combat_controller": self})
+			CardData.CardType.SKILL:
+				RunState.relic_system.fire_hook("ON_SKILL_PLAYED", card_params, {"combat_controller": self})
+
+	# Quest event: CARD_PLAYED
+	if QuestManager:
+		QuestManager.emit_game_event("CARD_PLAYED", {"card_type": card_data.card_type, "card_id": deck_card.card_id})
 
 	# Tick all enemies with the timer amount for THIS card
 	enemy_time_system.tick_all_enemies(timer_tick_amount)
@@ -331,46 +459,31 @@ func _resolve_card_effects_with_effects(deck_card: DeckCardData, target: Node = 
 	if not card_data:
 		return
 	
+	# Look up the card owner's base-stat EntityStats (Phase 2.5)
+	var owner_stats: EntityStats = character_stats.get(deck_card.owner_character_id, null)
+
 	var draw_count = 0
-	
+
 	# Handle ALL_ENEMIES targeting (e.g., Transcend 1)
 	if card_data.targeting_mode == CardData.TargetingMode.ALL_ENEMIES:
 		# Resolve effects for each alive enemy
 		for enemy in enemies:
 			if enemy.stats.is_alive():
-				draw_count += EffectResolver.resolve_effects(effects, player_stats, enemy.stats, enemy, self)
+				draw_count += EffectResolver.resolve_effects(effects, player_stats, enemy.stats, enemy, self, owner_stats)
 	else:
-		# Single target resolution
+		# Single target resolution — all enemy nodes must carry a "enemy" meta set
+		# by the UI when constructing the node.  The string-matching fallback has
+		# been removed; any node without the meta is treated as self-targeting.
 		var target_stats: EntityStats = null
-		if target:
-			# Find target's EntityStats
-			if target.has_method("get_stats"):
-				target_stats = target.get_stats()
-			elif target.has_meta("enemy"):
-				var enemy = target.get_meta("enemy")
-				if enemy is Enemy:
-					target_stats = enemy.stats
-			else:
-				# Try to find enemy by iterating through enemies
-				for enemy in enemies:
-					if target.name.begins_with("Enemy_") and enemy.enemy_id in target.name:
-						target_stats = enemy.stats
-						break
-		
-		# Get enemy context if targeting an enemy
 		var enemy_context: Enemy = null
-		if target:
-			if target.has_meta("enemy"):
-				enemy_context = target.get_meta("enemy") as Enemy
-			else:
-				# Try to find enemy by iterating
-				for enemy in enemies:
-					if target.name.begins_with("Enemy_") and enemy.enemy_id in target.name:
-						enemy_context = enemy
-						break
-		
+		if target and target.has_meta("enemy"):
+			var meta_enemy = target.get_meta("enemy") as Enemy
+			if meta_enemy:
+				target_stats = meta_enemy.stats
+				enemy_context = meta_enemy
+
 		# Resolve effects
-		draw_count = EffectResolver.resolve_effects(effects, player_stats, target_stats, enemy_context, self)
+		draw_count = EffectResolver.resolve_effects(effects, player_stats, target_stats, enemy_context, self, owner_stats)
 	
 	# Update RunState block
 	if ResourceManager:
@@ -384,91 +497,8 @@ func _resolve_card_effects_with_effects(deck_card: DeckCardData, target: Node = 
 		RunState.draw_cards(draw_count)
 
 func _get_card_effects(deck_card: DeckCardData) -> Array:
-	## Get effects for a card from CardData, with upgrade modifications applied
-	var effects: Array = []
-	
-	# Load CardData from DataRegistry
-	var card_data = DataRegistry.get_card_data(deck_card.card_id)
-	if not card_data:
-		push_warning("CombatController._get_card_effects: Could not find CardData for card_id: " + deck_card.card_id)
-		return effects
-	
-	# Start with base effects from CardData
-	for base_effect in card_data.base_effects:
-		if base_effect is EffectData:
-			# Create a copy of the effect to avoid modifying the original
-			var effect_copy = EffectData.new(base_effect.effect_type, base_effect.params.duplicate())
-			effects.append(effect_copy)
-	
-	# Apply upgrade modifications to effects
-	for upgrade_id in deck_card.applied_upgrades:
-		var upgrade_def = DataRegistry.get_upgrade_def(upgrade_id)
-		if not upgrade_def.has("effects"):
-			continue
-		
-		var upgrade_effects = upgrade_def["effects"]
-		
-		# Apply damage modifications
-		if upgrade_effects.has("damage_delta"):
-			var damage_delta = upgrade_effects["damage_delta"]
-			# Find damage effects and modify them
-			for effect in effects:
-				if effect is EffectData and effect.effect_type == EffectType.DAMAGE:
-					var current_amount = effect.params.get("amount", 0)
-					effect.params["amount"] = current_amount + damage_delta
-		
-		# Apply damage multiplier (for half damage double hit)
-		if upgrade_effects.has("damage_multiply"):
-			var multiplier = upgrade_effects["damage_multiply"]
-			if multiplier is float or multiplier is int:
-				for effect in effects:
-					if effect is EffectData and effect.effect_type == EffectType.DAMAGE:
-						var current_amount = effect.params.get("amount", 0)
-						effect.params["amount"] = int(current_amount * float(multiplier))
-		
-		# Set hit_count (for double hit)
-		if upgrade_effects.has("hit_count_set"):
-			var hit_count = upgrade_effects["hit_count_set"]
-			if hit_count is int:
-				for effect in effects:
-					if effect is EffectData and effect.effect_type == EffectType.DAMAGE:
-						effect.params["hit_count"] = hit_count
-		
-		# Apply ignore_block flag
-		if upgrade_effects.has("ignore_block") and upgrade_effects["ignore_block"] == true:
-			for effect in effects:
-				if effect is EffectData and effect.effect_type == EffectType.DAMAGE:
-					effect.params["ignore_block"] = true
-		
-		# Apply block modifications
-		if upgrade_effects.has("block_delta"):
-			var block_delta = upgrade_effects["block_delta"]
-			# Find block effects and modify them
-			for effect in effects:
-				if effect is EffectData and effect.effect_type == EffectType.BLOCK:
-					var current_amount = effect.params.get("amount", 0)
-					effect.params["amount"] = current_amount + block_delta
-		
-		# Add block effect (for upgrades that add block)
-		if upgrade_effects.has("add_block"):
-			var block_amount = upgrade_effects["add_block"]
-			if block_amount is int:
-				var block_effect = EffectData.new(EffectType.BLOCK, {"amount": block_amount})
-				effects.append(block_effect)
-		
-		# Apply heal modifications
-		if upgrade_effects.has("heal_delta"):
-			var heal_delta = upgrade_effects["heal_delta"]
-			# Find heal effects and modify them
-			for effect in effects:
-				if effect is EffectData and effect.effect_type == EffectType.HEAL:
-					var current_amount = effect.params.get("amount", 0)
-					effect.params["amount"] = current_amount + heal_delta
-		
-		# Add new effects from upgrades (e.g., "draw card" upgrade)
-		# This can be extended for upgrades that add new effects
-	
-	return effects
+	## Returns resolved effects (base + upgrade modifications) via CardRules.
+	return CardRules.get_resolved_effects(deck_card)
 
 func _get_card_timer_tick(deck_card: DeckCardData) -> int:
 	## Get the timer tick amount for a card
@@ -480,10 +510,18 @@ func end_player_turn():
 	## End the player turn and start enemy turn
 	if not combat_active:
 		return
-	
+
+	# Fire END_OF_PLAYER_TURN relic hooks (before enemies act — block applies to enemy phase)
+	if RunState and RunState.relic_system:
+		RunState.relic_system.fire_hook("END_OF_PLAYER_TURN", {}, {"combat_controller": self})
+
+	# Fire pet END_OF_PLAYER_TURN hooks
+	if pet_board:
+		pet_board.on_end_player_turn()
+
 	# Discard hand
 	RunState.discard_hand()
-	
+
 	# Force all enemies to 0 and resolve triggers
 	enemy_time_system.force_all_enemies_to_zero()
 	enemy_time_system.resolve_enemy_time_triggers("end_turn")
@@ -532,12 +570,15 @@ func _remove_temporary_cards():
 		print("CombatController: Removed %d temporary card(s) from deck" % cards_to_remove.size())
 
 func _on_player_hp_changed(new_hp: int):
-	## Track minimum HP for damage detection (Fade Step)
+	## Track minimum HP for damage detection (Fade Step) and fire ON_PLAYER_DAMAGED relic hook.
 	if new_hp < min_hp_this_turn:
 		min_hp_this_turn = new_hp
 		if min_hp_this_turn < player_start_hp:
 			damage_taken_this_turn = true
 			damage_taken_this_combat = true  # Never resets during combat (Revenant)
+			# Fire ON_PLAYER_DAMAGED relic hooks (once per damage event, not per HP point)
+			if RunState and RunState.relic_system:
+				RunState.relic_system.fire_hook("ON_PLAYER_DAMAGED", {}, {"combat_controller": self})
 
 var previous_block: int = 0  # Track previous block value for block gain detection
 
@@ -597,9 +638,11 @@ func _replay_last_card_effects(enemy_override: Enemy = null):
 		if e is EffectData and e.effect_type != EffectType.MIRROR:
 			filtered_effects.append(e)
 
+	var mirror_owner_stats: EntityStats = character_stats.get(last_card_played.owner_character_id, null)
+
 	if enemy_override != null:
 		# Resolve directly against a specific enemy
-		var draw_count = EffectResolver.resolve_effects(filtered_effects, player_stats, enemy_override.stats, enemy_override, self)
+		var draw_count = EffectResolver.resolve_effects(filtered_effects, player_stats, enemy_override.stats, enemy_override, self, mirror_owner_stats)
 		if ResourceManager:
 			ResourceManager.set_block(player_stats.block)
 			ResourceManager.set_hp(player_stats.current_hp, player_stats.max_hp)
@@ -627,8 +670,111 @@ func _setup_power_card_effects(_deck_card: DeckCardData, _card_data: CardData, e
 			# Set status to track this power
 			player_stats.apply_status(StatusEffectType.RESONANT_FRAME_ACTIVE, effect.params.get("amount", 1))
 
-func _on_enemy_acted():
-	## Called when an enemy performs an action - check for block_on_enemy_act
+func _pre_enemy_act(enemy) -> void:
+	## Called by EnemyTimeSystem immediately before an enemy executes its intent.
+	## Lets PetBoard know which enemy is currently acting (for WHEN_ENEMY_ACTS targeting).
+	if pet_board:
+		pet_board.current_acting_enemy = enemy
+
+func _on_enemy_acted() -> void:
+	## Called when an enemy performs an action.
+	## Handles: relic WHEN_ENEMY_ACTS hooks, Survey-the-Path block, and pet hooks.
+
+	# Fire WHEN_ENEMY_ACTS relic hooks
+	if RunState and RunState.relic_system:
+		RunState.relic_system.fire_hook("WHEN_ENEMY_ACTS", {}, {"combat_controller": self})
+
 	var block_amount = player_stats.get_status(StatusEffectType.BLOCK_ON_ENEMY_ACT)
 	if block_amount != null and int(block_amount) > 0:
 		player_stats.add_block(int(block_amount))
+
+	# Fire pet WHEN_ENEMY_ACTS triggers (deal damage, gain block, etc.)
+	# Also handles Reinforced Frame draw check and clears per-action flags.
+	if pet_board:
+		pet_board.on_enemy_acted(pet_board.current_acting_enemy)
+
+func get_pet_board() -> PetBoard:
+	return pet_board
+
+func _on_enemy_died(_enemy: Enemy) -> void:
+	## Called when any enemy's stats.died signal fires.
+	## Fires ON_ENEMY_KILLED relic hooks and quest events.
+	if RunState and RunState.relic_system:
+		RunState.relic_system.fire_hook("ON_ENEMY_KILLED", {}, {"combat_controller": self})
+	if QuestManager:
+		QuestManager.emit_game_event("ENEMY_KILLED", {})
+
+func end_combat(victory: bool) -> void:
+	## Cleanly end combat. Call from CombatScreen when all enemies are dead (victory)
+	## or the player dies (defeat).
+	if not combat_active:
+		return
+	combat_active = false
+	if victory and RunState and RunState.relic_system:
+		RunState.relic_system.fire_hook("END_OF_COMBAT", {}, {"combat_controller": self})
+	_remove_temporary_cards()
+	combat_ended.emit()
+
+	# Boss Rush: score and signal CombatScreen to navigate back
+	if RunState and RunState.is_boss_rush:
+		var score: int = 0
+		if victory and LeaderboardManager:
+			var stats: Dictionary = RunState.boss_rush_stats
+			var elapsed: float = Time.get_unix_time_from_system() - float(stats.get("start_time", Time.get_unix_time_from_system()))
+			var enemy_hp: int = int(stats.get("enemy_total_hp", 1))
+			var cards: int = int(stats.get("cards_played", 1))
+			var hp_rem: int = ResourceManager.current_hp if ResourceManager else 0
+			var hp_max: int = ResourceManager.max_hp if ResourceManager else 1
+			score = LeaderboardManager.calculate_score(elapsed, enemy_hp, hp_rem, hp_max, cards,
+				ModifierManager.get_active_count() if ModifierManager else 0)
+			var build_label: String = ""
+			if PartyManager:
+				var names: Array[String] = []
+				for pid in PartyManager.get_party_ids():
+					var cd = DataRegistry.get_character(pid) if DataRegistry else null
+					names.append(cd.display_name if cd else pid)
+				build_label = " · ".join(names)
+			LeaderboardManager.submit_score(
+				RunState.boss_rush_boss_id,
+				score,
+				build_label,
+				elapsed,
+				enemy_hp,
+				float(hp_rem) / float(hp_max),
+				cards
+			)
+		boss_rush_combat_finished.emit(victory, score)
+
+func _resolve_pending_next_turn_effects() -> void:
+	## Process START_OF_NEXT_PLAYER_TURN queued effects (e.g. Delayed Slam).
+	if _pending_next_turn_effects.is_empty():
+		return
+	var effects_snapshot: Array = _pending_next_turn_effects.duplicate()
+	_pending_next_turn_effects.clear()
+	for entry in effects_snapshot:
+		var effect_type: String = entry.get("type", "")
+		match effect_type:
+			"damage_random_enemy":
+				var dmg: int = int(entry.get("amount", 0))
+				_apply_damage_to_random_enemy(dmg)
+			_:
+				push_warning("CombatController: unknown pending_next_turn_effect type '%s'" % effect_type)
+
+func _apply_damage_to_random_enemy(amount: int) -> void:
+	## Deal damage to a random alive enemy (used by Delayed Slam etc.)
+	var alive: Array[Enemy] = []
+	for enemy in enemies:
+		if enemy.stats.is_alive():
+			alive.append(enemy)
+	if alive.is_empty():
+		return
+	var target: Enemy = alive[randi() % alive.size()]
+	# Apply Strength / Weakness from player_stats
+	var strength_val = player_stats.get_status(StatusEffectType.STRENGTH)
+	var strength_bonus: int = int(strength_val) if strength_val != null else 0
+	var weakness_val = player_stats.get_status(StatusEffectType.WEAKNESS)
+	var is_weak: bool = (weakness_val != null and int(weakness_val) > 0)
+	var final_dmg: int = amount + strength_bonus
+	if is_weak:
+		final_dmg = int(ceil(float(final_dmg) * 0.75))
+	target.stats.take_damage(final_dmg, false)

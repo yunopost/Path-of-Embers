@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/CharacterData.gd" id="1_chardata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/CardData.gd" id="2_carddata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/QuestData.gd" id="3_questdata"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/calibrate.tres" id="4_c1"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/overclocked.tres" id="5_c2"]
+
+[sub_resource type="Resource" id="QuestData_1" script_class="QuestData"]
+script = ExtResource("3_questdata")
+id = "mechanist_quest_1"
+title = "Fine-Tuned"
+description = "Upgrade 3 cards."
+progress_max = 3
+tracking_type = "upgrade_cards"
+reward = {"gold": 30}
+
+[sub_resource type="Resource" id="QuestData_2" script_class="QuestData"]
+script = ExtResource("3_questdata")
+id = "mechanist_quest_2"
+title = "Efficiency"
+description = "Win 3 combat encounters."
+progress_max = 3
+tracking_type = "win_combat"
+reward = {"gold": 25}
+
+[resource]
+script = ExtResource("1_chardata")
+id = "mechanist"
+display_name = "Mechanist"
+role = "Warrior"
+str_base = 2
+def_base = 1
+spirit_base = 1
+hp_base = 25
+theme_1 = "Board Control"
+theme_2 = "Legacy Cards"
+theme_3 = "Transcendence Synergy"
+starter_unique_cards = Array[ExtResource("2_carddata")]([ExtResource("4_c1"), ExtResource("5_c2")])
+quests = Array[ExtResource("3_questdata")]([SubResource("QuestData_1"), SubResource("QuestData_2")])

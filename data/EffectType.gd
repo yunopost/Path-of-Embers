@@ -66,6 +66,27 @@ const RESONANCE_BLOCK = "resonance_block"  # Gain block; bonus block if last car
 const BLOCK_TO_ENERGY = "block_to_energy"  # Convert all current Block into Energy at ratio: {block_per_energy}
 const FORCE_END_TURN = "force_end_turn"  # End your turn immediately after this card resolves: {}
 
+# Living Armor - Iron Tide
+const DAMAGE_EQUAL_TO_BLOCK = "damage_equal_to_block"  # Deal damage equal to current Block value: {}
+
+# ── Golemancer / Pet System ────────────────────────────────────────────────────
+## Summon a pet defined in PetBoard's registry.
+## params: { "pet_def_id": String, "hp_bonus": int (optional, default 0) }
+const SUMMON_PET = "summon_pet"
+
+## Give the oldest alive pet +max_hp and heal; optionally draw if it survives an enemy action.
+## params: { "max_hp_bonus": int, "heal_amount": int, "draw_if_survives": int }
+const REINFORCE_PET = "reinforce_pet"
+
+## Power card: Whenever a Construct pet is summoned it gains +hp and heals.
+## Also triggers an immediate assembly check.
+## params: { "hp_bonus": int, "heal_amount": int }
+const GRAND_ASSEMBLY_POWER = "grand_assembly_power"
+
+## Deal damage to a random alive enemy at the START_OF_NEXT_PLAYER_TURN.
+## params: { "amount": int }
+const DELAYED_DAMAGE = "delayed_damage"
+
 # Get all valid effect types (for validation)
 static func get_all_types() -> Array[String]:
 	return [
@@ -103,6 +124,11 @@ static func get_all_types() -> Array[String]:
 		RESONANCE_BLOCK,
 		BLOCK_TO_ENERGY,
 		FORCE_END_TURN,
+		SUMMON_PET,
+		REINFORCE_PET,
+		GRAND_ASSEMBLY_POWER,
+		DELAYED_DAMAGE,
+		DAMAGE_EQUAL_TO_BLOCK,
 	]
 
 # Validate if a string is a valid effect type
