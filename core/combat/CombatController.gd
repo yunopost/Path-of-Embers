@@ -107,6 +107,9 @@ func start_combat(enemy_data: Array):
 			for i in range(count):
 				# Randomize HP from range
 				var random_hp = randi_range(enemy_data_def.min_hp, enemy_data_def.max_hp)
+				if ModifierManager:
+					var _is_boss = (enemy_data_def.enemy_type == EnemyData.EnemyType.BOSS)
+					random_hp = int(float(random_hp) * ModifierManager.get_enemy_hp_multiplier(_is_boss))
 				var display_name = enemy_data_def.display_name if enemy_data_def.display_name else enemy_data_def.name
 
 				var enemy = Enemy.new(enemy_id, display_name, random_hp, 3)  # Default time_max, will be overridden by move timers
@@ -187,10 +190,6 @@ func start_combat(enemy_data: Array):
 				if ResourceManager:
 					ResourceManager.set_hp(player_stats.current_hp, player_stats.max_hp)
 
-	# Fire START_OF_COMBAT relic hooks (before first turn so effects apply to turn 1)
-	if RunState and RunState.relic_system:
-		RunState.relic_system.fire_hook("START_OF_COMBAT", {}, {"combat_controller": self})
-
 	# Start player turn
 	start_player_turn()
 	combat_started.emit()
@@ -237,10 +236,6 @@ func start_player_turn():
 	# Use set_energy() which will emit the signal if value changed
 	if ResourceManager:
 		ResourceManager.set_energy(current_energy, max_energy)
-
-	# Fire START_OF_PLAYER_TURN relic hooks (before draw — relic-drawn cards join opening hand)
-	if RunState and RunState.relic_system:
-		RunState.relic_system.fire_hook("START_OF_PLAYER_TURN", {}, {"combat_controller": self})
 
 	# Draw 5 cards
 	RunState.draw_cards(5)
@@ -364,16 +359,6 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	last_card_type_played = card_data.card_type
 	last_card_played = deck_card
 	last_card_target_node = target
-
-	# Fire relic hooks for card played (after effects resolve, before timer ticks)
-	if RunState and RunState.relic_system:
-		var card_params := {"card_type": card_data.card_type, "card_id": deck_card.card_id}
-		RunState.relic_system.fire_hook("ON_CARD_PLAYED", card_params, {"combat_controller": self})
-		match card_data.card_type:
-			CardData.CardType.ATTACK:
-				RunState.relic_system.fire_hook("ON_ATTACK_PLAYED", card_params, {"combat_controller": self})
-			CardData.CardType.SKILL:
-				RunState.relic_system.fire_hook("ON_SKILL_PLAYED", card_params, {"combat_controller": self})
 
 	# Quest event: CARD_PLAYED
 	if QuestManager:

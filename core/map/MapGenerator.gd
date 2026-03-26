@@ -153,6 +153,10 @@ func _choose_node_type(row: int, col: int, row_width: int, act_index: int) -> Ma
 		if col == int(row_width / 2.0) and randf() < 0.08:
 			return MapNodeData.NodeType.STORY
 
+	# REST node: exactly one per act, placed in row 4 at the middle column
+	if row == 4 and col == int(row_width / 2.0):
+		return MapNodeData.NodeType.REST
+
 	# Elite nodes appear mid-to-late map (center-ish positions)
 	if row >= 5 and row < 12:
 		if col == int(row_width / 2.0):
@@ -205,7 +209,8 @@ func _set_reward_flags(node: MapNodeData):
 			node.reward_flags.append(MapNodeData.RewardType.UPGRADE)
 			node.reward_flags.append(MapNodeData.RewardType.BOSS_RELIC)
 
-		MapNodeData.NodeType.SHOP, MapNodeData.NodeType.ENCOUNTER, MapNodeData.NodeType.STORY:
+		MapNodeData.NodeType.SHOP, MapNodeData.NodeType.ENCOUNTER, \
+		MapNodeData.NodeType.STORY, MapNodeData.NodeType.REST:
 			# No preview icons
 			node.reward_flags.clear()
 

@@ -4,7 +4,6 @@ extends Node
 ## Emits signals when values change for reactive UI updates
 
 signal deck_changed
-signal relics_changed
 signal buffs_changed
 signal hand_changed
 signal draw_pile_changed
@@ -18,12 +17,6 @@ var deck_order: Array[String] = []  # Stable ordering for deck view / upgrades U
 
 # Models (architecture rule 4.1, 8.1)
 var deck_model: DeckModel = null
-
-# Relic system
-var relic_system: RelicSystem = null  # Hook dispatcher — see core/relics/RelicSystem.gd
-
-# Relics
-var relics: Array = []  # Array of { id: String, is_boss: bool }
 
 # Combat status effects
 var haste_next_card: bool = false  # Next card played doesn't advance enemy timer
@@ -61,7 +54,6 @@ func _ready():
 	# Initialize with empty values (will be set by character selection)
 	deck = {}
 	deck_order = []
-	relics = []
 	haste_next_card = false
 	reward_card_pool = []
 	rare_pity_counter = -2
@@ -71,8 +63,7 @@ func _ready():
 	
 	# Initialize systems
 	deck_model = DeckModel.new()
-	relic_system = RelicSystem.new()
-	
+
 	# Connect model signals to RunState signals
 	deck_model.deck_changed.connect(func(): deck_changed.emit())
 	deck_model.draw_pile_changed.connect(func(): draw_pile_changed.emit())
@@ -378,10 +369,14 @@ func apply_upgrade_to_instance(instance_id: String, upgrade_id: String) -> bool:
 	if deck_model and deck_model.hand.has(instance_id):
 		deck_model.hand_changed.emit()
 	
+	# Quest event: card upgraded
+	if QuestManager:
+		QuestManager.emit_game_event("CARD_UPGRADED", {})
+
 	# Autosave after upgrade
 	if AutoSaveManager:
 		AutoSaveManager.force_save("card_upgraded")
-	
+
 	return true
 
 func get_upgradeable_instance_ids() -> Array[String]:
@@ -475,24 +470,6 @@ func transcend_card(instance_id: String, new_card_id: String) -> bool:
 	
 	return true
 
-func add_relic(relic_id: String, is_boss: bool = false) -> void:
-	## Add a relic to the player's collection.
-	## Fires the ON_RELIC_GAINED hook for immediate relic effects (e.g. gain max HP on pickup).
-	## Also emits RELIC_GAINED to QuestManager for quest tracking.
-	if relic_id.is_empty():
-		return
-
-	relics.append({ "id": relic_id, "is_boss": is_boss })
-	relics_changed.emit()
-
-	# Fire ON_RELIC_GAINED hook — relic is now in the list so it fires itself
-	if relic_system:
-		relic_system.fire_hook("ON_RELIC_GAINED", { "relic_id": relic_id })
-
-	# Emit RELIC_GAINED event for quest system
-	if QuestManager:
-		QuestManager.emit_game_event("RELIC_GAINED", { "relic_id": relic_id, "is_boss": is_boss })
-
 func get_rare_chance(node_type: MapNodeData.NodeType) -> float:
 	## Calculate current Rare chance including Elite bonus
 	## Deck penalty is applied per-card during selection, not to overall Rare chance
@@ -566,12 +543,7 @@ func reset_run() -> void:
 	# Clear quests (delegates to QuestManager)
 	if QuestManager:
 		QuestManager.clear_quests()
-	
-	# Clear relics and reset hook system
-	relics.clear()
-	relics_changed.emit()
-	relic_system = RelicSystem.new()
-	
+
 	# Reset resources (delegates to ResourceManager)
 	if ResourceManager:
 		ResourceManager.reset_resources()
@@ -608,6 +580,10 @@ func reset_run() -> void:
 	boss_rush_boss_id = ""
 	boss_rush_stats = {}
 
+	# Clear active difficulty modifiers
+	if ModifierManager:
+		ModifierManager.end_run()
+
 # ── Boss Rush helpers (Phase 8) ───────────────────────────────────────────────
 
 func load_from_build_data(build: BuildData) -> void:
@@ -641,12 +617,6 @@ func load_from_build_data(build: BuildData) -> void:
 			equipment_slots[str(char_id)][str(slot_name)] = str(build.equipment_slots[char_id][slot_name])
 	run_stash = build.run_stash.duplicate()
 	equipment_changed.emit()
-
-	# Restore relics (metadata only — effects not reapplied for boss rush simplicity)
-	relics.clear()
-	for relic_id in build.relics:
-		relics.append({ "id": relic_id, "is_boss": false })
-	relics_changed.emit()
 
 # ── Equipment helpers (Phase 6) ───────────────────────────────────────────────
 

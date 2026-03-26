@@ -13,6 +13,7 @@ script = ExtResource("1_carddata")
 id = "bulwark"
 name = "Bulwark"
 cost = 2
+rarity = 2
 card_type = 1
 targeting_mode = 4
 owner_character_id = "living_armor"

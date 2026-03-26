@@ -22,6 +22,7 @@ var screen_scenes: Dictionary = {
 	"shop": "res://Path-of-Embers/scenes/screens/ShopScreen.tscn",
 	"boss_rush": "res://Path-of-Embers/scenes/screens/BossRushScreen.tscn",
 	"game_over": "res://Path-of-Embers/scenes/screens/GameOverScreen.tscn",
+	"victory": "res://Path-of-Embers/Scenes/screens/VictoryScreen.tscn",
 }
 
 func _ready():
@@ -84,6 +85,10 @@ func go_to_game_over():
 func go_to_boss_rush():
 	## Navigate to Boss Rush screen
 	_change_screen("boss_rush", {})
+
+func go_to_victory():
+	## Navigate to victory/run-complete screen
+	_change_screen("victory", {})
 
 func _change_screen(screen_name: String, data: Dictionary):
 	## Internal method to change screens

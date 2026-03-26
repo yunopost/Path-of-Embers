@@ -13,6 +13,7 @@ script = ExtResource("1_carddata")
 id = "dark_pact"
 name = "Dark Pact"
 cost = 1
+rarity = 2
 card_type = 0
 targeting_mode = 2
 owner_character_id = "witch"

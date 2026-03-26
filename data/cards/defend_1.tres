@@ -15,6 +15,7 @@ params = {
 script = ExtResource("1_carddata")
 id = "defend_1"
 name = "Defend"
+rarity = 0
 card_type = 1
 targeting_mode = 4
 base_effects = Array[ExtResource("2_effectdata")]([SubResource("EffectData_1")])

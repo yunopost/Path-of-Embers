@@ -10,7 +10,6 @@ var upgrade_flow_panel: Control = null  # UpgradeFlowPanel scene instance
 var reward_bundle: RewardBundle = null
 var gold_claimed: bool = false
 var card_claimed: bool = false
-var relic_claimed: bool = false
 var upgrade_claimed: bool = false
 var heal_applied: bool = false
 
@@ -41,7 +40,6 @@ func initialize(reward_data: RewardBundle = null):
 	# If bundle shows rewards as already claimed (0/empty), mark them as claimed
 	gold_claimed = (reward_bundle.gold <= 0)
 	card_claimed = (reward_bundle.card_choices.size() == 0)
-	relic_claimed = reward_bundle.relic_id.is_empty()
 	upgrade_claimed = (reward_bundle.upgrade_count <= 0)
 	heal_applied = false  # Heal is auto-applied on display, so reset this
 
@@ -91,11 +89,7 @@ func _display_rewards():
 	if reward_bundle.card_choices.size() > 0:
 		_create_card_choices_section(reward_bundle.card_choices)
 		# Note: Pity counter is updated by RewardResolver when rewards are generated
-	
-	# Relic section
-	if not reward_bundle.relic_id.is_empty():
-		_create_relic_section(reward_bundle.relic_id)
-	
+
 	# Upgrade section
 	if reward_bundle.upgrade_count > 0:
 		_create_upgrade_section(reward_bundle.upgrade_count)
@@ -171,27 +165,6 @@ func _create_card_choices_section(card_ids: Array[String]):
 	
 	rewards_container.add_child(section)
 
-func _create_relic_section(relic_id: String):
-	## Create relic reward section (placeholder)
-	var section = Panel.new()
-	section.custom_minimum_size = Vector2(0, 60)
-	var hbox = HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 10)
-	section.add_child(hbox)
-	
-	var label = Label.new()
-	label.text = "Relic: %s" % relic_id  # Placeholder
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_child(label)
-	
-	var claim_btn = Button.new()
-	claim_btn.text = "Claim Relic"
-	claim_btn.pressed.connect(_on_claim_relic.bind(relic_id))
-	claim_btn.disabled = relic_claimed
-	hbox.add_child(claim_btn)
-	
-	rewards_container.add_child(section)
-
 func _create_upgrade_section(count: int):
 	## Create upgrade reward section with button to start upgrade flow
 	var section = Panel.new()
@@ -260,31 +233,6 @@ func _on_skip_cards():
 	# Clear card choices from bundle to prevent re-claiming on reload
 	reward_bundle.card_choices.clear()
 	card_claimed = true
-	_update_continue_button()
-	_refresh_reward_sections()
-
-func _on_claim_relic(relic_id: String):
-	## Claim relic reward
-	## PLACEHOLDER FOR FUTURE WORK: Relic storage works, but relic effects are not implemented.
-	## Relics are added to RunState.relics but have no gameplay impact.
-	if relic_claimed:
-		return
-	
-	# Determine if this is a boss relic (check if current node is boss)
-	var is_boss = false
-	if RunState.current_map and not RunState.current_node_id.is_empty():
-		var node = RunState.current_map.get_node(RunState.current_node_id)
-		if node and node.node_type == MapNodeData.NodeType.BOSS:
-			is_boss = true
-	
-	# Add relic to RunState (emits RELIC_GAINED event for quest system)
-	RunState.add_relic(relic_id, is_boss)
-	
-	# Clear relic from bundle
-	if reward_bundle:
-		reward_bundle.relic_id = ""
-	
-	relic_claimed = true
 	_update_continue_button()
 	_refresh_reward_sections()
 
@@ -408,13 +356,10 @@ func _update_continue_button():
 	
 	if reward_bundle.gold > 0 and not gold_claimed:
 		all_resolved = false
-	
+
 	if reward_bundle.card_choices.size() > 0 and not card_claimed:
 		all_resolved = false
-	
-	if not reward_bundle.relic_id.is_empty() and not relic_claimed:
-		all_resolved = false
-	
+
 	if reward_bundle.upgrade_count > 0:
 		all_resolved = false
 	
@@ -441,18 +386,60 @@ func _finish_rewards():
 	# Act transition: completing a BOSS in acts 1-2 advances to the next act
 	if completed_node:
 		if completed_node.node_type == MapNodeData.NodeType.FINAL_BOSS:
-			# Run is over — emit event, offer build save, then go to main menu
+			# Run is over — emit event, go to victory screen
 			MapManager.run_completed.emit()
 			QuestManager.emit_game_event("FINAL_BOSS_DEFEATED", {})
-			_offer_build_save()
+			ScreenManager.go_to_victory()
 			return
 		elif completed_node.node_type == MapNodeData.NodeType.BOSS and MapManager.act < 3:
-			MapManager.transition_to_next_act()
-			ScreenManager.go_to_map()
+			_show_act_transition()
 			return
 
 	# Default: return to map
 	ScreenManager.go_to_map()
+
+const ACT_FLAVOUR: Dictionary = {
+	2: "Act II\nThe path grows darker.",
+	3: "Act III\nThe ember core awaits.",
+}
+
+func _show_act_transition() -> void:
+	## Show a brief flavour overlay before advancing to the next act.
+	var next_act: int = (MapManager.act if MapManager else 1) + 1
+	var flavour: String = ACT_FLAVOUR.get(next_act, "The journey continues.")
+
+	var overlay := CanvasLayer.new()
+	overlay.layer = 10
+	add_child(overlay)
+
+	var bg := ColorRect.new()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color(0.05, 0.05, 0.05, 0.92)
+	overlay.add_child(bg)
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_CENTER)
+	vbox.add_theme_constant_override("separation", 28)
+	overlay.add_child(vbox)
+
+	var lbl := Label.new()
+	lbl.text = flavour
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", 32)
+	vbox.add_child(lbl)
+
+	var btn := Button.new()
+	btn.text = "Continue"
+	btn.custom_minimum_size = Vector2(200, 50)
+	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	btn.pressed.connect(func():
+		overlay.queue_free()
+		if MapManager:
+			MapManager.transition_to_next_act()
+		ScreenManager.go_to_map()
+	)
+	vbox.add_child(btn)
+
 
 func _offer_build_save() -> void:
 	## Show a dialog offering to save the current build for Boss Rush, then go to main menu.

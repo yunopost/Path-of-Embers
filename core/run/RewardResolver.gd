@@ -18,8 +18,7 @@ static func build_rewards_for_node(node: MapNodeData) -> RewardBundle:
 	var is_elite_node = node.node_type == MapNodeData.NodeType.ELITE
 	
 	if has_boss_relic:
-		# Boss pool (B): boss relic + 3 card choices + gold + transcendence upgrade + 12 pts
-		bundle.relic_id = "relic_boss_01"  # Placeholder
+		# Boss pool (B): 3 card choices + gold + transcendence upgrade + 12 pts
 		bundle.card_choices = _generate_card_choices(3, node.node_type)
 		bundle.gold = 50
 		bundle.upgrade_count = 1
@@ -28,8 +27,7 @@ static func build_rewards_for_node(node: MapNodeData) -> RewardBundle:
 		return bundle
 
 	if is_elite_node:
-		# Elite pool (E): guaranteed relic + 3 card choices + upgrade + 6 pts
-		bundle.relic_id = "relic_elite_01"  # Placeholder
+		# Elite pool (E): 3 card choices + upgrade + 6 pts
 		bundle.card_choices = _generate_card_choices(3, node.node_type)
 		bundle.upgrade_count = 1
 		bundle.upgrade_points = 6
@@ -71,10 +69,6 @@ static func build_rewards_for_node(node: MapNodeData) -> RewardBundle:
 				bundle.gold = 50
 			_:
 				bundle.gold = 10
-	
-	# R = RELIC: regular relic
-	if node.reward_flags.has(MapNodeData.RewardType.RELIC):
-		bundle.relic_id = "relic_01"  # Placeholder
 	
 	return bundle
 

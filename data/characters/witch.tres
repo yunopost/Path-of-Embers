@@ -1,10 +1,17 @@
-[gd_resource type="Resource" script_class="CharacterData" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="CharacterData" load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://Path-of-Embers/data/CharacterData.gd" id="1_chardata"]
 [ext_resource type="Script" path="res://Path-of-Embers/data/CardData.gd" id="2_carddata"]
 [ext_resource type="Script" path="res://Path-of-Embers/data/QuestData.gd" id="3_questdata"]
 [ext_resource type="Resource" path="res://Path-of-Embers/data/cards/hex.tres" id="4_c1"]
 [ext_resource type="Resource" path="res://Path-of-Embers/data/cards/dark_pact.tres" id="5_c2"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/hex.tres" id="6_r1"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/dark_pact.tres" id="7_r2"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/lifetap.tres" id="8_r3"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/spite_strike.tres" id="9_r4"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/drain.tres" id="10_r5"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/foresee.tres" id="11_r6"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/vine_wrap.tres" id="12_r7"]
 
 [sub_resource type="Resource" id="QuestData_1" script_class="QuestData"]
 script = ExtResource("3_questdata")
@@ -37,4 +44,5 @@ theme_1 = "Curse Generation"
 theme_2 = "Discard Payoffs"
 theme_3 = "Contagion"
 starter_unique_cards = Array[ExtResource("2_carddata")]([ExtResource("4_c1"), ExtResource("5_c2")])
+reward_card_pool = Array[ExtResource("2_carddata")]([ExtResource("6_r1"), ExtResource("7_r2"), ExtResource("8_r3"), ExtResource("9_r4"), ExtResource("10_r5"), ExtResource("11_r6"), ExtResource("12_r7")])
 quests = Array[ExtResource("3_questdata")]([SubResource("QuestData_1"), SubResource("QuestData_2")])

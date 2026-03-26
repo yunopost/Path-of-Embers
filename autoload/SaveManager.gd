@@ -134,7 +134,6 @@ func _serialize_run_state() -> Dictionary:
 		"party_ids": PartyManager.party_ids.duplicate() if PartyManager else [],
 		"deck": deck_dict,  # Dictionary keyed by instance_id
 		"deck_order": deck_order_data,  # Stable ordering array
-		"relics": RunState.relics,
 		"gold": ResourceManager.gold if ResourceManager else 0,
 		"current_hp": ResourceManager.current_hp if ResourceManager else 50,
 		"max_hp": ResourceManager.max_hp if ResourceManager else 50,
@@ -155,7 +154,8 @@ func _serialize_run_state() -> Dictionary:
 		"tap_to_play": RunState.tap_to_play,
 		"pending_rewards": pending_rewards_serialized,
 		"equipment_slots": RunState.equipment_slots,
-		"run_stash": RunState.run_stash.duplicate()
+		"run_stash": RunState.run_stash.duplicate(),
+		"active_modifiers": Array(ModifierManager._run_active) if ModifierManager else []
 	}
 
 func _deserialize_run_state(save_data: Dictionary):
@@ -245,11 +245,6 @@ func _deserialize_run_state(save_data: Dictionary):
 		# Reinitialize deck piles from loaded deck
 		RunState._initialize_deck_piles()
 		RunState.deck_changed.emit()
-	
-	# Restore relics
-	if save_data.has("relics"):
-		RunState.relics = save_data["relics"]
-		RunState.relics_changed.emit()
 	
 	# Restore resources
 	if ResourceManager:
@@ -375,6 +370,12 @@ func _deserialize_run_state(save_data: Dictionary):
 			RunState.run_stash.append(str(item))
 
 	RunState.equipment_changed.emit()
+
+	# Restore active difficulty modifiers
+	if ModifierManager and save_data.has("active_modifiers") and save_data["active_modifiers"] is Array:
+		ModifierManager._run_active.clear()
+		for m in save_data["active_modifiers"]:
+			ModifierManager._run_active.append(str(m))
 
 # ── Meta save (user://meta.json) ──────────────────────────────────────────────
 # Stores persistent cross-run data: equipment stash, milestones, and unlocks.

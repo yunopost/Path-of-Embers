@@ -79,10 +79,17 @@ func reset_resources():
 	set_energy(3, 3)
 	set_upgrade_points(0)
 
+func heal(amount: int) -> void:
+	## Restore HP by amount, capped at max_hp.
+	var new_hp = min(current_hp + amount, max_hp)
+	set_hp(new_hp)
+
 func reset_resources_for_party(party_max_hp: int) -> void:
 	## Reset all resources, seeding max_hp from the party's combined hp_base.
 	## Called by RunState.generate_starter_deck() after the party is known.
 	set_gold(0)
+	if ModifierManager:
+		party_max_hp = int(float(party_max_hp) * ModifierManager.get_player_hp_multiplier())
 	set_hp(party_max_hp, party_max_hp)
 	set_block(0)
 	set_energy(3, 3)

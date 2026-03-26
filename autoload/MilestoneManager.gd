@@ -39,11 +39,22 @@ func _load_from_meta() -> void:
 		_apply_starting_roster()
 		return
 	var data: Dictionary = SaveManager.load_milestone_meta()
-	completed_milestone_ids.assign(data.get("completed_milestones", []))
-	unlocked_characters.assign(data.get("unlocked_characters", []))
-	unlocked_modifiers.assign(data.get("unlocked_modifiers", []))
-	unlocked_boss_rush_bosses.assign(data.get("unlocked_boss_rush_bosses", []))
-	story_progress.assign(data.get("story_progress", []))
+	# Use clear+append loops to safely coerce untyped JSON arrays into Array[String]
+	completed_milestone_ids.clear()
+	for s in data.get("completed_milestones", []):
+		completed_milestone_ids.append(str(s))
+	unlocked_characters.clear()
+	for s in data.get("unlocked_characters", []):
+		unlocked_characters.append(str(s))
+	unlocked_modifiers.clear()
+	for s in data.get("unlocked_modifiers", []):
+		unlocked_modifiers.append(str(s))
+	unlocked_boss_rush_bosses.clear()
+	for s in data.get("unlocked_boss_rush_bosses", []):
+		unlocked_boss_rush_bosses.append(str(s))
+	story_progress.clear()
+	for s in data.get("story_progress", []):
+		story_progress.append(str(s))
 	_progress_counters = data.get("milestone_progress", {})
 	_apply_starting_roster()
 

@@ -15,6 +15,7 @@ script = ExtResource("1_carddata")
 id = "heal_1"
 name = "Heal"
 cost = 1
+rarity = 0
 card_type = 1
 targeting_mode = 4
 base_effects = [SubResource("EffectData_1")]

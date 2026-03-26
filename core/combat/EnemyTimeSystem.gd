@@ -18,6 +18,8 @@ func register_enemies(p_enemies: Array):
 
 func tick_all_enemies(amount: int):
 	## Tick all enemies' timers by the given amount
+	if ModifierManager:
+		amount = int(ceil(float(amount) * ModifierManager.get_enemy_timer_multiplier()))
 	for enemy in enemies:
 		if not enemy.stats.is_alive():
 			continue

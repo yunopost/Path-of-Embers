@@ -11,7 +11,8 @@ enum NodeType {
 	ENCOUNTER,
 	BOSS,
 	FINAL_BOSS,  # Act 3 only — end-of-run boss, requires all quests complete
-	STORY        # Special narrative node; placed mid-map in acts 2+
+	STORY,       # Special narrative node; placed mid-map in acts 2+
+	REST         # Camp node — heal 30% max HP, once per visit
 }
 
 enum RewardType {

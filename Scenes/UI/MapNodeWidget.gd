@@ -68,6 +68,8 @@ func _update_display():
 				node_icon_label.text = "FB"
 			MapNodeData.NodeType.STORY:
 				node_icon_label.text = "S"
+			MapNodeData.NodeType.REST:
+				node_icon_label.text = "Z"
 	
 	# Update reward icons
 	_update_reward_icons()
@@ -84,11 +86,12 @@ func _update_reward_icons():
 	for child in reward_container.get_children():
 		child.queue_free()
 	
-	# Skip reward icons for ENCOUNTER, SHOP, and STORY
+	# Skip reward icons for ENCOUNTER, SHOP, STORY, and REST
 	if node_data.node_type in [
 		MapNodeData.NodeType.ENCOUNTER,
 		MapNodeData.NodeType.SHOP,
-		MapNodeData.NodeType.STORY
+		MapNodeData.NodeType.STORY,
+		MapNodeData.NodeType.REST
 	]:
 		return
 	

@@ -18,6 +18,7 @@ script = ExtResource("1_carddata")
 id = "hunters_mark"
 name = "Hunter's Mark"
 cost = 1
+rarity = 1
 card_type = 0
 targeting_mode = 1
 owner_character_id = "warrior_1"

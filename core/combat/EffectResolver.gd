@@ -49,7 +49,12 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 			var final_damage = damage_before_weakness
 			if weakness_active:
 				final_damage = int(ceil(float(damage_before_weakness) * 0.75))
-			
+			# Enemy damage multiplier: owner_stats is null for enemy move calls
+			if owner_stats == null and ModifierManager:
+				var _dmg_mult = ModifierManager.get_enemy_damage_multiplier()
+				if _dmg_mult != 1.0:
+					final_damage = int(ceil(float(final_damage) * _dmg_mult))
+
 			if target:
 				# Apply damage multiple times (vulnerable applies per hit in take_damage)
 				for i in range(hit_count):

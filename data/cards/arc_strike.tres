@@ -13,6 +13,7 @@ script = ExtResource("1_carddata")
 id = "arc_strike"
 name = "Arc Strike"
 cost = 1
+rarity = 1
 card_type = 0
 targeting_mode = 1
 owner_character_id = "warrior_4"

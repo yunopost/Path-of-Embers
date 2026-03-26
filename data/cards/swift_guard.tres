@@ -13,6 +13,7 @@ script = ExtResource("1_carddata")
 id = "swift_guard"
 name = "Swift Guard"
 cost = 1
+rarity = 0
 card_type = 1
 targeting_mode = 4
 owner_character_id = "warrior_4"

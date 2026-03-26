@@ -8,7 +8,6 @@ const DATA_DIR_CARDS = "res://Path-of-Embers/data/cards/"
 const DATA_DIR_CHARACTERS = "res://Path-of-Embers/data/characters/"
 const DATA_DIR_ENEMIES = "res://Path-of-Embers/data/enemies/"
 const DATA_DIR_UPGRADES = "res://Path-of-Embers/data/upgrades/"
-const DATA_DIR_RELICS = "res://Path-of-Embers/data/relics/"
 const DATA_DIR_EQUIPMENT = "res://Path-of-Embers/data/equipment/"
 const DATA_DIR_MILESTONES = "res://Path-of-Embers/data/milestones/"
 const DATA_DIR_ENCOUNTERS = "res://Path-of-Embers/data/encounters/"
@@ -21,9 +20,6 @@ var enemy_cache: Dictionary = {}  # Maps enemy_id -> EnemyData
 # Upgrade cache
 var upgrade_resource_cache: Dictionary = {}  # Maps upgrade_id -> UpgradeData Resource
 var card_upgrade_pools: Dictionary = {}  # Maps card_id -> Array[upgrade_id]
-
-# Relic cache
-var relic_cache: Dictionary = {}  # Maps relic_id -> RelicData
 
 # Equipment cache
 var equipment_cache: Dictionary = {}  # Maps equipment_id -> EquipmentData
@@ -72,7 +68,6 @@ func _load_all_resources():
 	var loaded_enemies = _load_resources_from_directory(DATA_DIR_ENEMIES, "EnemyData")
 	var loaded_characters = _load_resources_from_directory(DATA_DIR_CHARACTERS, "CharacterData")
 	var loaded_upgrades = _load_resources_from_directory(DATA_DIR_UPGRADES, "UpgradeData")
-	var loaded_relics = _load_resources_from_directory(DATA_DIR_RELICS, "RelicData")
 	var loaded_equipment = _load_resources_from_directory(DATA_DIR_EQUIPMENT, "EquipmentData")
 	var loaded_milestones = _load_resources_from_directory(DATA_DIR_MILESTONES, "MilestoneData")
 	var loaded_encounters = _load_resources_from_directory(DATA_DIR_ENCOUNTERS, "EncounterData")
@@ -107,11 +102,6 @@ func _load_all_resources():
 					if not card_upgrade_pools[card_id].has(upgrade.id):
 						card_upgrade_pools[card_id].append(upgrade.id)
 
-	# Cache loaded relics
-	for relic in loaded_relics:
-		if relic and relic is RelicData and not relic.id.is_empty():
-			relic_cache[relic.id] = relic
-
 	# Cache loaded equipment
 	for equip in loaded_equipment:
 		if equip and equip is EquipmentData and not equip.id.is_empty():
@@ -129,14 +119,14 @@ func _load_all_resources():
 
 	# Log loading summary
 	var total_loaded = (loaded_cards.size() + loaded_enemies.size()
-			+ loaded_characters.size() + loaded_upgrades.size() + loaded_relics.size()
+			+ loaded_characters.size() + loaded_upgrades.size()
 			+ loaded_equipment.size() + loaded_milestones.size() + loaded_encounters.size())
 	if total_loaded == 0:
 		push_error("DataRegistry: No resource files found! Please create .tres files in data directories.")
 	else:
-		print("DataRegistry: Loaded %d cards, %d enemies, %d characters, %d upgrades, %d relics, %d equipment, %d milestones, %d encounters" % [
+		print("DataRegistry: Loaded %d cards, %d enemies, %d characters, %d upgrades, %d equipment, %d milestones, %d encounters" % [
 			loaded_cards.size(), loaded_enemies.size(), loaded_characters.size(),
-			loaded_upgrades.size(), loaded_relics.size(), loaded_equipment.size(),
+			loaded_upgrades.size(), loaded_equipment.size(),
 			loaded_milestones.size(), loaded_encounters.size()
 		])
 
@@ -241,22 +231,6 @@ func register_enemy(enemy_data: EnemyData):
 func get_enemy(enemy_id: String) -> EnemyData:
 	## Get EnemyData by ID, returns null if not found
 	return enemy_cache.get(enemy_id, null)
-
-func register_relic(relic_data: RelicData) -> void:
-	## Register a RelicData resource manually (e.g. for testing or runtime-created relics).
-	if relic_data and not relic_data.id.is_empty():
-		relic_cache[relic_data.id] = relic_data
-
-func get_relic(relic_id: String) -> RelicData:
-	## Get RelicData by ID. Returns null if not found.
-	return relic_cache.get(relic_id, null)
-
-func get_all_relics() -> Array[RelicData]:
-	## Return all registered RelicData resources.
-	var result: Array[RelicData] = []
-	for relic in relic_cache.values():
-		result.append(relic)
-	return result
 
 func get_equipment(equipment_id: String) -> EquipmentData:
 	## Get EquipmentData by ID. Returns null if not found.

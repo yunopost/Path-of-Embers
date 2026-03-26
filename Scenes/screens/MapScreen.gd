@@ -558,6 +558,28 @@ func _on_node_clicked(node_id: String):
 			ScreenManager.go_to_shop({})
 		MapNodeData.NodeType.ENCOUNTER, MapNodeData.NodeType.STORY:
 			ScreenManager.go_to_encounter({})
+		MapNodeData.NodeType.REST:
+			_show_rest_dialog()
+
+func _show_rest_dialog() -> void:
+	## Show the camp rest dialog — heal 30% max HP on confirm.
+	var heal_amount: int = int(ResourceManager.max_hp * 0.30) if ResourceManager else 0
+	var dialog := AcceptDialog.new()
+	dialog.title = "Camp"
+	dialog.dialog_text = "Rest here and recover %d HP?" % heal_amount
+	dialog.add_cancel_button("Leave")
+	dialog.confirmed.connect(func():
+		if ResourceManager:
+			ResourceManager.heal(heal_amount)
+		MapManager.mark_current_node_completed()
+		if AutoSaveManager:
+			AutoSaveManager.force_save("rest_node")
+		dialog.queue_free()
+		_render_map()
+	)
+	dialog.canceled.connect(func(): dialog.queue_free())
+	add_child(dialog)
+	dialog.popup_centered()
 
 func _show_boss_gate_popup():
 	## Show popup blocking boss entry when quests are incomplete
