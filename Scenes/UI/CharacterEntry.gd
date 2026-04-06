@@ -114,48 +114,121 @@ func set_selected(is_selected: bool) -> void:
 		else:
 			portrait.modulate = Color(0.7, 0.7, 0.7)  # Dimmed
 
+## Role-based placeholder colors for characters without portrait art
+const ROLE_COLORS = {
+	"Warrior":  Color("#5A2010"),
+	"Healer":   Color("#14451E"),
+	"Defender": Color("#102050"),
+}
+const ROLE_ICONS = {
+	"Warrior":  "⚔",
+	"Healer":   "✦",
+	"Defender": "◈",
+}
+
 func _load_portrait(portrait_node: TextureRect = null) -> void:
-	## Load character portrait image
+	## Load character portrait image, falling back to a role-colored placeholder
 	var portrait_to_use = portrait_node if portrait_node else portrait
 	if not is_instance_valid(portrait_to_use) or not character_data:
 		if not character_data:
 			push_warning("CharacterEntry: _load_portrait called with null character_data")
 		return
-	
+
 	var texture = null
-	
+
 	# Load texture - use direct path matching for known characters first
 	if character_data.display_name == "Monster Hunter":
 		texture = load("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter.png")
 		if texture == null:
 			texture = load("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter 2.png")
-		if texture:
-			portrait_to_use.texture = texture
-			print("CharacterEntry: Loaded Monster Hunter portrait successfully")
-			return
 	elif character_data.display_name == "Witch":
 		texture = load("res://Path-of-Embers/Art Assets/Witch/Witch.png")
 		if texture == null:
 			texture = load("res://Path-of-Embers/Art Assets/Witch/Witch 2.png")
-		if texture:
-			portrait_to_use.texture = texture
-			print("CharacterEntry: Loaded Witch portrait successfully")
-			return
-	
-	# Fallback to portrait_path if available
-	if character_data.portrait_path != "" and character_data.portrait_path != null:
-		texture = load(character_data.portrait_path)
-		if texture == null:
-			# Try ResourceLoader as fallback
-			texture = ResourceLoader.load(character_data.portrait_path)
-		
-		if texture:
-			portrait_to_use.texture = texture
-			print("CharacterEntry: Loaded portrait from path: %s" % character_data.portrait_path)
-		else:
-			push_warning("CharacterEntry: Failed to load portrait for %s from path: %s" % [character_data.display_name, character_data.portrait_path])
+
+	# Fallback: portrait_path on CharacterData
+	if texture == null and character_data.get("portrait_path") and character_data.portrait_path != "":
+		texture = ResourceLoader.load(character_data.portrait_path)
+
+	if texture:
+		portrait_to_use.texture = texture
 	else:
-		print("CharacterEntry: No portrait path for %s" % character_data.display_name)
+		# No art available — show a role-colored placeholder
+		_setup_placeholder_portrait(portrait_to_use)
+
+func _setup_placeholder_portrait(portrait_node: TextureRect) -> void:
+	## Build a styled placeholder when no portrait art is available
+	if not is_instance_valid(portrait_node) or not character_data:
+		return
+
+	# Hide the (empty) TextureRect
+	portrait_node.visible = false
+
+	var container = portrait_node.get_parent()
+	if not is_instance_valid(container):
+		return
+
+	# Avoid duplicating placeholder if already created
+	if container.has_node("PlaceholderBg"):
+		return
+
+	# Colored background matching the character's role
+	var role_color = ROLE_COLORS.get(character_data.role, Color("#2A2A2A"))
+	var bg = ColorRect.new()
+	bg.name = "PlaceholderBg"
+	bg.color = role_color
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(bg)
+
+	# Initials label (center)
+	var words = character_data.display_name.split(" ")
+	var initials = ""
+	for w in words:
+		if w.length() > 0:
+			initials += w[0].to_upper()
+	var initials_label = Label.new()
+	initials_label.text = initials
+	initials_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	initials_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	initials_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	initials_label.add_theme_font_size_override("font_size", 42)
+	initials_label.modulate = Color(1, 1, 1, 0.75)
+	initials_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.add_child(initials_label)
+
+	# Role icon badge (bottom-right, small circle)
+	var badge = Panel.new()
+	badge.name = "RoleBadge"
+	badge.custom_minimum_size = Vector2(24, 24)
+	badge.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	badge.offset_left = -28
+	badge.offset_top = -28
+	badge.offset_right = -4
+	badge.offset_bottom = -4
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var badge_style = StyleBoxFlat.new()
+	badge_style.bg_color = role_color.lightened(0.3)
+	badge_style.corner_radius_top_left = 12
+	badge_style.corner_radius_top_right = 12
+	badge_style.corner_radius_bottom_left = 12
+	badge_style.corner_radius_bottom_right = 12
+	badge_style.border_color = Color(1, 1, 1, 0.4)
+	badge_style.border_width_left = 1
+	badge_style.border_width_right = 1
+	badge_style.border_width_top = 1
+	badge_style.border_width_bottom = 1
+	badge.add_theme_stylebox_override("panel", badge_style)
+	container.add_child(badge)
+
+	var badge_label = Label.new()
+	badge_label.text = ROLE_ICONS.get(character_data.role, "?")
+	badge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	badge_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	badge_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	badge_label.add_theme_font_size_override("font_size", 12)
+	badge_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.add_child(badge_label)
 
 func _update_quest_info(quest_title: Label = null, quest_desc: Label = null) -> void:
 	## Update quest title and description labels

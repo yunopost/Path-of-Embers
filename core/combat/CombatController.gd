@@ -237,8 +237,12 @@ func start_player_turn():
 	if ResourceManager:
 		ResourceManager.set_energy(current_energy, max_energy)
 
-	# Draw 5 cards
-	RunState.draw_cards(5)
+	# Draw 5 cards + any bonus from Overclocked / DRAW_PER_TURN powers
+	var base_draw := 5
+	var bonus_draw_status = player_stats.get_status(StatusEffectType.DRAW_PER_TURN)
+	if bonus_draw_status != null:
+		base_draw += int(bonus_draw_status)
+	RunState.draw_cards(base_draw)
 
 func can_play_card(card_cost: int, card_data: CardData = null) -> bool:
 	## Check if card can be played based on cost type
@@ -496,10 +500,6 @@ func end_player_turn():
 	if not combat_active:
 		return
 
-	# Fire END_OF_PLAYER_TURN relic hooks (before enemies act — block applies to enemy phase)
-	if RunState and RunState.relic_system:
-		RunState.relic_system.fire_hook("END_OF_PLAYER_TURN", {}, {"combat_controller": self})
-
 	# Fire pet END_OF_PLAYER_TURN hooks
 	if pet_board:
 		pet_board.on_end_player_turn()
@@ -561,9 +561,6 @@ func _on_player_hp_changed(new_hp: int):
 		if min_hp_this_turn < player_start_hp:
 			damage_taken_this_turn = true
 			damage_taken_this_combat = true  # Never resets during combat (Revenant)
-			# Fire ON_PLAYER_DAMAGED relic hooks (once per damage event, not per HP point)
-			if RunState and RunState.relic_system:
-				RunState.relic_system.fire_hook("ON_PLAYER_DAMAGED", {}, {"combat_controller": self})
 
 var previous_block: int = 0  # Track previous block value for block gain detection
 
@@ -654,6 +651,9 @@ func _setup_power_card_effects(_deck_card: DeckCardData, _card_data: CardData, e
 			# Resonant Frame: whenever you gain Block, deal damage to random enemy
 			# Set status to track this power
 			player_stats.apply_status(StatusEffectType.RESONANT_FRAME_ACTIVE, effect.params.get("amount", 1))
+		elif effect.effect_type == EffectType.DRAW_PER_TURN:
+			# Overclocked: draw N extra cards at the start of each turn
+			player_stats.apply_status(StatusEffectType.DRAW_PER_TURN, effect.params.get("amount", 1))
 
 func _pre_enemy_act(enemy) -> void:
 	## Called by EnemyTimeSystem immediately before an enemy executes its intent.
@@ -663,11 +663,7 @@ func _pre_enemy_act(enemy) -> void:
 
 func _on_enemy_acted() -> void:
 	## Called when an enemy performs an action.
-	## Handles: relic WHEN_ENEMY_ACTS hooks, Survey-the-Path block, and pet hooks.
-
-	# Fire WHEN_ENEMY_ACTS relic hooks
-	if RunState and RunState.relic_system:
-		RunState.relic_system.fire_hook("WHEN_ENEMY_ACTS", {}, {"combat_controller": self})
+	## Handles: Survey-the-Path block and pet hooks.
 
 	var block_amount = player_stats.get_status(StatusEffectType.BLOCK_ON_ENEMY_ACT)
 	if block_amount != null and int(block_amount) > 0:
@@ -683,9 +679,7 @@ func get_pet_board() -> PetBoard:
 
 func _on_enemy_died(_enemy: Enemy) -> void:
 	## Called when any enemy's stats.died signal fires.
-	## Fires ON_ENEMY_KILLED relic hooks and quest events.
-	if RunState and RunState.relic_system:
-		RunState.relic_system.fire_hook("ON_ENEMY_KILLED", {}, {"combat_controller": self})
+	## Fires quest events on enemy death.
 	if QuestManager:
 		QuestManager.emit_game_event("ENEMY_KILLED", {})
 
@@ -695,8 +689,6 @@ func end_combat(victory: bool) -> void:
 	if not combat_active:
 		return
 	combat_active = false
-	if victory and RunState and RunState.relic_system:
-		RunState.relic_system.fire_hook("END_OF_COMBAT", {}, {"combat_controller": self})
 	_remove_temporary_cards()
 	combat_ended.emit()
 

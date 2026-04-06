@@ -5,8 +5,8 @@
 
 [sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
 script = ExtResource("2_effectdata")
-effect_type = "heal"
-params = {"amount": 4}
+effect_type = "draw"
+params = {"amount": 2}
 
 [resource]
 script = ExtResource("1_carddata")

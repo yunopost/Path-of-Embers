@@ -343,6 +343,152 @@ Golemancer, Sibyl, Echo, and Mechanist are **support/connector characters** — 
 
 ---
 
+## Pre-Run Screen Design
+
+### Character Select Screen
+
+The character select screen is the player's first strategic decision. Its UI must communicate enough information for an informed party choice while preserving the sense of discovery. The layout is designed around a **scan → inspect → commit** interaction model.
+
+---
+
+#### Layout Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  HEADER: Step wizard (Party → Modifiers → Loadout)  |  Party HP    │
+├──────────────────────────────────┬──────────────────────────────────┤
+│                                  │                                  │
+│  CHARACTER GRID (top ~35%)       │  DETAIL PANEL (right, fixed     │
+│  Grouped by archetype            │  ~320–360px wide)               │
+│  4 cards per archetype row       │                                  │
+│  Compact cards: portrait thumb,  │  • Empty state until a card     │
+│  name, archetype badge,          │    is clicked                   │
+│  stat pips, theme tags           │  • Shows: portrait, name,       │
+│                                  │    archetype, stats, starting   │
+│                                  │    cards (all 5), themes with   │
+│                                  │    descriptions, quest seed,    │
+│                                  │    synergies with party members │
+├──────────────────────────────────┴──────────────────────────────────┤
+│                                                                      │
+│  PARTY DECK PREVIEW (bottom ~55%)                                   │
+│  Three slots appearing in selection order (left → right)           │
+│  Each slot: large splash art + character name + 2 unique cards     │
+│  Empty slots show a dimmed placeholder                              │
+│                                                                      │
+├──────────────────────────────────────────────────────────────────────┤
+│  FOOTER: 3 party portrait slots  |  0/3 selected  |  Back / Next  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+#### Character Grid
+
+Characters are grouped into three labeled archetype rows — Warriors, Healers, Defenders — each with a horizontal rule and a subtitle describing the archetype's strategic role (e.g. *Offense & Tempo*, *Engine & Scaling*, *Survivability & Control*). The archetype row header also shows baseline stats for that class so players can compare HP pools at a glance.
+
+Each character card in the grid is compact and prioritises scannability over detail:
+- Small portrait thumbnail (~42×42px, uses real character art)
+- Character name (Cinzel, prominent)
+- Archetype colour badge
+- Stat pips (STR / DEF / SPR) — small dot array, serves as visual fingerprint
+- Theme tags — pill badges in archetype and neutral colours, no descriptions at this size
+
+**Selection states:**
+- Default: dark card, subtle archetype top-border gradient
+- Hover: border brightens to ember-glow, slight lift
+- Selected: ember-orange border, radial inner glow, amber checkmark badge
+- Locked: greyed out, 50% opacity, lock icon, not clickable
+- Party full (3 selected, this card not one of them): 40% opacity, cursor blocked
+
+Clicking a card **inspects** it (opens the detail panel) — it does not immediately select it. Clicking again, or clicking a dedicated "Add to Party" button in the detail panel, selects it. This prevents accidental selections and gives the detail panel a purpose.
+
+---
+
+#### Detail Panel (Right Side)
+
+Opens when any character card is clicked. Animates in with a staggered fade-up on each section. Width: 320–360px.
+
+**Sections from top to bottom:**
+
+1. **Character header** — Large portrait (64px), name (Cinzel 18px), archetype line, add/remove party button
+2. **Stats block** — STR / DEF / SPR / HP as numeric tiles
+3. **Starting Cards** — All 5 starting cards listed as: `[cost pip] [type stripe] Card Name — italic effect text`. The 3 generic base cards are visually de-emphasised (dimmer); the 2 unique cards are full brightness
+4. **Themes** — Numbered 01 / 02 / 03, each with a short label and one-sentence description. Theme 3 is marked *Advanced* in gold
+5. **Quest Seed** — Single sentence with a left accent border
+6. **Synergies** — Lists named synergies with any currently selected party members. Empty if no party members selected yet. Updates live as the party changes
+
+**The detail panel is the only place full card effect text appears** on this screen. The grid cards and the party deck preview both show condensed versions.
+
+---
+
+#### Party Deck Preview (Bottom Section)
+
+Occupies roughly the lower 55% of the screen, below the character grid. Displays the two most strategically meaningful pieces of each selected character: their **splash art** and their **2 unique signature cards**.
+
+**Behaviour:**
+- Starts empty — three dimmed placeholder slots labelled with slot numbers
+- As the player selects characters (up to 3), each selection fills the next slot left-to-right in selection order
+- Slot fill animation: splash art fades/slides in, then the two card entries appear below it
+- Clicking a filled slot opens that character in the detail panel (right side)
+- The slot does not act as a deselect — removal is handled via the footer party portrait hover-remove or the detail panel button
+
+**Per-slot layout:**
+```
+┌──────────────────────────────────┐
+│                                  │
+│       CHARACTER SPLASH ART       │  ~400–460px tall
+│       (atmospheric, full-body    │
+│        or half-body illustration)│
+│                                  │
+├──────────────────────────────────┤
+│  CHARACTER NAME  (Cinzel)        │
+│  [archetype badge]               │
+├──────────────────────────────────┤
+│  [●] [▌] Unique Card 1 — text   │  cost pip + type stripe format
+│  [●] [▌] Unique Card 2 — text   │
+└──────────────────────────────────┘
+```
+
+**Why only the 2 unique cards (not all 5):**
+The 3 generic base cards (Strike, Heal, Defend) are identical across most characters and add no information to the party-building decision. The 2 unique cards are the character's strategic identity. Showing only those keeps the preview focused and avoids visual repetition (a full 15-card deck would contain 9 nearly identical rows).
+
+---
+
+#### Footer
+
+A slim persistent bar at the bottom of the screen:
+- **Party slot portraits** — 3 small portrait thumbnails (36×36px), dashed border when empty, fills in as characters are selected. Hover reveals an ✕ remove button
+- **Party HP total** — live running total of the selected party's combined base HP. Helps players understand the defensive cost of choosing low-HP characters (e.g. a Witch at 22 HP vs a Hollow at 28 HP is a visible trade-off)
+- **Navigation buttons** — `← Back` (returns to main menu) and `Modifiers →` (advances to difficulty modifier selection). The forward button is disabled until exactly 3 characters are selected
+
+---
+
+#### Step Wizard (Header)
+
+A minimal progress indicator spanning the top-left of the header showing the full pre-run flow:
+
+`① Party  ——  ② Modifiers  ——  ③ Loadout`
+
+Active step uses ember-bright colour; completed steps use dimmed gold; upcoming steps are greyed out. This communicates to the player that character select is one of several decisions before a run begins, preventing confusion about when equipment configuration happens.
+
+---
+
+#### Art Assets Required
+
+| Asset | Count | Notes |
+|---|---|---|
+| Character portraits | 12 | Square, transparent PNG/WebP, 256×256px min. Used at ~42px (grid thumbnail) and ~64px (detail panel). One file per character. |
+| Character splash art | 12 | Large atmospheric illustration, half or full-body. ~500px tall in-engine. Highest-impact asset category. Different from portraits — environment-suggestive, loose composition. |
+| Card type icons | 4 | Attack, Skill, Power, Curse. Deliver at 48–64px source, display at ~12px. High contrast silhouettes only. |
+| Archetype icons | 3 | Warrior, Healer, Defender. Used in row headers and card badges. 24×24px source. |
+| UI texture (tileable) | 1 | Aged parchment or paper, ~256×256px. Tinted per archetype via CSS/shader overlay. |
+| Selected / locked icons | 2 | Checkmark, padlock. Small, consistent with icon style. |
+| Section divider ornaments | 2–3 | Used as horizontal rules in the detail panel. Ember, sigil, or branch motif. |
+
+**Note on portrait vs splash art:** These are two distinct asset categories delivered at different dimensions and compositions. Portrait art is a close bust or face shot optimised to read at 42–64px. Splash art is a large atmospheric piece optimised to fill a ~400–500px panel. Brief artists on both separately.
+
+---
+
 ## Card System
 
 ### Card Types

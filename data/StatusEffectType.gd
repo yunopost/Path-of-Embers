@@ -18,13 +18,14 @@ const PENDING_STRENGTH_IF_NO_DAMAGE = "pending_strength_if_no_damage"
 const RETAIN_BLOCK_THIS_TURN = "retain_block_this_turn"
 const BLOCK_ON_ENEMY_ACT = "block_on_enemy_act"
 const RESONANT_FRAME_ACTIVE = "resonant_frame_active"
+const DRAW_PER_TURN = "draw_per_turn"
 
 # Golemancer - Grand Assembly Power (stacking: each copy adds more HP bonus)
 const GRAND_ASSEMBLY_ACTIVE = "grand_assembly_active"
 
 # Get all stacking status types
 static func get_stacking_statuses() -> Array[String]:
-	return [STRENGTH, DEXTERITY, FAITH, GRAND_ASSEMBLY_ACTIVE]
+	return [STRENGTH, DEXTERITY, FAITH, GRAND_ASSEMBLY_ACTIVE, DRAW_PER_TURN]
 
 # Get all pending status types (handled at specific times)
 static func get_pending_statuses() -> Array[String]:
@@ -51,6 +52,7 @@ static func get_all_types() -> Array[String]:
 		BLOCK_ON_ENEMY_ACT,
 		RESONANT_FRAME_ACTIVE,
 		GRAND_ASSEMBLY_ACTIVE,
+		DRAW_PER_TURN,
 	]
 
 # Validate if a string is a valid status type

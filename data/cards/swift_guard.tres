@@ -5,14 +5,14 @@
 
 [sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
 script = ExtResource("2_effectdata")
-effect_type = "block"
-params = {"amount": 4}
+effect_type = "draw"
+params = {"amount": 1}
 
 [resource]
 script = ExtResource("1_carddata")
 id = "swift_guard"
 name = "Swift Guard"
-cost = 1
+cost = 0
 rarity = 0
 card_type = 1
 targeting_mode = 4

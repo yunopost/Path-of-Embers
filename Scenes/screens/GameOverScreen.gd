@@ -113,8 +113,8 @@ func _build_ui() -> void:
 
 func _pick_death_message() -> String:
 	# Try per-character message first
-	if RunState:
-		for char_id in RunState.party:
+	if PartyManager:
+		for char_id in PartyManager.party_ids:
 			if DEATH_MESSAGES_CHARACTER.has(char_id):
 				var msgs: Array = DEATH_MESSAGES_CHARACTER[char_id]
 				if not msgs.is_empty():

@@ -22,7 +22,7 @@ func _ready():
 	# Connect RunState signals for debounced saves (deck/relics/buffs only)
 	if RunState:
 		RunState.deck_changed.connect(func(): request_save("deck_changed"))
-		RunState.relics_changed.connect(func(): request_save("relics_changed"))
+		RunState.equipment_changed.connect(func(): request_save("equipment_changed"))
 		RunState.buffs_changed.connect(func(): request_save("buffs_changed"))
 		# Optional: pile changes (can be noisy but fine with debounce)
 		RunState.hand_changed.connect(func(): request_save("piles_changed"))
