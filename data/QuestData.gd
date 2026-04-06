@@ -11,5 +11,10 @@ class_name QuestData
 @export var params: Dictionary = {}  # Additional parameters for quest logic
 @export var is_complete: bool = false
 
+## Reward granted immediately on quest completion.
+## Keys (all optional): "gold": int, "upgrade_count": int, "heal_amount": int, "relic_id": String
+@export var reward: Dictionary = {}
+
 func _init():
 	params = {}
+	reward = {}

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EquipmentData.gd" id="1_equipdata"]
+
+[resource]
+script = ExtResource("1_equipdata")
+id = "dragonscale_mail"
+name = "Dragonscale Mail"
+description = "Scales from the first dragon. +15 HP, +2 DEF."
+slot_type = 1
+rarity = 2
+stat_modifiers = {"hp": 15, "def": 2}
+shop_price = 160

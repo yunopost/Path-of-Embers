@@ -50,18 +50,20 @@ func _ready():
 	if not is_instance_valid(party_hud):
 		push_warning("UIRoot: PartyHUD not found. Bar width syncing will be disabled.")
 	
-	# Connect to RunState signals (with safety checks)
-	if RunState:
-		if not RunState.hp_changed.is_connected(_on_hp_changed):
-			RunState.hp_changed.connect(_on_hp_changed)
-		if not RunState.block_changed.is_connected(_on_block_changed):
-			RunState.block_changed.connect(_on_block_changed)
-		if not RunState.gold_changed.is_connected(_on_gold_changed):
-			RunState.gold_changed.connect(_on_gold_changed)
-		if not RunState.node_position_changed.is_connected(_on_node_position_changed):
-			RunState.node_position_changed.connect(_on_node_position_changed)
-		if not RunState.party_changed.is_connected(_on_party_changed_ui):
-			RunState.party_changed.connect(_on_party_changed_ui)
+	# Connect to manager signals (with safety checks)
+	if ResourceManager:
+		if not ResourceManager.hp_changed.is_connected(_on_hp_changed):
+			ResourceManager.hp_changed.connect(_on_hp_changed)
+		if not ResourceManager.block_changed.is_connected(_on_block_changed):
+			ResourceManager.block_changed.connect(_on_block_changed)
+		if not ResourceManager.gold_changed.is_connected(_on_gold_changed):
+			ResourceManager.gold_changed.connect(_on_gold_changed)
+	if MapManager:
+		if not MapManager.node_position_changed.is_connected(_on_node_position_changed):
+			MapManager.node_position_changed.connect(_on_node_position_changed)
+	if PartyManager:
+		if not PartyManager.party_changed.is_connected(_on_party_changed_ui):
+			PartyManager.party_changed.connect(_on_party_changed_ui)
 	
 	# Connect buttons (with safety check)
 	if is_instance_valid(map_button):
@@ -101,16 +103,22 @@ func _ready():
 
 func _load_popups():
 	# Load Settings popup
-	var settings_scene = load("res://Path-of-Embers/Scenes/UI/SettingsPopup.tscn")
+	var settings_scene = load("res://Path-of-Embers/scenes/ui/SettingsPopup.tscn")
 	settings_popup = settings_scene.instantiate()
 	add_child(settings_popup)
 	settings_popup.visible = false
+	# Connect popup closed signal
+	if settings_popup.has_signal("popup_closed"):
+		settings_popup.popup_closed.connect(_on_popup_closed)
 	
 	# Load Deck popup
-	var deck_scene = load("res://Path-of-Embers/Scenes/UI/DeckViewPopup.tscn")
+	var deck_scene = load("res://Path-of-Embers/scenes/ui/DeckViewPopup.tscn")
 	deck_popup = deck_scene.instantiate()
 	add_child(deck_popup)
 	deck_popup.visible = false
+	# Connect popup closed signal
+	if deck_popup.has_signal("popup_closed"):
+		deck_popup.popup_closed.connect(_on_popup_closed)
 
 func _update_all_ui():
 	_on_hp_changed()
@@ -119,13 +127,13 @@ func _update_all_ui():
 	_on_node_position_changed()
 
 func _on_hp_changed():
-	if is_instance_valid(hp_label) and RunState:
-		hp_label.text = "%d/%d" % [RunState.current_hp, RunState.max_hp]
+	if is_instance_valid(hp_label) and ResourceManager:
+		hp_label.text = "%d/%d" % [ResourceManager.current_hp, ResourceManager.max_hp]
 	_update_bar_fills()
 
 func _on_block_changed():
-	if is_instance_valid(block_label) and RunState:
-		block_label.text = str(RunState.block)
+	if is_instance_valid(block_label) and ResourceManager:
+		block_label.text = str(ResourceManager.block)
 	_update_bar_fills()
 
 func _on_party_changed_ui():
@@ -189,28 +197,28 @@ func _update_bar_fills():
 	
 	# HP fill (left -> right)
 	var hp_ratio = 0.0
-	if RunState and RunState.max_hp > 0:
-		hp_ratio = float(RunState.current_hp) / float(RunState.max_hp)
+	if ResourceManager and ResourceManager.max_hp > 0:
+		hp_ratio = float(ResourceManager.current_hp) / float(ResourceManager.max_hp)
 	hp_ratio = clamp(hp_ratio, 0.0, 1.0)
 	hp_fill.position = Vector2(0, 0)
 	hp_fill.size = Vector2(w * hp_ratio, h)
 	
 	# Block overlay (right -> left), sized relative to max_hp
 	var block_ratio = 0.0
-	if RunState and RunState.max_hp > 0:
-		block_ratio = float(RunState.block) / float(RunState.max_hp)
+	if ResourceManager and ResourceManager.max_hp > 0:
+		block_ratio = float(ResourceManager.block) / float(ResourceManager.max_hp)
 	block_ratio = clamp(block_ratio, 0.0, 1.0)
 	var bw = w * block_ratio
 	block_overlay.size = Vector2(bw, h)
 	block_overlay.position = Vector2(w - bw, 0)
 
 func _on_gold_changed():
-	if is_instance_valid(gold_label) and RunState:
-		gold_label.text = str(RunState.gold)
+	if is_instance_valid(gold_label) and ResourceManager:
+		gold_label.text = str(ResourceManager.gold)
 
 func _on_node_position_changed():
-	if is_instance_valid(node_progress_label) and RunState:
-		node_progress_label.text = "Node: %d" % RunState.node_position
+	if is_instance_valid(node_progress_label) and MapManager:
+		node_progress_label.text = "Node: %d" % MapManager.node_position
 
 func _on_map_button_pressed():
 	ScreenManager.go_to_map()
@@ -235,21 +243,26 @@ func close_popup(popup_name: String):
 	elif popup_name == "deck" and deck_popup:
 		deck_popup.visible = false
 
+func _on_popup_closed(popup_name: String):
+	## Handle popup closed signal from child popups
+	close_popup(popup_name)
+
 func _setup_debug_info():
 	## Setup debug info label (debug builds only)
 	# Debug label is now in the scene at TopCenter/DebugLabel
 	# Connect to signals to update debug info
+	if PartyManager:
+		if not PartyManager.party_changed.is_connected(_update_debug_info):
+			PartyManager.party_changed.connect(_update_debug_info)
 	if RunState:
-		if not RunState.party_changed.is_connected(_update_debug_info):
-			RunState.party_changed.connect(_update_debug_info)
 		if not RunState.deck_changed.is_connected(_update_debug_info):
 			RunState.deck_changed.connect(_update_debug_info)
-		_update_debug_info()
+	_update_debug_info()
 
 func _update_debug_info():
 	## Update debug info display
-	if is_instance_valid(debug_label) and OS.is_debug_build() and RunState:
-		var party_str = ", ".join(RunState.party_ids) if RunState.party_ids.size() > 0 else "None"
-		var deck_count = RunState.get_deck_size() if RunState.has_method("get_deck_size") else 0
+	if is_instance_valid(debug_label) and OS.is_debug_build():
+		var party_str = ", ".join(PartyManager.party_ids) if PartyManager and PartyManager.party_ids.size() > 0 else "None"
+		var deck_count = RunState.get_deck_size() if RunState and RunState.has_method("get_deck_size") else 0
 		debug_label.text = "Party: [%s] | Deck: %d" % [party_str, deck_count]
 		debug_label.visible = true

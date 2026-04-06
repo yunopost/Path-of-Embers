@@ -18,21 +18,19 @@ static func build_rewards_for_node(node: MapNodeData) -> RewardBundle:
 	var is_elite_node = node.node_type == MapNodeData.NodeType.ELITE
 	
 	if has_boss_relic:
-		# Boss pool (B): boss relic + 3 card choices + gold + transcendence upgrade
-		bundle.relic_id = "relic_boss_01"  # Placeholder
+		# Boss pool (B): 3 card choices + gold + transcendence upgrade + 12 pts
 		bundle.card_choices = _generate_card_choices(3, node.node_type)
 		bundle.gold = 50
 		bundle.upgrade_count = 1
+		bundle.upgrade_points = 12
 		bundle.is_transcendence_upgrade = true  # Special flag for transcendence upgrades
 		return bundle
-	
+
 	if is_elite_node:
-		# Elite pool (E): guaranteed relic + 3 card choices + upgrade
-		# Elite nodes always have these rewards regardless of flags
-		bundle.relic_id = "relic_elite_01"  # Placeholder
+		# Elite pool (E): 3 card choices + upgrade + 6 pts
 		bundle.card_choices = _generate_card_choices(3, node.node_type)
 		bundle.upgrade_count = 1
-		# Elite nodes may also have gold flag
+		bundle.upgrade_points = 6
 		if node.reward_flags.has(MapNodeData.RewardType.GOLD):
 			bundle.gold = 25
 		return bundle
@@ -46,6 +44,19 @@ static func build_rewards_for_node(node: MapNodeData) -> RewardBundle:
 	if node.reward_flags.has(MapNodeData.RewardType.UPGRADE):
 		bundle.upgrade_count = 1
 	
+	# Upgrade points by node type (Phase 4) — always granted regardless of reward_flags
+	match node.node_type:
+		MapNodeData.NodeType.FIGHT:
+			bundle.upgrade_points = 2
+		MapNodeData.NodeType.ELITE:
+			bundle.upgrade_points = 6   # also set above for elite pool path
+		MapNodeData.NodeType.BOSS:
+			bundle.upgrade_points = 12  # also set above for boss pool path
+		MapNodeData.NodeType.FINAL_BOSS:
+			bundle.upgrade_points = 12
+		_:
+			bundle.upgrade_points = 2
+
 	# G = GOLD: gold amount
 	if node.reward_flags.has(MapNodeData.RewardType.GOLD):
 		# Gold amount varies by node type
@@ -54,14 +65,10 @@ static func build_rewards_for_node(node: MapNodeData) -> RewardBundle:
 				bundle.gold = 10
 			MapNodeData.NodeType.ELITE:
 				bundle.gold = 25
-			MapNodeData.NodeType.BOSS:
+			MapNodeData.NodeType.BOSS, MapNodeData.NodeType.FINAL_BOSS:
 				bundle.gold = 50
 			_:
 				bundle.gold = 10
-	
-	# R = RELIC: regular relic
-	if node.reward_flags.has(MapNodeData.RewardType.RELIC):
-		bundle.relic_id = "relic_01"  # Placeholder
 	
 	return bundle
 

@@ -16,10 +16,10 @@ func _ready():
 	# Initialize map generator
 	map_generator = MapGenerator.new()
 	
-	# Connect to RunState signals
-	RunState.map_changed.connect(_on_map_changed)
-	RunState.current_node_changed.connect(_on_current_node_changed)
-	RunState.available_next_node_ids_changed.connect(_on_available_nodes_changed)
+	# Connect to MapManager signals
+	MapManager.map_changed.connect(_on_map_changed)
+	MapManager.current_node_changed.connect(_on_current_node_changed)
+	MapManager.available_next_node_ids_changed.connect(_on_available_nodes_changed)
 	
 	# Setup scroll container
 	if scroll_container:
@@ -37,9 +37,9 @@ func initialize():
 	refresh_from_state()
 
 func refresh_from_state():
-	## Refresh UI from RunState (architecture rule 11.2)
+	## Refresh UI from MapManager (architecture rule 11.2)
 	# Generate map if none exists
-	if not RunState.current_map:
+	if not MapManager.current_map:
 		_generate_map()
 	
 	# Render map
@@ -116,20 +116,20 @@ func _setup_debug_ui():
 
 func _generate_map():
 	## Generate a new map
-	var map_data = map_generator.generate_map(RunState.act)
-	RunState.set_map_data(map_data)
-	RunState.current_node_id = ""
-	RunState.node_position = 0
+	var map_data = map_generator.generate_map(MapManager.act)
+	MapManager.set_map_data(map_data)
+	MapManager.set_current_node("")
+	MapManager.set_node_position(0)
 	_update_available_nodes()
 
 func _reset_progress():
 	## Reset map progress (debug tool)
-	if RunState.current_map:
+	if MapManager.current_map:
 		# Mark all nodes as not completed
-		for node in RunState.current_map.nodes.values():
+		for node in MapManager.current_map.nodes.values():
 			node.is_completed = false
-		RunState.current_node_id = ""
-		RunState.node_position = 0
+		MapManager.set_current_node("")
+		MapManager.set_node_position(0)
 		_update_available_nodes()
 		_render_map()
 
@@ -144,7 +144,7 @@ func _show_reward_pool_popup():
 
 func _create_reward_pool_popup():
 	## Create the reward pool popup instance
-	var popup_scene = load("res://Path-of-Embers/Scenes/UI/RewardPoolPopup.tscn")
+	var popup_scene = load("res://Path-of-Embers/scenes/ui/RewardPoolPopup.tscn")
 	if popup_scene:
 		var popup = popup_scene.instantiate()
 		add_child(popup)
@@ -153,22 +153,22 @@ func _create_reward_pool_popup():
 		push_warning("MapScreen: Could not load RewardPoolPopup.tscn")
 
 func _update_available_nodes():
-	## Update which nodes are available for selection (calls RunState method)
-	RunState._update_available_nodes()
+	## Update which nodes are available for selection
+	# MapManager automatically updates available nodes when current_node changes
 	_update_node_states()
 
 func _update_node_states():
 	## Update visual states of all node widgets
 	if OS.is_debug_build():
-		print("MapScreen: _update_node_states called, available nodes: ", RunState.available_next_node_ids)  # Debug
+		print("MapScreen: _update_node_states called, available nodes: ", MapManager.available_next_node_ids)  # Debug
 	
 	for node_id in node_widgets:
 		var widget = node_widgets[node_id]
 		if not is_instance_valid(widget):
 			continue
 		
-		var is_selectable = node_id in RunState.available_next_node_ids
-		var is_selected = node_id == RunState.current_node_id
+		var is_selectable = node_id in MapManager.available_next_node_ids
+		var is_selected = node_id == MapManager.current_node_id
 		
 		if OS.is_debug_build() and is_selectable:
 			print("MapScreen: Setting node ", node_id, " as selectable")  # Debug
@@ -177,7 +177,7 @@ func _update_node_states():
 		widget.set_selected(is_selected)
 	
 	# Rebuild connection data with updated selectability
-	if RunState.current_map:
+	if MapManager.current_map:
 		_build_connection_data_for_existing_nodes()
 	
 	# Trigger redraw of connections
@@ -188,16 +188,16 @@ func _build_connection_data_for_existing_nodes():
 	
 	# Build selectable set for fast lookup
 	var selectable_set: Dictionary = {}
-	for node_id in RunState.available_next_node_ids:
+	for node_id in MapManager.available_next_node_ids:
 		selectable_set[node_id] = true
 	
-	var current_node_id = RunState.current_node_id
+	var current_node_id = MapManager.current_node_id
 	
 	connection_data.clear()
 	
 	# Build connection data for each edge
-	for from_node_id in RunState.current_map.nodes:
-		var from_node = RunState.current_map.nodes[from_node_id]
+	for from_node_id in MapManager.current_map.nodes:
+		var from_node = MapManager.current_map.nodes[from_node_id]
 		var from_widget = node_widgets.get(from_node_id)
 		
 		if not from_widget or not is_instance_valid(from_widget):
@@ -248,7 +248,7 @@ func _render_map():
 	# Clear existing widgets and lines
 	_clear_map()
 	
-	if not RunState.current_map:
+	if not MapManager.current_map:
 		push_warning("MapScreen: No map to render")
 		return
 	
@@ -265,8 +265,8 @@ func _render_map():
 	
 	# Find max lanes (columns) across all rows
 	var max_cols = 0
-	for row in range(RunState.current_map.total_rows):
-		var row_nodes = RunState.current_map.get_nodes_in_row(row)
+	for row in range(MapManager.current_map.total_rows):
+		var row_nodes = MapManager.current_map.get_nodes_in_row(row)
 		max_cols = max(max_cols, row_nodes.size())
 	
 	# Calculate step spacing (fixed for scrolling)
@@ -279,8 +279,8 @@ func _render_map():
 	var node_positions_by_id: Dictionary = {}
 	
 	# First pass: calculate raw positions
-	for row in range(RunState.current_map.total_rows):
-		var row_nodes = RunState.current_map.get_nodes_in_row(row)
+	for row in range(MapManager.current_map.total_rows):
+		var row_nodes = MapManager.current_map.get_nodes_in_row(row)
 		if row_nodes.is_empty():
 			continue
 		
@@ -362,13 +362,13 @@ func _render_map():
 					print("MapScreen: viewport size: ", scroll_container.size)
 					print("MapScreen: map_root min size: ", map_root.custom_minimum_size, " actual: ", map_root.size)
 					print("MapScreen: h_scroll max: ", max_scroll)
-					print("MapScreen: start nodes count: ", RunState.current_map.start_node_ids.size())
+					print("MapScreen: start nodes count: ", MapManager.current_map.start_node_ids.size())
 	
 		# Second pass: create widgets with positioned locations
 		for node_id in node_positions_by_id:
 			var raw_pos = node_positions_by_id[node_id]
 			var final_pos = raw_pos + Vector2(offset_x, offset_y)
-			var node = RunState.current_map.get_node(node_id)
+			var node = MapManager.current_map.get_node(node_id)
 			if node:
 				await _create_node_widget(node, final_pos)
 
@@ -421,25 +421,25 @@ func _build_connection_data(_offset_x: float = 0.0, _offset_y: float = 0.0, _nod
 	## Build connection data for rendering (stored for _draw_all_connections)
 	connection_data.clear()
 	
-	if not RunState.current_map:
+	if not MapManager.current_map:
 		return
 	
 	# Build selectable set for fast lookup
 	var selectable_set: Dictionary = {}
-	for node_id in RunState.available_next_node_ids:
+	for node_id in MapManager.available_next_node_ids:
 		selectable_set[node_id] = true
 	
-	var current_node_id = RunState.current_node_id
+	var current_node_id = MapManager.current_node_id
 	
 	# Build connection data for each edge
 	var widgets_found = 0
 	var widgets_missing = 0
 	
 	if OS.is_debug_build():
-		print("MapScreen._build_connection_data: node_widgets.size()=", node_widgets.size(), ", map.nodes.size()=", RunState.current_map.nodes.size())
+		print("MapScreen._build_connection_data: node_widgets.size()=", node_widgets.size(), ", map.nodes.size()=", MapManager.current_map.nodes.size())
 	
-	for from_node_id in RunState.current_map.nodes:
-		var from_node = RunState.current_map.nodes[from_node_id]
+	for from_node_id in MapManager.current_map.nodes:
+		var from_node = MapManager.current_map.nodes[from_node_id]
 		var from_widget = node_widgets.get(from_node_id)
 		
 		if not from_widget or not is_instance_valid(from_widget):
@@ -530,33 +530,56 @@ func _clear_map():
 func _on_node_clicked(node_id: String):
 	## Handle node selection
 	print("MapScreen: Node clicked: ", node_id)  # Debug
-	if node_id not in RunState.available_next_node_ids:
+	if node_id not in MapManager.available_next_node_ids:
 		print("MapScreen: Node not in available_next_node_ids")  # Debug
 		return  # Invalid selection
 	
 	# Get node data
-	var node = RunState.current_map.get_node(node_id)
+	var node = MapManager.current_map.get_node(node_id)
 	if not node:
 		return
 	
-	# Boss gate: check if all quests are complete before allowing boss entry
-	if node.node_type == MapNodeData.NodeType.BOSS:
-		if not RunState.are_all_party_quests_complete():
+	# Boss gate: check if all quests are complete before allowing boss/final-boss entry
+	if node.node_type == MapNodeData.NodeType.BOSS or node.node_type == MapNodeData.NodeType.FINAL_BOSS:
+		if not QuestManager.are_all_party_quests_complete():
 			_show_boss_gate_popup()
 			return  # Block entry
 	
 	print("MapScreen: Setting current node to: ", node_id)  # Debug
 	# Set current node
-	RunState.set_current_node(node_id)
+	MapManager.set_current_node(node_id)
 	
 	# Transition to appropriate screen based on node type
 	match node.node_type:
-		MapNodeData.NodeType.FIGHT, MapNodeData.NodeType.ELITE, MapNodeData.NodeType.BOSS:
+		MapNodeData.NodeType.FIGHT, MapNodeData.NodeType.ELITE, \
+		MapNodeData.NodeType.BOSS, MapNodeData.NodeType.FINAL_BOSS:
 			ScreenManager.go_to_combat({})
 		MapNodeData.NodeType.SHOP:
 			ScreenManager.go_to_shop({})
-		MapNodeData.NodeType.ENCOUNTER:
+		MapNodeData.NodeType.ENCOUNTER, MapNodeData.NodeType.STORY:
 			ScreenManager.go_to_encounter({})
+		MapNodeData.NodeType.REST:
+			_show_rest_dialog()
+
+func _show_rest_dialog() -> void:
+	## Show the camp rest dialog — heal 30% max HP on confirm.
+	var heal_amount: int = int(ResourceManager.max_hp * 0.30) if ResourceManager else 0
+	var dialog := AcceptDialog.new()
+	dialog.title = "Camp"
+	dialog.dialog_text = "Rest here and recover %d HP?" % heal_amount
+	dialog.add_cancel_button("Leave")
+	dialog.confirmed.connect(func():
+		if ResourceManager:
+			ResourceManager.heal(heal_amount)
+		MapManager.mark_current_node_completed()
+		if AutoSaveManager:
+			AutoSaveManager.force_save("rest_node")
+		dialog.queue_free()
+		_render_map()
+	)
+	dialog.canceled.connect(func(): dialog.queue_free())
+	add_child(dialog)
+	dialog.popup_centered()
 
 func _show_boss_gate_popup():
 	## Show popup blocking boss entry when quests are incomplete

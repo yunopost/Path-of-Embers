@@ -3,27 +3,12 @@ extends Node
 ## Autoload singleton - Source of truth for game state
 ## Emits signals when values change for reactive UI updates
 
-signal party_changed
 signal deck_changed
-signal relics_changed
-signal gold_changed
-signal act_changed
-signal map_changed
-signal node_position_changed
-signal current_node_changed
-signal available_next_node_ids_changed
-signal quests_changed
-signal hp_changed
-signal block_changed
-signal energy_changed
 signal buffs_changed
 signal hand_changed
 signal draw_pile_changed
 signal discard_pile_changed
-
-# Party (3 characters)
-var party: Array = []  # Will contain character data (legacy, kept for compatibility)
-var party_ids: Array[String] = []  # Array of 3 character IDs
+signal equipment_changed
 
 # Deck
 var deck: Dictionary = {}  # instance_id -> DeckCardData (authoritative registry)
@@ -33,30 +18,8 @@ var deck_order: Array[String] = []  # Stable ordering for deck view / upgrades U
 # Models (architecture rule 4.1, 8.1)
 var deck_model: DeckModel = null
 
-# Relics
-var relics: Array = []  # Will contain relic data
-
-# Resources
-var gold: int = 0
-var current_hp: int = 50
-var max_hp: int = 50
-var block: int = 0
-var energy: int = 3
-var max_energy: int = 3
-
 # Combat status effects
 var haste_next_card: bool = false  # Next card played doesn't advance enemy timer
-
-# Map/Progress
-var act: int = 1
-var map: String = ""
-var node_position: int = 0  # How many nodes progressed (0 = start)
-var current_map: MapData = null  # Current map for the floor
-var current_node_id: String = ""  # ID of currently selected node
-var available_next_node_ids: Array[String] = []  # IDs of nodes that can be selected next
-
-# Quests
-var quests: Dictionary = {}  # Dictionary keyed by character_id, value is QuestState
 
 # Reward pool
 var reward_card_pool: Array[CardData] = []  # Merged reward card pool from selected characters
@@ -73,171 +36,39 @@ var buffs: Array = []  # Will contain buff/debuff data
 # Settings
 var tap_to_play: bool = false
 
+# Equipment state (Phase 6)
+## Per-character equipped items: { "char_id": { "SLOT_NAME": "equipment_id" } }
+var equipment_slots: Dictionary = {}
+## Items in the current run stash (max 9 equipment_ids)
+var run_stash: Array[String] = []
+const MAX_STASH_SIZE: int = 9
+
+# Boss Rush state (Phase 8)
+var is_boss_rush: bool = false          ## True while in a Boss Rush challenge
+var boss_rush_boss_id: String = ""      ## Which boss is being challenged
+## Combat stats accumulated during a Boss Rush fight for leaderboard scoring.
+## Keys: start_time (float), enemy_total_hp (int), cards_played (int)
+var boss_rush_stats: Dictionary = {}
+
 func _ready():
 	# Initialize with empty values (will be set by character selection)
-	party = []
-	party_ids = []
 	deck = {}
 	deck_order = []
-	relics = []
-	gold = 0
-	current_hp = 50
-	max_hp = 50
-	block = 0
-	energy = 3
-	max_energy = 3
 	haste_next_card = false
-	act = 1
-	map = "Act1"
-	node_position = 0
-	current_map = null
-	current_node_id = ""
-	available_next_node_ids = []
-	quests = {}
 	reward_card_pool = []
 	rare_pity_counter = -2
 	buffs = []
+	equipment_slots = {}
+	run_stash = []
 	
-	# Initialize models
+	# Initialize systems
 	deck_model = DeckModel.new()
-	
-	# Connect model signals to RunState signals for backward compatibility
+
+	# Connect model signals to RunState signals
 	deck_model.deck_changed.connect(func(): deck_changed.emit())
 	deck_model.draw_pile_changed.connect(func(): draw_pile_changed.emit())
 	deck_model.hand_changed.connect(func(): hand_changed.emit())
 	deck_model.discard_pile_changed.connect(func(): discard_pile_changed.emit())
-	
-	# Note: CombatModel removed - CombatController manages combat state directly
-
-func set_gold(value: int):
-	if gold != value:
-		gold = value
-		gold_changed.emit()
-
-func set_hp(current: int, maximum: int = -1):
-	if current_hp != current:
-		current_hp = current
-		if maximum > 0:
-			max_hp = maximum
-		hp_changed.emit()
-
-func set_block(value: int):
-	if block != value:
-		block = value
-		block_changed.emit()
-
-func set_energy(current: int, maximum: int = -1):
-	if energy != current:
-		energy = current
-		if maximum > 0:
-			max_energy = maximum
-		energy_changed.emit()
-
-func reset_block():
-	## Called at start of each player turn
-	set_block(0)
-
-func set_node_position(value: int):
-	if node_position != value:
-		node_position = value
-		node_position_changed.emit()
-
-func set_act(value: int):
-	if act != value:
-		act = value
-		act_changed.emit()
-
-func set_map_data(map_data: MapData):
-	## Set the current map data
-	if current_map != map_data:
-		current_map = map_data
-		map_changed.emit()
-		_update_available_nodes()
-
-func set_current_node(node_id: String):
-	## Set the currently selected node
-	## Note: Does NOT mark node as completed - use mark_current_node_completed() after encounter finishes
-	if current_node_id != node_id:
-		current_node_id = node_id
-		
-		# Update available next nodes
-		_update_available_nodes()
-		
-		# Update node position
-		if current_map and current_map.nodes.has(current_node_id):
-			var node = current_map.nodes[current_node_id]
-			node_position = node.row
-		
-		current_node_changed.emit(node_id)
-		node_position_changed.emit()
-
-func get_current_node_type() -> int:
-	## Get the current node's type (MapNodeData.NodeType)
-	## Returns FIGHT as fallback if node not found
-	if not current_map or current_node_id.is_empty():
-		return MapNodeData.NodeType.FIGHT
-	
-	var node = current_map.get_node(current_node_id)
-	if node:
-		return node.node_type
-	
-	return MapNodeData.NodeType.FIGHT
-
-func mark_current_node_completed() -> void:
-	## Mark the current node as completed and update available nodes
-	## This is called after combat ends, separate from set_current_node
-	## Emits NODE_COMPLETED event for quest system
-	if not current_map or current_node_id.is_empty():
-		return
-	
-	var node = current_map.get_node(current_node_id)
-	if node:
-		node.is_completed = true
-		_update_available_nodes()
-		# Emit map_changed to refresh map display
-		map_changed.emit()
-		
-		# Emit NODE_COMPLETED event for quest system
-		emit_game_event("NODE_COMPLETED", {
-			"node_id": current_node_id,
-			"node_type": node.node_type,
-			"row": node.row
-		})
-		
-		# Force save after node completion
-		if AutoSaveManager:
-			AutoSaveManager.force_save("node_completed")
-
-func _update_available_nodes():
-	## Update the list of available next nodes based on current selection
-	var old_available = available_next_node_ids.duplicate()
-	available_next_node_ids.clear()
-	
-	if not current_map:
-		# No map - make start nodes available
-		available_next_node_ids_changed.emit([])
-		return
-	
-	if current_node_id.is_empty():
-		# No node selected - start nodes are available
-		available_next_node_ids = current_map.start_node_ids.duplicate()
-	else:
-		# Get nodes connected from current node
-		var current_node = current_map.get_node(current_node_id)
-		if current_node:
-			available_next_node_ids = current_node.connected_to.duplicate()
-	
-	# Filter out completed nodes (can't go back)
-	available_next_node_ids = available_next_node_ids.filter(func(id): return not current_map.get_node(id).is_completed)
-	
-	# Emit signal if changed
-	if available_next_node_ids != old_available:
-		available_next_node_ids_changed.emit(available_next_node_ids)
-
-func set_map(value: String):
-	if map != value:
-		map = value
-		map_changed.emit()
 
 func add_card_to_deck(card_id: String, owner_character_id: String = "", upgrades: Array[String] = [], transcended: bool = false, transcendent_card_id: String = ""):
 	## Add a card to the deck with optional upgrades and owner
@@ -270,13 +101,6 @@ func add_card_to_deck(card_id: String, owner_character_id: String = "", upgrades
 	draw_pile_changed.emit()
 	
 	deck_changed.emit()
-
-func remove_card_from_deck(index: int):
-	## DEPRECATED: Use remove_card_instance(instance_id) instead
-	## Legacy method - converts index to instance_id and calls remove_card_instance
-	if index >= 0 and index < deck_order.size():
-		var instance_id = deck_order[index]
-		remove_card_instance(instance_id)
 
 func remove_card_instance(instance_id: String) -> void:
 	## Remove a card instance from the deck and all piles
@@ -364,15 +188,6 @@ func get_discard_pile_count() -> int:
 func get_hand_size() -> int:
 	return deck_model.get_hand_size()
 
-func set_party(character_ids: Array[String]):
-	## Set the party to the given character IDs (must be exactly 3)
-	if character_ids.size() != 3:
-		push_error("Party must contain exactly 3 characters, got %d" % character_ids.size())
-		return
-	party_ids = character_ids.duplicate()
-	party = character_ids.duplicate()  # Keep legacy party for compatibility
-	party_changed.emit()
-
 func generate_starter_deck(character_data_list: Array[CharacterData]):
 	## Generate starter deck from selected characters
 	## character_data_list must be exactly 3 CharacterData resources
@@ -383,7 +198,14 @@ func generate_starter_deck(character_data_list: Array[CharacterData]):
 	deck.clear()
 	deck_order.clear()
 	reward_card_pool.clear()
-	
+
+	# Seed shared HP pool from sum of all party members' hp_base
+	var party_max_hp: int = 0
+	for char_data in character_data_list:
+		party_max_hp += char_data.hp_base
+	if ResourceManager:
+		ResourceManager.reset_resources_for_party(party_max_hp)
+
 	# Generate deck: 3 generic + 2 unique per character = 15 cards total
 	for char_data in character_data_list:
 		# Add 3 generic cards based on role
@@ -422,11 +244,22 @@ func generate_starter_deck(character_data_list: Array[CharacterData]):
 			deck[instance_id] = deck_card
 			deck_order.append(instance_id)
 		
+		# Inject cards from equipped items (Phase 6)
+		var char_equip_slots: Dictionary = equipment_slots.get(char_data.id, {})
+		for slot_name in char_equip_slots:
+			var equipment_id: String = char_equip_slots[slot_name]
+			if equipment_id.is_empty():
+				continue
+			var equip_data = DataRegistry.get_equipment(equipment_id) if DataRegistry else null
+			if equip_data:
+				for card_id in equip_data.injected_cards:
+					add_card_to_deck(card_id, char_data.id)
+
 		# Merge reward card pool (22 cards per character = 66 total)
 		for reward_card in char_data.reward_card_pool:
 			if reward_card:
 				reward_card_pool.append(reward_card)
-	
+
 	# Initialize deck piles
 	_initialize_deck_piles()
 	deck_changed.emit()
@@ -434,64 +267,19 @@ func generate_starter_deck(character_data_list: Array[CharacterData]):
 	# Initialize rare pity counter (starts at -2%)
 	rare_pity_counter = -2
 
-func initialize_quests(character_data_list: Array[CharacterData]):
-	## Initialize quest state for selected characters
-	## character_data_list must be exactly 3 CharacterData resources
-	## Creates QuestState objects from QuestData templates
-	if character_data_list.size() != 3:
-		push_error("initialize_quests requires exactly 3 characters, got %d" % character_data_list.size())
-		return
-	
-	quests.clear()
-	
-	for char_data in character_data_list:
-		if char_data.quest:
-			# Create QuestState from QuestData (immutable template)
-			var quest_state = QuestState.new(
-				char_data.quest.id,
-				char_data.id,
-				char_data.quest.title,
-				char_data.quest.description,
-				char_data.quest.progress_max,
-				char_data.quest.tracking_type,
-				char_data.quest.params.duplicate()
-			)
-			# Use character_id as key for easy lookup
-			quests[char_data.id] = quest_state
-	
-	quests_changed.emit()
-
-func get_quest(character_id: String) -> QuestState:
-	## Get quest state for a character
-	return quests.get(character_id, null)
-
-func are_all_party_quests_complete() -> bool:
-	## Check if all party member quests are complete
-	if quests.is_empty():
-		return false
-	
-	# Check all 3 party members have complete quests
-	for character_id in party_ids:
-		var quest = quests.get(character_id)
-		if not quest or not quest.is_complete:
-			return false
-	
-	return true
-
-func emit_game_event(event_type: String, payload: Dictionary = {}) -> void:
-	## Emit a game event and evaluate all quests
-	## This is the single entry point for quest updates
-	var any_changed = false
-	
-	for character_id in quests:
-		var quest = quests[character_id]
-		if quest and quest is QuestState:
-			var changed = QuestSystem.evaluate(quest, event_type, payload)
-			if changed:
-				any_changed = true
-	
-	if any_changed:
-		quests_changed.emit()
+func rebuild_reward_pool_from_party():
+	## Rebuild reward_card_pool from the current party's CharacterData.
+	## Called after loading a save so the pool reflects the saved party's cards.
+	reward_card_pool.clear()
+	var party_ids = PartyManager.party_ids if PartyManager else []
+	for char_id in party_ids:
+		var char_data: CharacterData = DataRegistry.get_character(char_id) if DataRegistry else null
+		if not char_data:
+			push_warning("RunState.rebuild_reward_pool_from_party: no CharacterData for '%s'" % char_id)
+			continue
+		for reward_card in char_data.reward_card_pool:
+			if reward_card:
+				reward_card_pool.append(reward_card)
 
 func set_pending_rewards(bundle: RewardBundle):
 	## Set pending rewards (called by EncounterScreen)
@@ -508,17 +296,18 @@ func clear_pending_rewards():
 func apply_reward_bundle(bundle: RewardBundle):
 	## Apply all rewards from a bundle to RunState
 	## This is called by RewardsScreen after player makes choices
+	## Uses ResourceManager for resource updates
 	if not bundle:
 		return
 	
-	# Apply gold
-	if bundle.gold > 0:
-		set_gold(gold + bundle.gold)
+	# Apply gold (uses ResourceManager)
+	if bundle.gold > 0 and ResourceManager:
+		ResourceManager.set_gold(ResourceManager.gold + bundle.gold)
 	
-	# Apply healing
-	if bundle.heal_amount > 0:
-		var new_hp = min(current_hp + bundle.heal_amount, max_hp)
-		set_hp(new_hp, max_hp)
+	# Apply healing (uses ResourceManager)
+	if bundle.heal_amount > 0 and ResourceManager:
+		var new_hp = min(ResourceManager.current_hp + bundle.heal_amount, ResourceManager.max_hp)
+		ResourceManager.set_hp(new_hp, ResourceManager.max_hp)
 	
 	# Card rewards are handled separately by RewardsScreen (player chooses which card)
 	# Relic and upgrade rewards are also handled separately by RewardsScreen
@@ -527,9 +316,15 @@ func apply_reward_bundle(bundle: RewardBundle):
 	# RewardsScreen calls add_card_to_deck/add_relic/etc. individually
 
 func add_card_to_deck_from_reward(card_id: String, owner_character_id: String = ""):
-	## Add a card to deck from reward (wrapper for add_card_to_deck)
-	## Uses "Shared Deck" owner if no owner specified
-	add_card_to_deck(card_id, owner_character_id)
+	## Add a card to deck from reward.
+	## If owner_character_id is empty, the owner is derived from CardData.owner_character_id
+	## so that stat scaling (STR/DEF/SPIRIT) works correctly for reward cards.
+	var resolved_owner = owner_character_id
+	if resolved_owner.is_empty():
+		var card_data = DataRegistry.get_card_data(card_id) if DataRegistry else null
+		if card_data and not card_data.owner_character_id.is_empty():
+			resolved_owner = card_data.owner_character_id
+	add_card_to_deck(card_id, resolved_owner)
 
 func can_upgrade_instance(instance_id: String) -> bool:
 	## Check if a card instance can be upgraded
@@ -549,14 +344,6 @@ func can_upgrade_instance(instance_id: String) -> bool:
 			available.append(upgrade_id)
 	
 	return not available.is_empty()
-
-func can_upgrade_card_at(deck_index: int) -> bool:
-	## DEPRECATED: Use can_upgrade_instance(instance_id) instead
-	## Legacy method - converts index to instance_id
-	if deck_index < 0 or deck_index >= deck_order.size():
-		return false
-	var instance_id = deck_order[deck_index]
-	return can_upgrade_instance(instance_id)
 
 func apply_upgrade_to_instance(instance_id: String, upgrade_id: String) -> bool:
 	## Apply an upgrade to a card instance by instance_id
@@ -582,19 +369,15 @@ func apply_upgrade_to_instance(instance_id: String, upgrade_id: String) -> bool:
 	if deck_model and deck_model.hand.has(instance_id):
 		deck_model.hand_changed.emit()
 	
+	# Quest event: card upgraded
+	if QuestManager:
+		QuestManager.emit_game_event("CARD_UPGRADED", {})
+
 	# Autosave after upgrade
 	if AutoSaveManager:
 		AutoSaveManager.force_save("card_upgraded")
-	
-	return true
 
-func apply_upgrade_to_card_at(deck_index: int, upgrade_id: String) -> bool:
-	## DEPRECATED: Use apply_upgrade_to_instance(instance_id, upgrade_id) instead
-	## Legacy method - converts index to instance_id
-	if deck_index < 0 or deck_index >= deck_order.size():
-		return false
-	var instance_id = deck_order[deck_index]
-	return apply_upgrade_to_instance(instance_id, upgrade_id)
+	return true
 
 func get_upgradeable_instance_ids() -> Array[String]:
 	## Get all instance_ids of cards that can be upgraded
@@ -603,15 +386,6 @@ func get_upgradeable_instance_ids() -> Array[String]:
 		if can_upgrade_instance(instance_id):
 			instance_ids.append(instance_id)
 	return instance_ids
-
-func get_upgradeable_deck_indices() -> Array[int]:
-	## DEPRECATED: Use get_upgradeable_instance_ids() instead
-	## Legacy method - returns indices of upgradeable cards
-	var indices: Array[int] = []
-	for i in range(deck_order.size()):
-		if can_upgrade_instance(deck_order[i]):
-			indices.append(i)
-	return indices
 
 func get_effective_cost(instance_id: String) -> int:
 	## Get the effective cost of a card after upgrades (delegates to CardRules)
@@ -696,21 +470,6 @@ func transcend_card(instance_id: String, new_card_id: String) -> bool:
 	
 	return true
 
-func add_relic(relic_id: String, is_boss: bool = false) -> void:
-	## Add a relic to the player's collection
-	## Emits RELIC_GAINED event for quest system
-	## 
-	## PLACEHOLDER FOR FUTURE WORK: Relic storage exists for testing game loop,
-	## but relic effects are not implemented. Relics are stored but have no gameplay impact.
-	if relic_id.is_empty():
-		return
-	
-	relics.append({ "id": relic_id, "is_boss": is_boss })
-	relics_changed.emit()
-	
-	# Emit RELIC_GAINED event for quest system
-	emit_game_event("RELIC_GAINED", { "relic_id": relic_id, "is_boss": is_boss })
-
 func get_rare_chance(node_type: MapNodeData.NodeType) -> float:
 	## Calculate current Rare chance including Elite bonus
 	## Deck penalty is applied per-card during selection, not to overall Rare chance
@@ -763,12 +522,11 @@ func reset_rare_pity() -> void:
 
 func reset_run() -> void:
 	## Reset all run state to initial values (for New Game)
-	## Clears party, deck, quests, map, and all resources
+	## Clears deck, relics, buffs, and delegates to managers for their state
 	
-	# Clear party
-	party.clear()
-	party_ids.clear()
-	party_changed.emit()
+	# Clear party (delegates to PartyManager)
+	if PartyManager:
+		PartyManager.clear_party()
 	
 	# Clear deck
 	deck.clear()
@@ -782,31 +540,19 @@ func reset_run() -> void:
 	hand_changed.emit()
 	discard_pile_changed.emit()
 	
-	# Clear quests
-	quests.clear()
-	quests_changed.emit()
+	# Clear quests (delegates to QuestManager)
+	if QuestManager:
+		QuestManager.clear_quests()
+
+	# Reset resources (delegates to ResourceManager)
+	if ResourceManager:
+		ResourceManager.reset_resources()
 	
-	# Clear relics
-	relics.clear()
-	relics_changed.emit()
-	
-	# Reset resources
-	set_gold(0)
-	set_hp(50, 50)
-	set_block(0)
-	set_energy(3, 3)
 	haste_next_card = false
 	
-	# Reset map/progress
-	set_act(1)
-	set_map("Act1")
-	set_node_position(0)
-	current_map = null
-	current_node_id = ""
-	available_next_node_ids.clear()
-	map_changed.emit()
-	current_node_changed.emit("")
-	available_next_node_ids_changed.emit([])
+	# Reset map/progress (delegates to MapManager)
+	if MapManager:
+		MapManager.reset_map_state()
 	
 	# Clear pending rewards
 	pending_rewards = null
@@ -823,3 +569,101 @@ func reset_run() -> void:
 	
 	# Reset settings
 	tap_to_play = false
+
+	# Reset equipment state
+	equipment_slots.clear()
+	run_stash.clear()
+	equipment_changed.emit()
+
+	# Reset boss rush state
+	is_boss_rush = false
+	boss_rush_boss_id = ""
+	boss_rush_stats = {}
+
+	# Clear active difficulty modifiers
+	if ModifierManager:
+		ModifierManager.end_run()
+
+# ── Boss Rush helpers (Phase 8) ───────────────────────────────────────────────
+
+func load_from_build_data(build: BuildData) -> void:
+	## Populate RunState from a BuildData snapshot for a Boss Rush challenge.
+	## Clears existing run state first (does not affect meta save).
+	reset_run()
+
+	is_boss_rush = true
+
+	# Restore party
+	if PartyManager:
+		PartyManager.set_party(build.party_ids)
+
+	# Restore deck
+	for entry in build.deck:
+		if entry is Dictionary:
+			var upgrades: Array[String] = []
+			for u in entry.get("upgrades", []):
+				upgrades.append(str(u))
+			add_card_to_deck(
+				str(entry.get("id", "")),
+				str(entry.get("owner", "")),
+				upgrades
+			)
+
+	# Restore equipment
+	equipment_slots = {}
+	for char_id in build.equipment_slots:
+		equipment_slots[str(char_id)] = {}
+		for slot_name in build.equipment_slots[char_id]:
+			equipment_slots[str(char_id)][str(slot_name)] = str(build.equipment_slots[char_id][slot_name])
+	run_stash = build.run_stash.duplicate()
+	equipment_changed.emit()
+
+# ── Equipment helpers (Phase 6) ───────────────────────────────────────────────
+
+func get_equipped_item(char_id: String, slot_name: String) -> String:
+	## Get the equipment_id in the given slot for a character, or "" if empty.
+	return equipment_slots.get(char_id, {}).get(slot_name, "")
+
+func equip_item(char_id: String, slot_name: String, equipment_id: String) -> bool:
+	## Equip an item into a character slot.
+	## If the slot is already occupied the old item is returned to the run stash.
+	## Returns false if the item is not in the run stash.
+	if not run_stash.has(equipment_id):
+		push_warning("RunState.equip_item: '%s' is not in run stash" % equipment_id)
+		return false
+	if not equipment_slots.has(char_id):
+		equipment_slots[char_id] = {}
+	var old_id: String = equipment_slots[char_id].get(slot_name, "")
+	if not old_id.is_empty():
+		run_stash.append(old_id)  # Return displaced item to stash
+	equipment_slots[char_id][slot_name] = equipment_id
+	run_stash.erase(equipment_id)
+	equipment_changed.emit()
+	return true
+
+func unequip_item(char_id: String, slot_name: String) -> void:
+	## Remove the item from a character slot and return it to the run stash.
+	if not equipment_slots.has(char_id):
+		return
+	var equipment_id: String = equipment_slots[char_id].get(slot_name, "")
+	if equipment_id.is_empty():
+		return
+	equipment_slots[char_id].erase(slot_name)
+	add_to_run_stash(equipment_id)
+
+func add_to_run_stash(equipment_id: String) -> bool:
+	## Add an equipment_id to the run stash (max 9).
+	## Returns false if the stash is full.
+	if equipment_id.is_empty():
+		return false
+	if run_stash.size() >= MAX_STASH_SIZE:
+		push_warning("RunState: Run stash is full (%d/%d), cannot add '%s'" % [run_stash.size(), MAX_STASH_SIZE, equipment_id])
+		return false
+	run_stash.append(equipment_id)
+	equipment_changed.emit()
+	return true
+
+func remove_from_run_stash(equipment_id: String) -> void:
+	## Remove an equipment_id from the run stash (e.g. after equipping it).
+	run_stash.erase(equipment_id)
+	equipment_changed.emit()

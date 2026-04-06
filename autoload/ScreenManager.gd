@@ -14,11 +14,15 @@ var screen_scenes: Dictionary = {
 	"main": "res://Path-of-Embers/scenes/screens/Main.tscn",
 	"main_menu": "res://Path-of-Embers/scenes/screens/Main.tscn",  # Alias for main
 	"character_select": "res://Path-of-Embers/scenes/screens/CharacterSelect.tscn",
+	"loadout": "res://Path-of-Embers/scenes/screens/LoadoutScreen.tscn",
 	"map": "res://Path-of-Embers/scenes/screens/MapScreen.tscn",
 	"combat": "res://Path-of-Embers/scenes/screens/CombatScreen.tscn",
 	"rewards": "res://Path-of-Embers/scenes/screens/RewardsScreen.tscn",
 	"encounter": "res://Path-of-Embers/scenes/screens/EncounterScreen.tscn",
-	"shop": "res://Path-of-Embers/scenes/screens/ShopScreen.tscn"
+	"shop": "res://Path-of-Embers/scenes/screens/ShopScreen.tscn",
+	"boss_rush": "res://Path-of-Embers/scenes/screens/BossRushScreen.tscn",
+	"game_over": "res://Path-of-Embers/scenes/screens/GameOverScreen.tscn",
+	"victory": "res://Path-of-Embers/Scenes/screens/VictoryScreen.tscn",
 }
 
 func _ready():
@@ -39,10 +43,10 @@ func go_to_map():
 func go_to_combat(encounter_data: Dictionary = {}):
 	## Navigate to combat screen with encounter data
 	## Second-line defense: check boss gate if current node is boss
-	if RunState.current_map and not RunState.current_node_id.is_empty():
-		var node = RunState.current_map.get_node(RunState.current_node_id)
+	if MapManager and MapManager.current_map and not MapManager.current_node_id.is_empty():
+		var node = MapManager.current_map.get_node(MapManager.current_node_id)
 		if node and node.node_type == MapNodeData.NodeType.BOSS:
-			if not RunState.are_all_party_quests_complete():
+			if QuestManager and not QuestManager.are_all_party_quests_complete():
 				push_warning("ScreenManager: Boss gate blocked - quests incomplete")
 				# Return to map (MapScreen will show popup if clicked there)
 				go_to_map()
@@ -66,9 +70,25 @@ func go_to_character_select():
 	## Navigate to character selection screen
 	_change_screen("character_select", {})
 
+func go_to_loadout():
+	## Navigate to loadout screen (pre-run equipment configuration)
+	_change_screen("loadout", {})
+
 func go_to_main_menu():
 	## Navigate to main menu screen
 	_change_screen("main_menu", {})
+
+func go_to_game_over():
+	## Navigate to game over screen
+	_change_screen("game_over", {})
+
+func go_to_boss_rush():
+	## Navigate to Boss Rush screen
+	_change_screen("boss_rush", {})
+
+func go_to_victory():
+	## Navigate to victory/run-complete screen
+	_change_screen("victory", {})
 
 func _change_screen(screen_name: String, data: Dictionary):
 	## Internal method to change screens
@@ -125,7 +145,7 @@ func _change_screen(screen_name: String, data: Dictionary):
 	if ui_root:
 		get_tree().root.move_child(ui_root, get_tree().root.get_child_count() - 1)
 		# Hide UI on Main and CharacterSelect screens
-		if screen_name == "main" or screen_name == "main_menu" or screen_name == "character_select":
+		if screen_name in ["main", "main_menu", "character_select", "loadout", "boss_rush"]:
 			ui_root.visible = false
 		else:
 			ui_root.visible = true

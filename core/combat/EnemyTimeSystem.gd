@@ -18,6 +18,8 @@ func register_enemies(p_enemies: Array):
 
 func tick_all_enemies(amount: int):
 	## Tick all enemies' timers by the given amount
+	if ModifierManager:
+		amount = int(ceil(float(amount) * ModifierManager.get_enemy_timer_multiplier()))
 	for enemy in enemies:
 		if not enemy.stats.is_alive():
 			continue
@@ -54,6 +56,10 @@ func resolve_enemy_time_triggers(_reason: String):
 	
 	# Execute all enemies that hit 0
 	for enemy in enemies_to_act:
+		# Notify CombatController (and PetBoard) which enemy is about to act
+		if combat_controller and combat_controller.has_method("_pre_enemy_act"):
+			combat_controller._pre_enemy_act(enemy)
+
 		# Enemy performs its intent
 		enemy.perform_intent(combat_controller)
 		

@@ -51,10 +51,10 @@ func to_dict() -> Dictionary:
 
 static func from_dict(data: Dictionary) -> MapData:
 	# Convert act_index and total_rows to int (JSON may store as float)
-	var act_index = int(data.get("act_index", 1))
-	var total_rows = int(data.get("total_rows", 0))
-	var map_data = MapData.new(act_index)
-	map_data.total_rows = total_rows
+	var p_act_index := int(data.get("act_index", 1))
+	var p_total_rows := int(data.get("total_rows", 0))
+	var map_data = MapData.new(p_act_index)
+	map_data.total_rows = p_total_rows
 	map_data.boss_node_id = data.get("boss_node_id", "")
 	
 	# Restore start_node_ids as typed array

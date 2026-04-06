@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/UpgradeData.gd" id="1_upgradedata"]
+
+[resource]
+script = ExtResource("1_upgradedata")
+id = "upgrade_haste"
+name = "Haste"
+description = "Playing this card does not advance the enemy turn."
+rarity = "common"
+weight = 1.0
+is_keyword = true
+effects_dict = {
+"timer_tick_override": 0
+}
+applies_to_cards = []
+

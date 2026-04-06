@@ -140,8 +140,9 @@ func perform_intent(combat_controller: CombatController):
 				EffectResolver.resolve_effect(effect, source, target)
 		
 		# Update RunState HP and block after effects
-		RunState.set_hp(combat_controller.player_stats.current_hp, combat_controller.player_stats.max_hp)
-		RunState.set_block(combat_controller.player_stats.block)
+		if ResourceManager:
+			ResourceManager.set_hp(combat_controller.player_stats.current_hp, combat_controller.player_stats.max_hp)
+			ResourceManager.set_block(combat_controller.player_stats.block)
 		
 		# Notify combat controller that enemy acted (for Power card effects)
 		if combat_controller.has_method("_on_enemy_acted"):
@@ -151,10 +152,11 @@ func perform_intent(combat_controller: CombatController):
 		match intent.intent_type:
 			"Attack":
 				var damage = intent.values.get("damage", 0)
-				var attack_effect = EffectData.new("damage", {"amount": damage})
+				var attack_effect = EffectData.new(EffectType.DAMAGE, {"amount": damage})
 				EffectResolver.resolve_effect(attack_effect, stats, combat_controller.player_stats)
-				RunState.set_hp(combat_controller.player_stats.current_hp, combat_controller.player_stats.max_hp)
-				RunState.set_block(combat_controller.player_stats.block)
+				if ResourceManager:
+					ResourceManager.set_hp(combat_controller.player_stats.current_hp, combat_controller.player_stats.max_hp)
+					ResourceManager.set_block(combat_controller.player_stats.block)
 				
 				# Notify combat controller that enemy acted (for Power card effects)
 				if combat_controller.has_method("_on_enemy_acted"):

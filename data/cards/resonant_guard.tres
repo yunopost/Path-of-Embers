@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/CardData.gd" id="1_carddata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/EffectData.gd" id="2_effectdata"]
+
+[sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "resonance_block"
+params = {"base_amount": 4, "bonus_if_last_was_skill": 3}
+
+[resource]
+script = ExtResource("1_carddata")
+id = "resonant_guard"
+name = "Resonant Guard"
+cost = 1
+rarity = 1
+card_type = 1
+targeting_mode = 4
+owner_character_id = "echo"
+base_effects = [SubResource("EffectData_1")]

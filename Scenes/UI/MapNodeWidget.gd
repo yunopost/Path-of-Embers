@@ -64,6 +64,12 @@ func _update_display():
 				node_icon_label.text = "?"
 			MapNodeData.NodeType.BOSS:
 				node_icon_label.text = "B"
+			MapNodeData.NodeType.FINAL_BOSS:
+				node_icon_label.text = "FB"
+			MapNodeData.NodeType.STORY:
+				node_icon_label.text = "S"
+			MapNodeData.NodeType.REST:
+				node_icon_label.text = "Z"
 	
 	# Update reward icons
 	_update_reward_icons()
@@ -80,12 +86,13 @@ func _update_reward_icons():
 	for child in reward_container.get_children():
 		child.queue_free()
 	
-	# Skip reward icons for ENCOUNTER and SHOP
-	if node_data.node_type == MapNodeData.NodeType.ENCOUNTER:
-		return
-	
-	if node_data.node_type == MapNodeData.NodeType.SHOP:
-		# Optional: could add bag icon here, but not required
+	# Skip reward icons for ENCOUNTER, SHOP, STORY, and REST
+	if node_data.node_type in [
+		MapNodeData.NodeType.ENCOUNTER,
+		MapNodeData.NodeType.SHOP,
+		MapNodeData.NodeType.STORY,
+		MapNodeData.NodeType.REST
+	]:
 		return
 	
 	# Add reward icons based on reward_flags

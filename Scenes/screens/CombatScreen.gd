@@ -27,8 +27,8 @@ func _ready():
 	RunState.hand_changed.connect(_update_hand)
 	RunState.draw_pile_changed.connect(_update_draw_pile_count)
 	RunState.discard_pile_changed.connect(_update_discard_pile_count)
-	RunState.energy_changed.connect(_update_energy)
-	RunState.hp_changed.connect(_update_player_hp)
+	ResourceManager.energy_changed.connect(_update_energy)
+	ResourceManager.hp_changed.connect(_update_player_hp)
 	
 	# Connect combat controller signals
 	combat_controller.combat_started.connect(_on_combat_started)
@@ -37,14 +37,65 @@ func _ready():
 	if end_turn_button:
 		end_turn_button.pressed.connect(_on_end_turn_pressed)
 		end_turn_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	
+
 	# Setup play area (invisible but detects drops)
 	if play_area:
-		play_area.color = Color(1, 1, 1, 0.1)  # Slightly visible for debugging
+		play_area.color = Color(1, 1, 1, 0.08)  # Subtle guide — brightens green when card is dragged
 		play_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
+
+	_apply_combat_ui_style()
+
 	# Initialize screen (architecture rule 2.1)
 	initialize()
+
+func _apply_combat_ui_style() -> void:
+	## Apply visual styling to combat screen elements
+
+	# Hand tray: reduce overlap, add subtle background panel
+	if hand_container:
+		hand_container.add_theme_constant_override("separation", -30)
+		var hand_area = hand_container.get_parent()
+		if hand_area:
+			var tray = Panel.new()
+			tray.name = "HandTray"
+			tray.set_anchors_preset(Control.PRESET_FULL_RECT)
+			tray.z_index = -1
+			tray.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			var tray_style = StyleBoxFlat.new()
+			tray_style.bg_color = Color(0.08, 0.08, 0.10, 0.75)
+			tray_style.corner_radius_top_left = 8
+			tray_style.corner_radius_top_right = 8
+			tray_style.border_color = Color(0.25, 0.20, 0.15, 0.6)
+			tray_style.border_width_top = 1
+			tray_style.border_width_left = 1
+			tray_style.border_width_right = 1
+			hand_area.add_child(tray)
+			hand_area.move_child(tray, 0)
+
+	# End Turn button: ember-themed styling
+	if end_turn_button:
+		var btn_normal = StyleBoxFlat.new()
+		btn_normal.bg_color = Color("#1A0808")
+		btn_normal.border_color = Color("#8B2020")
+		btn_normal.border_width_left = 2
+		btn_normal.border_width_right = 2
+		btn_normal.border_width_top = 2
+		btn_normal.border_width_bottom = 2
+		btn_normal.corner_radius_top_left = 4
+		btn_normal.corner_radius_top_right = 4
+		btn_normal.corner_radius_bottom_left = 4
+		btn_normal.corner_radius_bottom_right = 4
+		var btn_hover = btn_normal.duplicate()
+		btn_hover.bg_color = Color("#2D0F0F")
+		btn_hover.border_color = Color("#CC3333")
+		var btn_pressed = btn_normal.duplicate()
+		btn_pressed.bg_color = Color("#400808")
+		end_turn_button.add_theme_stylebox_override("normal", btn_normal)
+		end_turn_button.add_theme_stylebox_override("hover", btn_hover)
+		end_turn_button.add_theme_stylebox_override("pressed", btn_pressed)
+		end_turn_button.add_theme_color_override("font_color", Color("#FFD0A0"))
+		end_turn_button.add_theme_font_size_override("font_size", 14)
+		end_turn_button.text = "END TURN"
 
 func initialize(encounter_data: Dictionary = {}):
 	## Initialize the screen with encounter data
@@ -56,7 +107,7 @@ func initialize(encounter_data: Dictionary = {}):
 		_start_combat_with_data(encounter_data)
 
 func refresh_from_state():
-	## Refresh UI from RunState (architecture rule 11.2)
+	## Refresh UI from managers (architecture rule 11.2)
 	_update_hand()
 	_update_draw_pile_count()
 	_update_discard_pile_count()
@@ -82,9 +133,110 @@ func _start_combat_with_data(encounter_data: Dictionary):
 	
 	combat_controller.start_combat(enemy_data)
 	_setup_enemies()
+	_setup_character_portrait()
 	# Note: _update_hand() will be called automatically via hand_changed signal when draw_cards() is called
 	# Similarly, other updates will be triggered by their respective signals
 	refresh_from_state()
+
+## Role-based placeholder colors (mirrors CharacterEntry)
+const PORTRAIT_ROLE_COLORS = {
+	"Warrior":  Color("#5A2010"),
+	"Healer":   Color("#14451E"),
+	"Defender": Color("#102050"),
+}
+const PORTRAIT_ROLE_ICONS = {"Warrior": "⚔", "Healer": "✦", "Defender": "◈"}
+
+func _setup_character_portrait() -> void:
+	## Add a small character portrait panel above the player HP area
+	if not player_area:
+		return
+
+	# Avoid duplicating on re-initialization
+	var existing = player_area.get_node_or_null("CharacterPortrait")
+	if existing:
+		existing.queue_free()
+
+	# Resolve the first party character
+	var char_data: CharacterData = null
+	if PartyManager and not PartyManager.party_ids.is_empty():
+		var cid = PartyManager.party_ids[0]
+		char_data = DataRegistry.get_character(cid) if DataRegistry else null
+
+	# Portrait container (80×100px)
+	var portrait_panel = Panel.new()
+	portrait_panel.name = "CharacterPortrait"
+	portrait_panel.custom_minimum_size = Vector2(80, 100)
+	portrait_panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	portrait_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# Role border color
+	var role_color = Color("#5A2010")  # default Warrior
+	if char_data:
+		role_color = PORTRAIT_ROLE_COLORS.get(char_data.role, role_color)
+	var frame_style = StyleBoxFlat.new()
+	frame_style.bg_color = role_color.darkened(0.4)
+	frame_style.border_color = role_color
+	frame_style.border_width_left = 2
+	frame_style.border_width_right = 2
+	frame_style.border_width_top = 2
+	frame_style.border_width_bottom = 2
+	frame_style.corner_radius_top_left = 3
+	frame_style.corner_radius_top_right = 3
+	frame_style.corner_radius_bottom_left = 3
+	frame_style.corner_radius_bottom_right = 3
+	portrait_panel.add_theme_stylebox_override("panel", frame_style)
+
+	# Try to load portrait texture
+	var texture: Texture2D = null
+	if char_data:
+		var portrait_key = char_data.display_name.replace(" ", "%20")  # not needed, just use display_name
+		if char_data.display_name == "Monster Hunter":
+			texture = load("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter 2.png") \
+				if ResourceLoader.exists("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter 2.png") else null
+		elif char_data.display_name == "Witch":
+			texture = load("res://Path-of-Embers/Art Assets/Witch/Witch 2.png") \
+				if ResourceLoader.exists("res://Path-of-Embers/Art Assets/Witch/Witch 2.png") else null
+
+	if texture:
+		var tex_rect = TextureRect.new()
+		tex_rect.texture = texture
+		tex_rect.expand_mode = TextureRect.EXPAND_FIT_HEIGHT_PROPORTIONAL
+		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tex_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		portrait_panel.add_child(tex_rect)
+	elif char_data:
+		# Placeholder: role color + initials
+		var words = char_data.display_name.split(" ")
+		var initials = ""
+		for w in words:
+			if w.length() > 0:
+				initials += w[0].to_upper()
+		var init_lbl = Label.new()
+		init_lbl.text = initials
+		init_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		init_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		init_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		init_lbl.add_theme_font_size_override("font_size", 32)
+		init_lbl.modulate = Color(1, 1, 1, 0.7)
+		init_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		portrait_panel.add_child(init_lbl)
+
+		var icon_lbl = Label.new()
+		icon_lbl.text = PORTRAIT_ROLE_ICONS.get(char_data.role, "?")
+		icon_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		icon_lbl.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		icon_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		icon_lbl.offset_right = -4
+		icon_lbl.offset_bottom = -4
+		icon_lbl.add_theme_font_size_override("font_size", 14)
+		icon_lbl.modulate = Color(1, 1, 1, 0.6)
+		icon_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		portrait_panel.add_child(icon_lbl)
+
+	# Insert at top of player_area before other widgets
+	player_area.add_child(portrait_panel)
+	player_area.move_child(portrait_panel, 0)
 
 func _setup_enemies():
 	## Create enemy displays
@@ -124,14 +276,14 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 	enemy_panel.add_child(vbox)
 	
 	# Health bar (at top)
-	var health_bar_scene = load("res://Path-of-Embers/Scenes/UI/HealthBar.tscn")
+	var health_bar_scene = load("res://Path-of-Embers/scenes/ui/HealthBar.tscn")
 	if health_bar_scene:
 		var health_bar = health_bar_scene.instantiate()
 		health_bar.setup(enemy.stats)
 		vbox.add_child(health_bar)
 	
 	# Status effect indicators (below health bar)
-	var status_indicator_scene = load("res://Path-of-Embers/Scenes/UI/StatusEffectIndicator.tscn")
+	var status_indicator_scene = load("res://Path-of-Embers/scenes/ui/StatusEffectIndicator.tscn")
 	if status_indicator_scene:
 		var status_indicator = status_indicator_scene.instantiate()
 		status_indicator.setup(enemy.stats)
@@ -170,8 +322,6 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 	# Connect to timer and intent signals
 	enemy.time_changed.connect(func(current, max_time): timer_label.text = "Timer: %d/%d" % [current, max_time])
 	enemy.intent_changed.connect(func(new_intent): intent_label.text = "Intent: %s" % (new_intent.telegraph_text if new_intent else "None"))
-	
-	# Store enemy reference in metadata for targeting
 	
 	return enemy_panel
 
@@ -227,8 +377,8 @@ func _update_hand():
 		
 		# Set play area after layout updates
 		if play_area:
-			var play_area_rect = Rect2(play_area.global_position, play_area.size)
-			card_ui.play_area = play_area_rect
+			card_ui.play_area = Rect2(play_area.global_position, play_area.size)
+			card_ui.play_area_node = play_area
 	
 	is_updating_hand = false
 
@@ -253,13 +403,26 @@ func _update_discard_pile_count():
 
 func _update_energy():
 	if energy_label:
-		energy_label.text = "Energy: %d/%d" % [RunState.energy, RunState.max_energy]
+		energy_label.text = "Energy: %d/%d" % [ResourceManager.energy, ResourceManager.max_energy]
 
 func _update_player_hp():
 	if player_hp_label:
-		player_hp_label.text = "HP: %d/%d" % [RunState.current_hp, RunState.max_hp]
+		player_hp_label.text = "HP: %d/%d" % [ResourceManager.current_hp, ResourceManager.max_hp]
 	if combat_controller and combat_controller.player_stats:
-		combat_controller.player_stats.current_hp = RunState.current_hp
+		combat_controller.player_stats.current_hp = ResourceManager.current_hp
+	# Check for player defeat
+	if ResourceManager.current_hp <= 0 and combat_controller and combat_controller.combat_active:
+		_on_player_defeated()
+
+func _on_player_defeated():
+	## Handle player HP reaching zero — end combat and go to game over.
+	if combat_ending:
+		return
+	combat_ending = true
+	if combat_controller:
+		combat_controller.combat_active = false
+		combat_controller.end_combat(false)
+	ScreenManager.go_to_game_over()
 
 func _on_combat_started():
 	_update_player_hp()
@@ -276,7 +439,7 @@ func _setup_player_status_indicator():
 		player_status_indicator = null
 	
 	# Create and add status indicator
-	var status_indicator_scene = load("res://Path-of-Embers/Scenes/UI/StatusEffectIndicator.tscn")
+	var status_indicator_scene = load("res://Path-of-Embers/scenes/ui/StatusEffectIndicator.tscn")
 	if status_indicator_scene:
 		player_status_indicator = status_indicator_scene.instantiate()
 		player_status_indicator.setup(combat_controller.player_stats)
@@ -317,12 +480,12 @@ func _check_combat_end():
 		_end_combat_and_transition()
 
 func _end_combat_and_transition():
-	## End combat and transition to rewards screen
+	## End combat and transition to rewards screen (or back to Boss Rush screen).
 	if combat_ending:
 		return  # Guard against duplicate calls
-	
+
 	combat_ending = true
-	
+
 	# Stop combat in controller, clear combat status effects, and remove temporary cards
 	if combat_controller:
 		combat_controller.combat_active = false
@@ -330,30 +493,41 @@ func _end_combat_and_transition():
 		combat_controller.player_stats.clear_combat_status_effects()
 		# Remove temporary cards
 		combat_controller._remove_temporary_cards()
-	
+
+	# Boss Rush: score is computed and submitted inside end_combat(); just navigate back
+	if RunState and RunState.is_boss_rush:
+		if combat_controller:
+			combat_controller.end_combat(true)  # emits boss_rush_combat_finished + scores
+		ScreenManager.go_to_boss_rush()
+		return
+
 	# Emit COMBAT_VICTORY event for quest system (before marking node completed)
-	RunState.emit_game_event("COMBAT_VICTORY", {
-		"node_id": RunState.current_node_id,
-		"node_type": RunState.get_current_node_type()
-	})
-	
+	if QuestManager:
+		QuestManager.emit_game_event("COMBAT_VICTORY", {
+			"node_id": MapManager.current_node_id if MapManager else "",
+			"node_type": MapManager.get_current_node_type() if MapManager else MapNodeData.NodeType.FIGHT
+		})
+
 	# Mark node as completed (this also emits NODE_COMPLETED event)
-	RunState.mark_current_node_completed()
-	
+	if MapManager:
+		MapManager.mark_current_node_completed()
+
 	# Compute rewards based on node's reward flags
-	var current_node = RunState.current_map.get_node(RunState.current_node_id) if RunState.current_map else null
+	var current_node = null
+	if MapManager and MapManager.current_map:
+		current_node = MapManager.current_map.get_node(MapManager.current_node_id)
 	var bundle = RewardResolver.build_rewards_for_node(current_node)
-	
+
 	var node_type_str = "Unknown"
 	if current_node:
 		node_type_str = MapNodeData.NodeType.keys()[current_node.node_type]
-	
-	print("Combat ended: all enemies dead. NodeType=%s, Rewards: gold=%d, cards=%d, upgrades=%d, relic=%s" % [
-		node_type_str, bundle.gold, bundle.card_choices.size(), bundle.upgrade_count, bundle.relic_id
+
+	print("Combat ended: all enemies dead. NodeType=%s, Rewards: gold=%d, cards=%d, upgrades=%d" % [
+		node_type_str, bundle.gold, bundle.card_choices.size(), bundle.upgrade_count
 	])
-	
+
 	# Set pending rewards
 	RunState.set_pending_rewards(bundle)
-	
+
 	# Transition to rewards screen
 	ScreenManager.go_to_rewards(bundle)

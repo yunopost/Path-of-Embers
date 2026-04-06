@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EquipmentData.gd" id="1_equipdata"]
+
+[resource]
+script = ExtResource("1_equipdata")
+id = "blazing_crown"
+name = "Blazing Crown"
+description = "Forged in the ember core. +6 HP, +3 STR."
+slot_type = 0
+rarity = 2
+stat_modifiers = {"hp": 6, "str": 3}
+shop_price = 160

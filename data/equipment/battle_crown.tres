@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EquipmentData.gd" id="1_equipdata"]
+
+[resource]
+script = ExtResource("1_equipdata")
+id = "battle_crown"
+name = "Battle Crown"
+description = "A crown forged from battlefield scrap. +3 HP, +1 DEF."
+slot_type = 0
+rarity = 1
+stat_modifiers = {"hp": 3, "def": 1}
+shop_price = 120

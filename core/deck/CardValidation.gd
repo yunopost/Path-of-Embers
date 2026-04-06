@@ -40,4 +40,3 @@ static func validate_and_log_creation(card: DeckCardData, source: String = "") -
 		context += " (source=%s)" % source
 	
 	return validate_card_instance(card, context)
-

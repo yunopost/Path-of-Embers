@@ -2,6 +2,8 @@ extends Control
 
 ## Settings popup
 
+signal popup_closed(popup_name: String)
+
 @onready var tap_to_play_toggle: CheckBox = $VBoxContainer/TapToPlayToggle
 @onready var close_button: Button = $VBoxContainer/CloseButton
 
@@ -43,9 +45,8 @@ func _on_tap_to_play_toggled(button_pressed: bool):
 
 func _on_close_pressed():
 	visible = false
-	# Notify UIRoot if needed
-	if get_parent().has_method("close_popup"):
-		get_parent().close_popup("settings")
+	# Emit signal to notify parent (UIRoot)
+	popup_closed.emit("settings")
 
 func _input(event):
 	# Close on escape or click outside

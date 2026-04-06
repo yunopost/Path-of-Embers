@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/UpgradeData.gd" id="1_upgradedata"]
+
+[resource]
+script = ExtResource("1_upgradedata")
+id = "full_attack_block_plus_6"
+name = "Block+6"
+description = "Also gain 6 block when played"
+rarity = "common"
+weight = 1.0
+is_keyword = false
+effects_dict = {
+"add_block": 6
+}
+applies_to_cards = ["monster_hunter_full_attack"]
+

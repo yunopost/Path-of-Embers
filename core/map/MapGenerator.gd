@@ -137,24 +137,40 @@ func _calculate_row_width(row: int, prev_count: int) -> int:
 
 	return clamp(target, MIN_LANES, MAX_LANES)
 
-func _choose_node_type(row: int, col: int, row_width: int, _act_index: int) -> MapNodeData.NodeType:
-	## Choose appropriate node type based on position
-	# Distribute: FIGHT ~50%, ENCOUNTER ~25%, SHOP ~15%, ELITE ~10%
-	
-	# Elite nodes appear mid-to-late map
+func _choose_node_type(row: int, col: int, row_width: int, act_index: int) -> MapNodeData.NodeType:
+	## Choose appropriate node type based on position and act.
+	## Act 1: standard (FIGHT ~55%, ENCOUNTER ~20%, SHOP ~15%, ELITE ~10%)
+	## Act 2: more elites (+5%), fewer shops (-5%)
+	## Act 3: even more elites (+5%), more encounters (+5%), fewer fights
+
+	# Per-act scaling multipliers
+	var elite_chance: float = 0.10 + (act_index - 1) * 0.05   # 0.10 / 0.15 / 0.20
+	var shop_chance: float  = 0.15 - (act_index - 1) * 0.03   # 0.15 / 0.12 / 0.09
+	var encounter_chance: float = 0.20 + (act_index - 1) * 0.05  # 0.20 / 0.25 / 0.30
+
+	# Story nodes: acts 2+ only, mid-map band, one slot per wide row
+	if act_index >= 2 and row >= 4 and row <= 10:
+		if col == int(row_width / 2.0) and randf() < 0.08:
+			return MapNodeData.NodeType.STORY
+
+	# REST node: exactly one per act, placed in row 4 at the middle column
+	if row == 4 and col == int(row_width / 2.0):
+		return MapNodeData.NodeType.REST
+
+	# Elite nodes appear mid-to-late map (center-ish positions)
 	if row >= 5 and row < 12:
-		if col == int(row_width / 2.0):  # Center-ish positions (explicit int conversion to avoid division warning)
-			if randf() < 0.15:  # ~10% chance overall
+		if col == int(row_width / 2.0):
+			if randf() < elite_chance:
 				return MapNodeData.NodeType.ELITE
-	
+
 	# Shop nodes scattered throughout
-	if row >= 2 and randf() < 0.15:
+	if row >= 2 and randf() < shop_chance:
 		return MapNodeData.NodeType.SHOP
-	
+
 	# Encounter nodes
-	if row >= 3 and randf() < 0.25:
+	if row >= 3 and randf() < encounter_chance:
 		return MapNodeData.NodeType.ENCOUNTER
-	
+
 	# Default to fight
 	return MapNodeData.NodeType.FIGHT
 
@@ -185,8 +201,16 @@ func _set_reward_flags(node: MapNodeData):
 			node.reward_flags.append(MapNodeData.RewardType.GOLD)  # Boss gets gold
 			node.reward_flags.append(MapNodeData.RewardType.UPGRADE)  # Transcendent upgrade
 			node.reward_flags.append(MapNodeData.RewardType.BOSS_RELIC)
-		
-		MapNodeData.NodeType.SHOP, MapNodeData.NodeType.ENCOUNTER:
+
+		MapNodeData.NodeType.FINAL_BOSS:
+			node.reward_flags.clear()
+			node.reward_flags.append(MapNodeData.RewardType.CARD)
+			node.reward_flags.append(MapNodeData.RewardType.GOLD)
+			node.reward_flags.append(MapNodeData.RewardType.UPGRADE)
+			node.reward_flags.append(MapNodeData.RewardType.BOSS_RELIC)
+
+		MapNodeData.NodeType.SHOP, MapNodeData.NodeType.ENCOUNTER, \
+		MapNodeData.NodeType.STORY, MapNodeData.NodeType.REST:
 			# No preview icons
 			node.reward_flags.clear()
 
@@ -372,7 +396,9 @@ func _calculate_monotonic_primary(sorted_index: int, from_count: int, to_count: 
 	return primary_target
 
 func _generate_boss_node(row: int, act_index: int) -> MapNodeData:
-	## Generate the boss node at the end
-	var node = MapNodeData.new("boss_%d" % act_index, row, 0, MapNodeData.NodeType.BOSS)
+	## Generate the boss node at the end.
+	## Acts 1-2 get a regular BOSS; Act 3 gets a FINAL_BOSS.
+	var boss_type = MapNodeData.NodeType.FINAL_BOSS if act_index >= 3 else MapNodeData.NodeType.BOSS
+	var node = MapNodeData.new("boss_%d" % act_index, row, 0, boss_type)
 	_set_reward_flags(node)
 	return node

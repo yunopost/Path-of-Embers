@@ -44,7 +44,7 @@ static func get_effective_damage(card_def: CardData, card_inst: DeckCardData) ->
 	
 	# Sum base damage effects
 	for effect in card_def.base_effects:
-		if effect and effect.effect_type == "damage":
+		if effect and effect.effect_type == EffectType.DAMAGE:
 			var damage = effect.params.get("amount", 0)
 			if damage is int:
 				total_damage += damage
@@ -73,7 +73,7 @@ static func get_effective_block(card_def: CardData, card_inst: DeckCardData) -> 
 	
 	# Sum base block effects
 	for effect in card_def.base_effects:
-		if effect and effect.effect_type == "block":
+		if effect and effect.effect_type == EffectType.BLOCK:
 			var block = effect.params.get("amount", 0)
 			if block is int:
 				total_block += block
@@ -102,7 +102,7 @@ static func get_effective_heal(card_def: CardData, card_inst: DeckCardData) -> i
 	
 	# Sum base heal effects
 	for effect in card_def.base_effects:
-		if effect and effect.effect_type == "heal":
+		if effect and effect.effect_type == EffectType.HEAL:
 			var heal = effect.params.get("amount", 0)
 			if heal is int:
 				total_heal += heal
@@ -148,7 +148,7 @@ static func get_card_effects_for_display(card_data: CardData, card_inst: DeckCar
 		if upgrade_effects.has("damage_delta"):
 			var damage_delta = upgrade_effects["damage_delta"]
 			for effect in effects:
-				if effect is EffectData and effect.effect_type == "damage":
+				if effect is EffectData and effect.effect_type == EffectType.DAMAGE:
 					var current_amount = effect.params.get("amount", 0)
 					effect.params["amount"] = current_amount + damage_delta
 		
@@ -157,7 +157,7 @@ static func get_card_effects_for_display(card_data: CardData, card_inst: DeckCar
 			var multiplier = upgrade_effects["damage_multiply"]
 			if multiplier is float or multiplier is int:
 				for effect in effects:
-					if effect is EffectData and effect.effect_type == "damage":
+					if effect is EffectData and effect.effect_type == EffectType.DAMAGE:
 						var current_amount = effect.params.get("amount", 0)
 						effect.params["amount"] = int(current_amount * float(multiplier))
 		
@@ -166,20 +166,20 @@ static func get_card_effects_for_display(card_data: CardData, card_inst: DeckCar
 			var hit_count = upgrade_effects["hit_count_set"]
 			if hit_count is int:
 				for effect in effects:
-					if effect is EffectData and effect.effect_type == "damage":
+					if effect is EffectData and effect.effect_type == EffectType.DAMAGE:
 						effect.params["hit_count"] = hit_count
 		
 		# Apply ignore_block flag
 		if upgrade_effects.has("ignore_block") and upgrade_effects["ignore_block"] == true:
 			for effect in effects:
-				if effect is EffectData and effect.effect_type == "damage":
+				if effect is EffectData and effect.effect_type == EffectType.DAMAGE:
 					effect.params["ignore_block"] = true
 		
 		# Apply block modifications
 		if upgrade_effects.has("block_delta"):
 			var block_delta = upgrade_effects["block_delta"]
 			for effect in effects:
-				if effect is EffectData and effect.effect_type == "block":
+				if effect is EffectData and effect.effect_type == EffectType.BLOCK:
 					var current_amount = effect.params.get("amount", 0)
 					effect.params["amount"] = current_amount + block_delta
 		
@@ -187,18 +187,29 @@ static func get_card_effects_for_display(card_data: CardData, card_inst: DeckCar
 		if upgrade_effects.has("add_block"):
 			var block_amount = upgrade_effects["add_block"]
 			if block_amount is int:
-				var block_effect = EffectData.new("block", {"amount": block_amount})
+				var block_effect = EffectData.new(EffectType.BLOCK, {"amount": block_amount})
 				effects.append(block_effect)
 		
 		# Apply heal modifications
 		if upgrade_effects.has("heal_delta"):
 			var heal_delta = upgrade_effects["heal_delta"]
 			for effect in effects:
-				if effect is EffectData and effect.effect_type == "heal":
+				if effect is EffectData and effect.effect_type == EffectType.HEAL:
 					var current_amount = effect.params.get("amount", 0)
 					effect.params["amount"] = current_amount + heal_delta
 	
 	return effects
+
+static func get_resolved_effects(card_inst: DeckCardData) -> Array:
+	## Canonical runtime method: returns a copy of a card's effects with all
+	## upgrade modifications applied.  Used by CombatController at play time
+	## and by get_card_effects_for_display (which wraps this).
+	if not card_inst:
+		return []
+	var card_data: CardData = DataRegistry.get_card_data(card_inst.card_id) if DataRegistry else null
+	if not card_data:
+		return []
+	return get_card_effects_for_display(card_data, card_inst)
 
 static func get_card_keywords(card_inst: DeckCardData) -> Array[String]:
 	## Get all keywords for a card instance
@@ -271,7 +282,7 @@ static func is_damage_modified(card_def: CardData, card_inst: DeckCardData) -> b
 	# Get base damage
 	var base_damage = 0
 	for effect in card_def.base_effects:
-		if effect and effect.effect_type == "damage":
+		if effect and effect.effect_type == EffectType.DAMAGE:
 			var damage = effect.params.get("amount", 0)
 			if damage is int:
 				base_damage += damage
@@ -289,7 +300,7 @@ static func is_block_modified(card_def: CardData, card_inst: DeckCardData) -> bo
 	# Get base block
 	var base_block = 0
 	for effect in card_def.base_effects:
-		if effect and effect.effect_type == "block":
+		if effect and effect.effect_type == EffectType.BLOCK:
 			var block = effect.params.get("amount", 0)
 			if block is int:
 				base_block += block
@@ -307,7 +318,7 @@ static func is_heal_modified(card_def: CardData, card_inst: DeckCardData) -> boo
 	# Get base heal
 	var base_heal = 0
 	for effect in card_def.base_effects:
-		if effect and effect.effect_type == "heal":
+		if effect and effect.effect_type == EffectType.HEAL:
 			var heal = effect.params.get("amount", 0)
 			if heal is int:
 				base_heal += heal
@@ -316,4 +327,3 @@ static func is_heal_modified(card_def: CardData, card_inst: DeckCardData) -> boo
 	
 	var effective_heal = get_effective_heal(card_def, card_inst)
 	return effective_heal != base_heal
-

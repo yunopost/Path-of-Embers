@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="EncounterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EncounterData.gd" id="1_encounterdata"]
+
+[resource]
+script = ExtResource("1_encounterdata")
+id = "encounter_library"
+title = "Burning Library"
+body = "A stone library blazes. Through a broken window you can see shelves of tomes still intact. The fire hasn't reached them yet."
+min_act = 1
+max_act = 3
+choices = [{
+"id": "rush_in",
+"label": "Rush in for the tomes",
+"effects_text": "You retrieve several rare tomes before the smoke drives you out.",
+"reward_gold": 0,
+"reward_heal": 0,
+"reward_card_choices": 3,
+"reward_upgrade_count": 0
+}, {
+"id": "wait",
+"label": "Wait for a gap in the flames",
+"effects_text": "Patience pays off. You recover a tome and a moment of rest.",
+"reward_gold": 0,
+"reward_heal": 5,
+"reward_card_choices": 2,
+"reward_upgrade_count": 0
+}, {
+"id": "leave_it",
+"label": "Leave it burning",
+"effects_text": "You step back and tend to your own wounds instead.",
+"reward_gold": 0,
+"reward_heal": 10,
+"reward_card_choices": 0,
+"reward_upgrade_count": 0
+}]

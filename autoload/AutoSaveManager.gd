@@ -19,22 +19,31 @@ func _ready():
 	_timer.timeout.connect(_on_debounce_timeout)
 	add_child(_timer)
 	
-	# Connect RunState signals for debounced saves
+	# Connect RunState signals for debounced saves (deck/relics/buffs only)
 	if RunState:
 		RunState.deck_changed.connect(func(): request_save("deck_changed"))
-		RunState.gold_changed.connect(func(): request_save("gold_changed"))
-		RunState.relics_changed.connect(func(): request_save("relics_changed"))
-		RunState.quests_changed.connect(func(): request_save("quests_changed"))
+		RunState.equipment_changed.connect(func(): request_save("equipment_changed"))
 		RunState.buffs_changed.connect(func(): request_save("buffs_changed"))
-		RunState.hp_changed.connect(func(): request_save("hp_changed"))
-		RunState.block_changed.connect(func(): request_save("block_changed"))
-		RunState.energy_changed.connect(func(): request_save("energy_changed"))
-		RunState.map_changed.connect(func(): request_save("map_changed"))
-		RunState.node_position_changed.connect(func(): request_save("node_position_changed"))
 		# Optional: pile changes (can be noisy but fine with debounce)
 		RunState.hand_changed.connect(func(): request_save("piles_changed"))
 		RunState.draw_pile_changed.connect(func(): request_save("piles_changed"))
 		RunState.discard_pile_changed.connect(func(): request_save("piles_changed"))
+	
+	# Connect ResourceManager signals
+	if ResourceManager:
+		ResourceManager.gold_changed.connect(func(): request_save("gold_changed"))
+		ResourceManager.hp_changed.connect(func(): request_save("hp_changed"))
+		ResourceManager.block_changed.connect(func(): request_save("block_changed"))
+		ResourceManager.energy_changed.connect(func(): request_save("energy_changed"))
+	
+	# Connect QuestManager signals
+	if QuestManager:
+		QuestManager.quests_changed.connect(func(): request_save("quests_changed"))
+	
+	# Connect MapManager signals
+	if MapManager:
+		MapManager.map_changed.connect(func(): request_save("map_changed"))
+		MapManager.node_position_changed.connect(func(): request_save("node_position_changed"))
 	
 	# Connect ScreenManager for force-save on screen transitions
 	if ScreenManager:
@@ -96,4 +105,3 @@ func _do_save(reason: String):
 func _on_scene_changed(scene_name: String):
 	## Force save on every scene transition
 	force_save("scene_changed:" + scene_name)
-

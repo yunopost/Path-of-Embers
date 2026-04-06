@@ -1,0 +1,75 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EnemyData.gd" id="1_enemydata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/EffectData.gd" id="2_effectdata"]
+
+[sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "damage"
+params = {"amount": 20}
+
+[sub_resource type="Resource" id="EffectData_2" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "damage"
+params = {"amount": 12}
+
+[sub_resource type="Resource" id="EffectData_3" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "weakness"
+params = {"amount": 2}
+
+[sub_resource type="Resource" id="EffectData_4" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "damage"
+params = {"amount": 8, "hit_count": 3}
+
+[sub_resource type="Resource" id="EffectData_5" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "heal"
+params = {"amount": 25}
+
+[sub_resource type="Resource" id="EffectData_6" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "strength"
+params = {"amount": 3}
+
+[sub_resource type="Resource" id="EffectData_7" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "damage"
+params = {"amount": 28}
+
+[resource]
+script = ExtResource("1_enemydata")
+id = "boss_act3"
+display_name = "The Eternal Ember"
+name = "The Eternal Ember"
+act = 3
+enemy_type = 2
+min_hp = 260
+max_hp = 300
+moves = [{
+"effects": [SubResource("EffectData_1")],
+"id": "move_1",
+"telegraph_text": "World Burn 20",
+"timer": 4
+}, {
+"effects": [SubResource("EffectData_2"), SubResource("EffectData_3")],
+"id": "move_2",
+"telegraph_text": "Soul Drain 12 + Weakness",
+"timer": 5
+}, {
+"effects": [SubResource("EffectData_4")],
+"id": "move_3",
+"telegraph_text": "Ember Surge 8x3",
+"timer": 6
+}, {
+"effects": [SubResource("EffectData_5"), SubResource("EffectData_6")],
+"id": "move_4",
+"telegraph_text": "Ashen Rebirth + Empower",
+"timer": 8
+}, {
+"effects": [SubResource("EffectData_7")],
+"id": "move_5",
+"telegraph_text": "Unstoppable 28",
+"timer": 7
+}]

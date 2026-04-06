@@ -19,6 +19,7 @@ var targeting_line_end: Vector2 = Vector2.ZERO
 var tooltip_popup: PopupPanel = null  # Tooltip for keywords
 
 var play_area: Rect2 = Rect2()
+var play_area_node: ColorRect = null  # Optional: node ref for visual highlight
 var valid_targets: Array = []
 var current_target: Node = null
 
@@ -57,6 +58,7 @@ func _setup_ui():
 
 func setup_card(deck_card: DeckCardData):
 	deck_card_data = deck_card
+	card_data = DataRegistry.get_card_data(deck_card.card_id) if deck_card else null
 	if card_widget:
 		card_widget.setup_card(deck_card)
 
@@ -67,13 +69,13 @@ func _can_play() -> bool:
 	if not deck_card_data or not deck_card_data.instance_id:
 		return false
 	var effective_cost = RunState.get_effective_cost(deck_card_data.instance_id)
-	return RunState.energy >= effective_cost
+	var current_energy = ResourceManager.energy if ResourceManager else 0
+	return current_energy >= effective_cost
 
 func _is_targeting_card() -> bool:
-	# For now, assume cards with "attack" or "strike" in name need targets
-	if not deck_card_data:
+	if not card_data:
 		return false
-	return "attack" in deck_card_data.card_id or "strike" in deck_card_data.card_id
+	return card_data.targeting_mode == CardData.TargetingMode.ENEMY
 
 func _gui_input(event):
 	if not visible:
@@ -121,9 +123,11 @@ func _start_drag(start_pos: Vector2):
 	z_index = 100
 	# Reset scale when starting drag
 	scale = Vector2(1.0, 1.0)
-	
+
 	if _is_targeting_card():
 		_show_targeting_line(start_pos)
+	elif play_area_node:
+		play_area_node.color = Color(0.2, 0.8, 0.2, 0.35)  # Green highlight when dragging
 
 func _show_targeting_line(start_pos: Vector2):
 	targeting_line_visible = true
@@ -172,15 +176,21 @@ func _end_drag(end_pos: Vector2):
 	z_index = 0
 	targeting_line_visible = false
 	queue_redraw()
-	
+
+	# Reset play area highlight
+	if play_area_node:
+		play_area_node.color = Color(1, 1, 1, 0.1)
+
 	var can_play = false
-	
+
 	if _is_targeting_card():
 		if current_target and current_target in valid_targets:
 			can_play = true
 			card_played.emit(self, current_target)
 	else:
-		if play_area.has_point(end_pos):
+		# Play if dropped in play zone OR dragged upward by at least 80px
+		var dragged_up = (end_pos.y < drag_start_pos.y - 80)
+		if play_area.has_point(end_pos) or dragged_up:
 			can_play = true
 			card_played.emit(self, null)
 	

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EquipmentData.gd" id="1_equipdata"]
+
+[resource]
+script = ExtResource("1_equipdata")
+id = "iron_sword"
+name = "Iron Sword"
+description = "A reliable blade. +2 STR."
+slot_type = 4
+rarity = 0
+stat_modifiers = {"str": 2}
+shop_price = 80

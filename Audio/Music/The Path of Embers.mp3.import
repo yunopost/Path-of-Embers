@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://chphufxmi6aem"
+path="res://.godot/imported/The Path of Embers.mp3-f3dbad6ff341bc4a5980fa8159545eba.mp3str"
+
+[deps]
+
+source_file="res://Path-of-Embers/Audio/Music/The Path of Embers.mp3"
+dest_files=["res://.godot/imported/The Path of Embers.mp3-f3dbad6ff341bc4a5980fa8159545eba.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

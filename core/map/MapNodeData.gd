@@ -9,7 +9,10 @@ enum NodeType {
 	ELITE,
 	SHOP,
 	ENCOUNTER,
-	BOSS
+	BOSS,
+	FINAL_BOSS,  # Act 3 only — end-of-run boss, requires all quests complete
+	STORY,       # Special narrative node; placed mid-map in acts 2+
+	REST         # Camp node — heal 30% max HP, once per visit
 }
 
 enum RewardType {
@@ -50,14 +53,14 @@ func to_dict() -> Dictionary:
 
 static func from_dict(data: Dictionary) -> MapNodeData:
 	# Convert row/col to int (JSON may store as float)
-	var row = int(data.get("row", 0))
-	var col = int(data.get("col", 0))
-	var node_type = int(data.get("node_type", NodeType.FIGHT))
+	var p_row := int(data.get("row", 0))
+	var p_col := int(data.get("col", 0))
+	var p_node_type := int(data.get("node_type", NodeType.FIGHT))
 	var node = MapNodeData.new(
 		data.get("id", ""),
-		row,
-		col,
-		node_type
+		p_row,
+		p_col,
+		p_node_type
 	)
 	# Restore reward_flags by appending each item (convert to int to handle float from JSON)
 	node.reward_flags.clear()

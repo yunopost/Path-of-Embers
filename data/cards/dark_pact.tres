@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CardData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/CardData.gd" id="1_carddata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/EffectData.gd" id="2_effectdata"]
+
+[sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "damage_per_curse"
+params = {"base_amount": 4, "per_curse": 2}
+
+[resource]
+script = ExtResource("1_carddata")
+id = "dark_pact"
+name = "Dark Pact"
+cost = 1
+rarity = 2
+card_type = 0
+targeting_mode = 2
+owner_character_id = "witch"
+base_effects = [SubResource("EffectData_1")]

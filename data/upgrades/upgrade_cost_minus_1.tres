@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/UpgradeData.gd" id="1_upgradedata"]
+
+[resource]
+script = ExtResource("1_upgradedata")
+id = "upgrade_cost_minus_1"
+name = "-1 Cost"
+description = "Costs 1 less (minimum 0)."
+rarity = "common"
+weight = 1.0
+is_keyword = false
+effects_dict = {
+"cost_delta": -1
+}
+applies_to_cards = []
+

@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/CharacterData.gd" id="1_chardata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/CardData.gd" id="2_carddata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/QuestData.gd" id="3_questdata"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/iron_shell.tres" id="4_c1"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/construct_punch.tres" id="5_c2"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/construct_punch.tres" id="6_r1"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/overclocked.tres" id="7_r2"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/calibrate.tres" id="8_r3"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/echo_strike.tres" id="9_r4"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/resonant_guard.tres" id="10_r5"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/bulwark.tres" id="11_r6"]
+[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/iron_shell.tres" id="12_r7"]
+
+[sub_resource type="Resource" id="QuestData_1" script_class="QuestData"]
+script = ExtResource("3_questdata")
+id = "golemancer_quest_1"
+title = "Iron Defense"
+description = "Gain 100 block."
+progress_max = 100
+tracking_type = "block_damage"
+reward = {"gold": 35}
+
+[sub_resource type="Resource" id="QuestData_2" script_class="QuestData"]
+script = ExtResource("3_questdata")
+id = "golemancer_quest_2"
+title = "Construct Army"
+description = "Kill 8 enemies."
+progress_max = 8
+tracking_type = "kill_enemies"
+reward = {"gold": 30}
+
+[resource]
+script = ExtResource("1_chardata")
+id = "golemancer"
+display_name = "Golemancer"
+role = "Defender"
+str_base = 1
+def_base = 2
+spirit_base = 1
+hp_base = 28
+theme_1 = "Damage Reduction"
+theme_2 = "Heavy Strikes"
+theme_3 = "Pet System"
+starter_unique_cards = Array[ExtResource("2_carddata")]([ExtResource("4_c1"), ExtResource("5_c2")])
+reward_card_pool = Array[ExtResource("2_carddata")]([ExtResource("6_r1"), ExtResource("7_r2"), ExtResource("8_r3"), ExtResource("9_r4"), ExtResource("10_r5"), ExtResource("11_r6"), ExtResource("12_r7")])
+quests = Array[ExtResource("3_questdata")]([SubResource("QuestData_1"), SubResource("QuestData_2")])
