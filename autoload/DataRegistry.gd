@@ -775,9 +775,9 @@ func _create_placeholder_characters():
 			quest.tracking_type = "ultimate_golem_assembled"
 		elif i == 1:
 			quest.title = "Living Armor Quest"
-			quest.description = "Buy %d relics" % 6
-			quest.progress_max = 6
-			quest.tracking_type = "buy_relics"
+			quest.description = "Spend %d gold" % 150
+			quest.progress_max = 150
+			quest.tracking_type = "spend_gold"
 		elif i == 2:
 			quest.title = "Echo Quest"
 			quest.description = "Mirror a card %d times" % 10

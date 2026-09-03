@@ -11,7 +11,7 @@ params = {"amount": 5}
 [sub_resource type="Resource" id="EffectData_2" script_class="EffectData"]
 script = ExtResource("2_effectdata")
 effect_type = "add_curse_to_hand"
-params = {}
+params = {"is_temporary": true}
 
 [resource]
 script = ExtResource("1_carddata")

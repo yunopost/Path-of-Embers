@@ -150,12 +150,6 @@ func _check_and_advance(milestone: MilestoneData, event_type: String, payload: D
 					return _progress_counters[milestone.id] >= milestone.condition_count
 			return false
 
-		"gain_relics":
-			if event_type == "RELIC_GAINED":
-				_progress_counters[milestone.id] = _progress_counters.get(milestone.id, 0) + 1
-				return _progress_counters[milestone.id] >= milestone.condition_count
-			return false
-
 		"gain_gold":
 			# Checked against the running total accumulated this run
 			return _run_gold_accumulated >= milestone.condition_count

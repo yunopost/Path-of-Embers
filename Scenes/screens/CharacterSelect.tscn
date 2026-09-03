@@ -1,8 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://fld01qrdutey"]
+[gd_scene load_steps=5 format=3 uid="uid://fld01qrdutey"]
 
 [ext_resource type="Script" uid="uid://wj4ed33833sn" path="res://Path-of-Embers/scenes/screens/CharacterSelect.gd" id="1_charselect"]
 [ext_resource type="Texture2D" uid="uid://ckenb5r6kqdjq" path="res://Path-of-Embers/Art Assets/Start Menu/Main Menu background v2.png" id="2_bg"]
-[ext_resource type="Shader" path="res://shaders/vignette.gdshader" id="3_vignette"]
+[ext_resource type="Shader" uid="uid://nundym8xo7mm" path="res://shaders/vignette.gdshader" id="3_vignette"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
 shader = ExtResource("3_vignette")
@@ -29,57 +29,10 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="VignetteRect" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 material = SubResource("ShaderMaterial_1")
-color = Color(1, 1, 1, 1)
-
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 60.0
-offset_top = 30.0
-offset_right = -60.0
-offset_bottom = -30.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 10
-
-[node name="Title" type="Label" parent="VBoxContainer"]
-layout_mode = 2
-text = "Select Your Party"
-horizontal_alignment = 1
-
-[node name="SelectionCountLabel" type="Label" parent="VBoxContainer"]
-layout_mode = 2
-text = "Selected: 0 / 3"
-horizontal_alignment = 1
-
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="CharacterGrid" type="GridContainer" parent="VBoxContainer/ScrollContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-theme_override_constants/h_separation = 16
-theme_override_constants/v_separation = 16
-columns = 3
-
-[node name="PartySummaryLabel" type="Label" parent="VBoxContainer"]
-visible = false
-layout_mode = 2
-autowrap_mode = 3
-
-[node name="ConfirmButton" type="Button" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-disabled = true
-text = "Confirm Party"

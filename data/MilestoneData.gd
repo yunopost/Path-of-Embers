@@ -13,7 +13,7 @@ class_name MilestoneData
 ##   "complete_nodes"         — complete condition_count nodes total
 ##   "win_elites"             — defeat condition_count elite nodes
 ##   "win_boss"               — defeat any boss node (condition_count times)
-##   "gain_relics"            — pick up condition_count relics
+
 ##   "gain_gold"              — accumulate condition_count gold in one run
 ##   "character_used"         — complete a run with character in condition_params["character_id"]
 ##   "choose_encounter_option"— trigger ENCOUNTER_CHOICE with condition_params["choice_id"]

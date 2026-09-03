@@ -119,11 +119,10 @@ func _update_available_nodes():
 	# Filter out completed nodes (can't go back)
 	available_next_node_ids = available_next_node_ids.filter(func(id): return not current_map.get_node(id).is_completed)
 
-	# Boss gate (Phase 3): BOSS and FINAL_BOSS nodes are only accessible when all party quests are complete
+	# Quest gate applies ONLY to the final boss (per GDD) — act bosses are always open
 	if QuestManager and not QuestManager.are_all_party_quests_complete():
 		available_next_node_ids = available_next_node_ids.filter(func(id):
-			var t = current_map.get_node(id).node_type
-			return t != MapNodeData.NodeType.BOSS and t != MapNodeData.NodeType.FINAL_BOSS
+			return current_map.get_node(id).node_type != MapNodeData.NodeType.FINAL_BOSS
 		)
 
 	# Emit signal if changed

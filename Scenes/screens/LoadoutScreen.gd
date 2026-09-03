@@ -396,7 +396,7 @@ func _build_bottom_bar() -> Control:
 	inner_hbox.add_child(right_vbox)
 
 	start_btn = Button.new()
-	start_btn.text = "START RUN"
+	start_btn.text = "NEXT: QUESTS →"
 	start_btn.custom_minimum_size = Vector2(220, 60)
 	_style_start_button(start_btn)
 	start_btn.pressed.connect(_on_start_run_pressed)
@@ -477,10 +477,11 @@ func _load_portrait_for(char_data: CharacterData) -> Control:
 		if tex:
 			var tr := TextureRect.new()
 			tr.texture = tex
-			tr.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 			tr.custom_minimum_size = Vector2(0, 180)
 			tr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			tr.clip_contents = true
 			return tr
 
 	var placeholder := ColorRect.new()
@@ -732,4 +733,5 @@ func _on_start_run_pressed():
 	if AutoSaveManager:
 		AutoSaveManager.force_save("new_run_started")
 
-	ScreenManager.go_to_map()
+	# Wizard step 4: pick one quest per companion before hitting the map
+	ScreenManager.go_to_quest_select() 

@@ -41,6 +41,19 @@ func initialize_quests(character_data_list: Array[CharacterData]):
 
 	quests_changed.emit()
 
+func set_quest_choice(char_data: CharacterData, quest_id: String) -> void:
+	## Replace the active quest for one character with a chosen quest from
+	## their pool (used by QuestSelectScreen). Resets progress to 0.
+	for q in char_data.quests:
+		if q.id == quest_id:
+			quests[char_data.id] = QuestState.new(
+				q.id, char_data.id, q.title, q.description,
+				q.progress_max, q.tracking_type, q.params.duplicate()
+			)
+			quests_changed.emit()
+			return
+	push_warning("QuestManager: quest '%s' not in pool for character '%s'" % [quest_id, char_data.id])
+
 func get_quest(character_id: String) -> QuestState:
 	## Get the active quest state for a character.
 	return quests.get(character_id, null)
@@ -110,7 +123,7 @@ func _on_quest_newly_completed(character_id: String, quest_state: QuestState) ->
 
 func _dispatch_reward(reward: Dictionary) -> void:
 	## Apply a quest reward immediately.
-	## Supported keys: "gold", "upgrade_count", "heal_amount", "relic_id"
+	## Supported keys: "gold", "upgrade_count", "heal_amount"
 	var gold = int(reward.get("gold", 0))
 	if gold > 0 and ResourceManager:
 		ResourceManager.set_gold(ResourceManager.gold + gold)
@@ -126,8 +139,3 @@ func _dispatch_reward(reward: Dictionary) -> void:
 	if upgrades > 0 and ResourceManager:
 		ResourceManager.add_upgrade_points(upgrades)
 		print("QuestManager: Quest reward — +%d upgrade point(s)" % upgrades)
-
-	var relic_id: String = reward.get("relic_id", "")
-	if not relic_id.is_empty() and RunState:
-		RunState.add_relic(relic_id)
-		print("QuestManager: Quest reward — relic '%s'" % relic_id)

@@ -5,6 +5,9 @@ class_name Enemy
 
 signal time_changed(current: int, max: int)
 signal intent_changed(intent: IntentData)
+
+## Act-scaling damage multiplier (set at spawn by CombatController; 1.0 = unscaled)
+var damage_multiplier: float = 1.0
 signal died
 
 var enemy_id: String = ""
@@ -134,10 +137,10 @@ func perform_intent(combat_controller: CombatController):
 		var source = stats
 		var target = combat_controller.player_stats
 		
-		# Resolve effects
+		# Resolve effects (damage scaled by act multiplier)
 		for effect in effects:
 			if effect is EffectData:
-				EffectResolver.resolve_effect(effect, source, target)
+				EffectResolver.resolve_effect(_scaled_effect(effect), source, target)
 		
 		# Update RunState HP and block after effects
 		if ResourceManager:
@@ -151,7 +154,7 @@ func perform_intent(combat_controller: CombatController):
 		# Legacy support: handle old "Attack" intent type
 		match intent.intent_type:
 			"Attack":
-				var damage = intent.values.get("damage", 0)
+				var damage = int(round(float(intent.values.get("damage", 0)) * damage_multiplier))
 				var attack_effect = EffectData.new(EffectType.DAMAGE, {"amount": damage})
 				EffectResolver.resolve_effect(attack_effect, stats, combat_controller.player_stats)
 				if ResourceManager:
@@ -163,3 +166,14 @@ func perform_intent(combat_controller: CombatController):
 					combat_controller._on_enemy_acted()
 			_:
 				push_warning("Unknown intent type: " + intent.intent_type)
+
+func _scaled_effect(effect: EffectData) -> EffectData:
+	## Return a copy of a damage effect with the act multiplier applied.
+	## Non-damage effects and unscaled enemies pass through untouched.
+	## Never mutates the original — EffectData resources are shared.
+	if damage_multiplier == 1.0 or effect.effect_type != EffectType.DAMAGE:
+		return effect
+	var scaled_params: Dictionary = effect.params.duplicate(true)
+	if scaled_params.has("amount"):
+		scaled_params["amount"] = int(round(float(scaled_params["amount"]) * damage_multiplier))
+	return EffectData.new(effect.effect_type, scaled_params)

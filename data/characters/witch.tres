@@ -26,9 +26,9 @@ reward = {"gold": 30}
 script = ExtResource("3_questdata")
 id = "witch_quest_2"
 title = "Dark Knowledge"
-description = "Gain 2 relics."
+description = "Upgrade 2 cards."
 progress_max = 2
-tracking_type = "gain_relics"
+tracking_type = "upgrade_cards"
 reward = {"gold": 35}
 
 [resource]

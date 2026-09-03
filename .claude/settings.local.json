@@ -1,7 +1,31 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find /c/Users/amkru/Documents/path-of-embers/Path-of-Embers/data -name *.tres)"
+      "Bash(find /c/Users/amkru/Documents/path-of-embers/Path-of-Embers/data -name *.tres)",
+      "Bash(\"C:/Users/amkru/Downloads/ffmpeg-2026-04-01-git-eedf8f0165-essentials_build/ffmpeg-2026-04-01-git-eedf8f0165-essentials_build/bin/ffmpeg.exe\" -i \"C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/Art Assets/Start Menu/background Animation.ogv\" -c:v libtheora -q:v 7 -an \"C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/Art Assets/Start Menu/background Animation fixed.ogv\")",
+      "Bash(\"C:/Users/amkru/Downloads/ffmpeg-2026-04-01-git-eedf8f0165-essentials_build/ffmpeg-2026-04-01-git-eedf8f0165-essentials_build/bin/ffmpeg.exe\" -i \"C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/Art Assets/Start Menu/background Animation.ogv\" -c:v copy -an \"C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/Art Assets/Start Menu/background Animation fixed.ogv\")",
+      "Bash(\"C:/Users/amkru/Downloads/ffmpeg-2026-04-01-git-eedf8f0165-essentials_build/ffmpeg-2026-04-01-git-eedf8f0165-essentials_build/bin/ffmpeg.exe\" -y -i \"C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/Art Assets/Start Menu/background Animation.ogv\" -c:v copy -an \"C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/Art Assets/Start Menu/background Animation fixed.ogv\")",
+      "Bash(\"C:/Users/amkru/Downloads/ffmpeg-2026-04-01-git-eedf8f0165-essentials_build/ffmpeg-2026-04-01-git-eedf8f0165-essentials_build/bin/ffmpeg.exe\" -y -i \"C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/Art Assets/Start Menu/animate-the-campfire-with-a-subtle-flame-flickerin.mp4\" -c:v libtheora -q:v 7 -an \"C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/Art Assets/Start Menu/background Animation.ogv\")",
+      "Bash(grep -h \"effect_type\" \"C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/data/cards/\"*.tres)",
+      "mcp__mcp-registry__search_mcp_registry",
+      "WebSearch",
+      "Bash(npm --version)",
+      "Bash(git clone:*)",
+      "Read(//c/Users/amkru/godot-mcp/server/**)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(claude mcp:*)",
+      "Bash(mkdir -p \"C:/Users/amkru/Documents/path-of-embers/addons\")",
+      "Bash(cp -r \"C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/addons/godot_mcp\" \"C:/Users/amkru/Documents/path-of-embers/addons/godot_mcp\")",
+      "mcp__godot-mcp__get_project_info",
+      "mcp__godot-mcp__open_scene",
+      "mcp__godot-mcp__get_current_scene",
+      "mcp__godot-mcp__list_nodes",
+      "mcp__godot-mcp__execute_editor_script",
+      "Bash(pandoc \"C:\\\\Users\\\\amkru\\\\Downloads\\\\EDEN Episode 1.docx\" -o - --to plain)",
+      "Bash(python \"C:\\\\Users\\\\amkru\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\45d1f679-cc60-46ea-98e5-8d078443136b\\\\ffd07b81-2bff-483d-8ee9-d5f50a1c2a12\\\\skills\\\\docx\\\\scripts\\\\office\\\\unpack.py\" \"C:\\\\Users\\\\amkru\\\\Downloads\\\\EDEN Episode 1.docx\" \"C:\\\\Users\\\\amkru\\\\Downloads\\\\eden_unpacked\")",
+      "PowerShell(python \"C:\\\\Users\\\\amkru\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\45d1f679-cc60-46ea-98e5-8d078443136b\\\\ffd07b81-2bff-483d-8ee9-d5f50a1c2a12\\\\skills\\\\docx\\\\scripts\\\\office\\\\unpack.py\" \"C:\\\\Users\\\\amkru\\\\Downloads\\\\EDEN Episode 1.docx\" \"C:\\\\Users\\\\amkru\\\\Downloads\\\\eden_unpacked\" 2>&1)",
+      "PowerShell($content = Get-Content \"C:\\\\Users\\\\amkru\\\\Downloads\\\\eden_unpacked\\\\word\\\\document.xml\" -Raw -Encoding UTF8; $idx = $content.IndexOf\\(\"Libert\"\\); $content.Substring\\($idx - 20, 200\\))"
     ]
   }
 }

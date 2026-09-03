@@ -70,9 +70,9 @@ const COST_ORB_COLOR_FREE = Color("#2D7A2D")    # Green — free card
 const COST_ORB_BORDER_COLOR = Color("#FFD700")   # Gold — orb ring
 
 # Font paths (gracefully absent until fonts are dropped in)
-const FONT_CINZEL_BOLD = "res://fonts/Cinzel/static/Cinzel-Bold.ttf"
-const FONT_NOTO_SANS = "res://fonts/Noto_Sans/static/NotoSans-Regular.ttf"
-const FONT_NOTO_SANS_BOLD = "res://fonts/Noto_Sans/static/NotoSans-Bold.ttf"
+const FONT_CINZEL_BOLD = "res://Path-of-Embers/fonts/Cinzel/static/Cinzel-Bold.ttf"
+const FONT_NOTO_SANS = "res://Path-of-Embers/fonts/Noto_Sans/static/NotoSans-Regular.ttf"
+const FONT_NOTO_SANS_BOLD = "res://Path-of-Embers/fonts/Noto_Sans/static/NotoSans-Bold.ttf"
 
 func _ready():
 	_load_fonts()

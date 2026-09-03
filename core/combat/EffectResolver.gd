@@ -202,7 +202,8 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 				target.take_damage(final_damage, false)
 		
 		EffectType.ADD_CURSE_TO_HAND:
-			var is_temporary = effect.params.get("is_temporary", false)
+			# Curses are combat-temporary by default; cards must opt in to permanent curses
+			var is_temporary = effect.params.get("is_temporary", true)
 			if combat_controller and combat_controller.has_method("_add_curse_to_hand"):
 				combat_controller._add_curse_to_hand(is_temporary)
 		
@@ -219,7 +220,7 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 		EffectType.RETAIN_BLOCK_THIS_TURN:
 			var status_value = effect.params.get("value", true)
 			if source:
-				source.apply_status("retain_block_this_turn", status_value)
+				source.apply_status(StatusEffectType.RETAIN_BLOCK_THIS_TURN, status_value)
 		
 		EffectType.BLOCK_ON_ENEMY_ACT:
 			# This is handled in CombatController._setup_power_card_effects()

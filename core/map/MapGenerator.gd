@@ -193,7 +193,6 @@ func _set_reward_flags(node: MapNodeData):
 			node.reward_flags.clear()
 			node.reward_flags.append(MapNodeData.RewardType.CARD)
 			node.reward_flags.append(MapNodeData.RewardType.UPGRADE)
-			node.reward_flags.append(MapNodeData.RewardType.RELIC)
 		
 		MapNodeData.NodeType.BOSS:
 			node.reward_flags.clear()

@@ -66,10 +66,12 @@ func _generate_stock():
 
 	# 5 cards (mixed rarity using reward pool + pity system)
 	var card_pool = RunState.reward_card_pool if RunState else []
-	if not card_pool.is_empty():
+	if card_pool.is_empty():
+		push_warning("ShopScreen: reward_card_pool is empty — no cards will be stocked")
+	else:
 		var used_ids: Array[String] = []
 		for _i in range(5):
-			var available = card_pool.filter(func(c): return not used_ids.has(c.id))
+			var available = card_pool.filter(func(c): return c != null and not used_ids.has(c.id))
 			if available.is_empty():
 				break
 			var picked: CardData = available[randi() % available.size()]
@@ -96,6 +98,8 @@ func _generate_stock():
 				picked_ids.append(chosen.id)
 				var price = EQUIP_PRICE.get(chosen.rarity, 100)
 				_stock.append({ "type": "equipment", "id": chosen.id, "price": price, "sold": false })
+
+	print("ShopScreen: generated %d stock items" % _stock.size())
 
 func _pick_weighted_equipment(pool: Array, exclude_ids: Array[String]):
 	## Pick a random EquipmentData from pool using EQUIP_DROP_WEIGHT rarity weights.
@@ -128,10 +132,29 @@ func _build_ui():
 	for child in get_children():
 		child.queue_free()
 
+	# Centered shop panel — anchored to clear the party HUD (top-left ~600×220)
+	# and the top-right nav cluster. Scales with window size.
+	var panel := PanelContainer.new()
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.10, 0.09, 0.08, 0.97)
+	panel_style.set_border_width_all(1)
+	panel_style.border_color = Color(0.85, 0.50, 0.15, 0.4)
+	panel_style.set_corner_radius_all(4)
+	panel_style.set_content_margin_all(28)
+	panel.add_theme_stylebox_override("panel", panel_style)
+	panel.anchor_left = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_top = 0.22
+	panel.anchor_bottom = 0.95
+	panel.offset_left = -460
+	panel.offset_right = 460
+	panel.offset_top = 0
+	panel.offset_bottom = 0
+	add_child(panel)
+
 	var root_vbox = VBoxContainer.new()
-	root_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root_vbox.add_theme_constant_override("separation", 10)
-	add_child(root_vbox)
+	root_vbox.add_theme_constant_override("separation", 12)
+	panel.add_child(root_vbox)
 
 	# Header row
 	var header = HBoxContainer.new()
@@ -155,6 +178,8 @@ func _build_ui():
 
 	_stock_container = VBoxContainer.new()
 	_stock_container.add_theme_constant_override("separation", 8)
+	_stock_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_stock_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_stock_container)
 
 	# Leave button

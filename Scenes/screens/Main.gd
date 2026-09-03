@@ -348,15 +348,6 @@ func _create_minimal_settings_popup():
 	var vbox = VBoxContainer.new()
 	popup.add_child(vbox)
 
-	var tap_to_play_toggle = CheckBox.new()
-	tap_to_play_toggle.text = "Tap to Play"
-	tap_to_play_toggle.button_pressed = RunState.tap_to_play if RunState else false
-	tap_to_play_toggle.toggled.connect(func(pressed):
-		if RunState:
-			RunState.tap_to_play = pressed
-	)
-	vbox.add_child(tap_to_play_toggle)
-
 	add_child(popup)
 	popup.popup_centered()
 	popup.confirmed.connect(func(): popup.queue_free())

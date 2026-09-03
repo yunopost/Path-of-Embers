@@ -22,8 +22,6 @@ static func evaluate(q: QuestState, event_type: String, payload: Dictionary) -> 
 			_handle_win_elites(q, event_type, payload)
 		"choose_encounter_option":
 			_handle_choose_encounter_option(q, event_type, payload)
-		"gain_relics":
-			_handle_gain_relics(q, event_type, payload)
 		"win_combat":
 			_handle_win_combat(q, event_type, payload)
 		"deal_damage":
@@ -67,11 +65,6 @@ static func _handle_choose_encounter_option(q: QuestState, event_type: String, p
 		if choice_id == required_choice:
 			# Set progress to max to complete
 			q.set_progress(q.progress_max)
-
-static func _handle_gain_relics(q: QuestState, event_type: String, payload: Dictionary) -> void:
-	## Handle gain_relics tracking: progress += 1 on RELIC_GAINED
-	if event_type == "RELIC_GAINED":
-		q.add_progress(1)
 
 static func _handle_win_combat(q: QuestState, event_type: String, payload: Dictionary) -> void:
 	## Handle win_combat tracking: progress += 1 on COMBAT_VICTORY with FIGHT node

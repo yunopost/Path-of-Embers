@@ -15,7 +15,7 @@
 2. **Map Navigation** — Travel through branching node paths. Each path choice is a meaningful trade-off between risk and reward.
 3. **Encounters** — Combat, events, elites, and bosses at nodes.
 4. **Combat** — Turn-based card combat with the enemy timer system creating a second axis of decision-making beyond energy.
-5. **Rewards** — Cards, upgrades, gold, relics after encounters.
+5. **Rewards** — Cards, upgrades, gold, and equipment after encounters. (Relics were cut — the equipment system replaced them.)
 6. **Progression** — Deck grows through Acts toward the final boss. Upgrades and transcendence deepen individual cards over time.
 
 ---
@@ -589,9 +589,8 @@ Each unique Rare card already in the deck applies -10% to that **specific** Rare
 | **C** | Card: 3 choices from reward pool |
 | **U** | Upgrade: 1 card upgrade |
 | **G** | Gold: Fight 10 / Elite 25 / Boss 50 |
-| **R** | Relic: Standard relic |
-| **B** | Boss Relic: Special boss pool relic |
-| **E** | Elite: Guaranteed relic + 3 card choices + upgrade |
+| **B** | Boss pool: 3 card choices + gold + transcendence upgrade + 12 upgrade points |
+| **E** | Elite pool: 3 card choices + upgrade + 6 upgrade points |
 
 ---
 
@@ -668,7 +667,7 @@ Each unique Rare card already in the deck applies -10% to that **specific** Rare
 | 3 | Map & Progression | ✅ Complete | Procedural map generation, node types (combat, shop, encounter, rest), reward screen, rarity + pity |
 | 4 | Enemy System | ✅ Complete | EnemyData, move patterns, weighted AI with anti-repetition, act 1 enemies, telegraph UI |
 | 5 | Status Effects & Upgrades | ✅ Complete | Full status effect set (Strength, Dexterity, Weakness, Vulnerable, Faith, Bloom, Regrowth, Scry…), card upgrade pool system, upgrade roll UI |
-| 6 | Save/Load, Relics & Quests | ✅ Complete | JSON save/load, DataRegistry character registration fix, RelicData + relic hooks, QuestData + QuestManager + 12 tracking types |
+| 6 | Save/Load & Quests | ✅ Complete | JSON save/load, DataRegistry character registration fix, QuestData + QuestManager + 12 tracking types (relics cut — replaced by equipment in Phase 8) |
 | 7 | Acts 2 & 3 + Final Boss | ✅ Complete | Act transition nodes, FINAL_BOSS/STORY node types, per-act scaling, boss_act2 + boss_act3, new enemies (Char Sentinel, Ashen Knight) |
 | 8 | Equipment System | ✅ Complete | EquipmentData (6 slot types, 3 rarities), LoadoutScreen, stat modifiers, card injection, ShopScreen integration, meta stash, persistent stash |
 | 9 | Milestones, Boss Rush & Content | ✅ Complete | MilestoneData + MilestoneManager, meta.json v2, locked character display, BuildData snapshots, 3 Boss Rush save slots, LeaderboardManager, BossRushScreen, 24 starter cards, 12 characters, 9 enemies + 3 bosses, 5 encounters, 12 equipment |
@@ -685,7 +684,7 @@ Each unique Rare card already in the deck applies -10% to that **specific** Rare
 - ✅ Status effects (Vulnerable)
 - ✅ Card upgrade system (upgrade pool per card)
 - ✅ Save/load system with DataRegistry character registration fix
-- ✅ Relic system (RelicData resource, DataRegistry loading, reward integration)
+- ✅ Equipment system replaced relics (relic system cut in Slice 7)
 - ✅ Quest system (QuestData, QuestState, QuestManager, QuestSystem evaluator)
 - ✅ Acts 2 and 3 + final boss (FINAL_BOSS/STORY node types, act transitions, per-act scaling)
 - ✅ Equipment system (6 slots per character, LoadoutScreen, stat modifiers, card injection, ShopScreen, meta stash)
@@ -717,11 +716,13 @@ Modifier selection is persisted to `user://modifier_settings.json`. Active modif
 
 ### Planned
 
-- ⏳ Apply `ModifierManager.get_enemy_hp_multiplier()` / `get_enemy_damage_multiplier()` in enemy spawn logic
-- ⏳ Apply `ModifierManager.get_player_hp_multiplier()` to ResourceManager at run start
 - ⏳ Milestone .tres data files (to gate modifier unlocks and track run completions)
 - ⏳ Balance tuning
 - ⏳ Art assets (character portraits, card art, enemy sprites)
+
+*(Note: modifier multipliers — enemy HP/damage and player HP — are now applied in CombatController, EffectResolver, and ResourceManager.)*
+
+See `DEVELOPMENT_PLAN.md` in the repo root for the full v1.0 completion plan.
 
 ---
 

@@ -115,20 +115,21 @@ func refresh_from_state():
 	_update_player_hp()
 
 func _start_combat():
-	## Initialize combat with test enemies (default for testing)
-	## Using new enemy system: 3 Ash Men
-	var enemy_data = [
-		{"enemy_id": "ash_man", "count": 3}
-	]
-	_start_combat_with_data({"enemies": enemy_data})
+	## Build an encounter from the current map node (act + node type).
+	var act: int = MapManager.act if MapManager else 1
+	var node_type: int = MapNodeData.NodeType.FIGHT
+	if MapManager and MapManager.has_method("get_current_node_type"):
+		node_type = MapManager.get_current_node_type()
+	var encounter: Dictionary = EncounterDirector.build_encounter(act, node_type)
+	_start_combat_with_data(encounter)
 
 func _start_combat_with_data(encounter_data: Dictionary):
 	## Initialize combat with provided encounter data
 	var enemy_data = encounter_data.get("enemies", [])
 	if enemy_data.is_empty():
-		# Fallback to test enemies: 3 Ash Men
+		# Fallback: single standard enemy
 		enemy_data = [
-			{"enemy_id": "ash_man", "count": 3}
+			{"enemy_id": "ash_man", "count": 1}
 		]
 	
 	combat_controller.start_combat(enemy_data)

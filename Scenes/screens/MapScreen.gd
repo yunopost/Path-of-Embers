@@ -539,8 +539,8 @@ func _on_node_clicked(node_id: String):
 	if not node:
 		return
 	
-	# Boss gate: check if all quests are complete before allowing boss/final-boss entry
-	if node.node_type == MapNodeData.NodeType.BOSS or node.node_type == MapNodeData.NodeType.FINAL_BOSS:
+	# Quest gate applies ONLY to the final boss (per GDD) — act bosses are always open
+	if node.node_type == MapNodeData.NodeType.FINAL_BOSS:
 		if not QuestManager.are_all_party_quests_complete():
 			_show_boss_gate_popup()
 			return  # Block entry

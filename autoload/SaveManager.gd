@@ -389,9 +389,20 @@ func save_meta_game() -> bool:
 	meta_data["version"] = 2
 	return _write_raw_meta(meta_data)
 
+## Starter equipment granted to brand-new players (first launch, no meta save yet)
+const STARTER_EQUIPMENT: Array[String] = ["iron_helm", "chain_mail", "swift_boots"]
+
 func load_persistent_stash() -> Array[String]:
-	## Return the persistent equipment stash from meta.json (or empty array if none).
+	## Return the persistent equipment stash from meta.json.
+	## On a fresh profile (no stash key at all), seed 3 common starter items
+	## so the Loadout screen has something to equip.
 	var data = _load_raw_meta()
+	# Equipment can currently only be gained, never lost — an empty stash means
+	# a fresh profile, so seeding on empty is safe.
+	if not data.has("persistent_stash") or (data["persistent_stash"] is Array and data["persistent_stash"].is_empty()):
+		data["persistent_stash"] = STARTER_EQUIPMENT.duplicate()
+		data["version"] = 2
+		_write_raw_meta(data)
 	var raw = data.get("persistent_stash", [])
 	var result: Array[String] = []
 	for item in raw:

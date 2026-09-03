@@ -98,10 +98,21 @@ func _display_rewards():
 	if reward_bundle.heal_amount > 0:
 		_create_heal_section(reward_bundle.heal_amount)
 
+func _make_section() -> PanelContainer:
+	## Section container that sizes itself to its content (Panel does not).
+	var section := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.13, 0.12, 0.11, 1.0)
+	style.set_border_width_all(1)
+	style.border_color = Color(0.4, 0.35, 0.3, 0.5)
+	style.set_corner_radius_all(3)
+	style.set_content_margin_all(14)
+	section.add_theme_stylebox_override("panel", style)
+	return section
+
 func _create_gold_section(amount: int):
 	## Create gold reward section
-	var section = Panel.new()
-	section.custom_minimum_size = Vector2(0, 60)
+	var section = _make_section()
 	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 10)
 	section.add_child(hbox)
@@ -121,8 +132,7 @@ func _create_gold_section(amount: int):
 
 func _create_card_choices_section(card_ids: Array[String]):
 	## Create card choice section
-	var section = Panel.new()
-	section.custom_minimum_size = Vector2(0, 120)
+	var section = _make_section()
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 10)
 	section.add_child(vbox)
@@ -167,8 +177,7 @@ func _create_card_choices_section(card_ids: Array[String]):
 
 func _create_upgrade_section(count: int):
 	## Create upgrade reward section with button to start upgrade flow
-	var section = Panel.new()
-	section.custom_minimum_size = Vector2(0, 60)
+	var section = _make_section()
 	var hbox = HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 10)
 	section.add_child(hbox)
@@ -188,8 +197,7 @@ func _create_upgrade_section(count: int):
 
 func _create_heal_section(amount: int):
 	## Create heal reward section (auto-applied)
-	var section = Panel.new()
-	section.custom_minimum_size = Vector2(0, 60)
+	var section = _make_section()
 	var label = Label.new()
 	label.text = "Heal: +%d HP (auto-applied)" % amount
 	section.add_child(label)
@@ -337,8 +345,7 @@ func _apply_heal(amount: int):
 	if heal_applied:
 		return
 	
-	var new_hp = min(RunState.current_hp + amount, RunState.max_hp)
-	RunState.set_hp(new_hp, RunState.max_hp)
+	ResourceManager.heal(amount)
 	heal_applied = true
 	_update_continue_button()
 

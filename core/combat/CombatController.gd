@@ -107,12 +107,15 @@ func start_combat(enemy_data: Array):
 			for i in range(count):
 				# Randomize HP from range
 				var random_hp = randi_range(enemy_data_def.min_hp, enemy_data_def.max_hp)
+				# Act scaling from EncounterDirector (1.0 when absent)
+				random_hp = int(round(float(random_hp) * float(enemy_info.get("hp_mult", 1.0))))
 				if ModifierManager:
 					var _is_boss = (enemy_data_def.enemy_type == EnemyData.EnemyType.BOSS)
 					random_hp = int(float(random_hp) * ModifierManager.get_enemy_hp_multiplier(_is_boss))
 				var display_name = enemy_data_def.display_name if enemy_data_def.display_name else enemy_data_def.name
 
 				var enemy = Enemy.new(enemy_id, display_name, random_hp, 3)  # Default time_max, will be overridden by move timers
+				enemy.damage_multiplier = float(enemy_info.get("dmg_mult", 1.0))
 
 				# Generate initial intent
 				var initial_intent = intent_system.generate_intent(enemy)

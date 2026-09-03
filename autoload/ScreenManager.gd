@@ -15,6 +15,7 @@ var screen_scenes: Dictionary = {
 	"main_menu": "res://Path-of-Embers/scenes/screens/Main.tscn",  # Alias for main
 	"character_select": "res://Path-of-Embers/scenes/screens/CharacterSelect.tscn",
 	"loadout": "res://Path-of-Embers/scenes/screens/LoadoutScreen.tscn",
+	"quest_select": "res://Path-of-Embers/scenes/screens/QuestSelectScreen.tscn",
 	"map": "res://Path-of-Embers/scenes/screens/MapScreen.tscn",
 	"combat": "res://Path-of-Embers/scenes/screens/CombatScreen.tscn",
 	"rewards": "res://Path-of-Embers/scenes/screens/RewardsScreen.tscn",
@@ -22,7 +23,7 @@ var screen_scenes: Dictionary = {
 	"shop": "res://Path-of-Embers/scenes/screens/ShopScreen.tscn",
 	"boss_rush": "res://Path-of-Embers/scenes/screens/BossRushScreen.tscn",
 	"game_over": "res://Path-of-Embers/scenes/screens/GameOverScreen.tscn",
-	"victory": "res://Path-of-Embers/Scenes/screens/VictoryScreen.tscn",
+	"victory": "res://Path-of-Embers/scenes/screens/VictoryScreen.tscn",
 }
 
 func _ready():
@@ -45,14 +46,18 @@ func go_to_combat(encounter_data: Dictionary = {}):
 	## Second-line defense: check boss gate if current node is boss
 	if MapManager and MapManager.current_map and not MapManager.current_node_id.is_empty():
 		var node = MapManager.current_map.get_node(MapManager.current_node_id)
-		if node and node.node_type == MapNodeData.NodeType.BOSS:
+		if node and node.node_type == MapNodeData.NodeType.FINAL_BOSS:
 			if QuestManager and not QuestManager.are_all_party_quests_complete():
-				push_warning("ScreenManager: Boss gate blocked - quests incomplete")
+				push_warning("ScreenManager: Final boss gate blocked - quests incomplete")
 				# Return to map (MapScreen will show popup if clicked there)
 				go_to_map()
 				return
 	
 	_change_screen("combat", encounter_data)
+
+func go_to_quest_select():
+	## Navigate to the pre-run quest selection screen (wizard step 4)
+	_change_screen("quest_select", {})
 
 func go_to_rewards(reward_bundle: RewardBundle = null):
 	## Navigate to rewards screen with reward bundle
@@ -145,7 +150,7 @@ func _change_screen(screen_name: String, data: Dictionary):
 	if ui_root:
 		get_tree().root.move_child(ui_root, get_tree().root.get_child_count() - 1)
 		# Hide UI on Main and CharacterSelect screens
-		if screen_name in ["main", "main_menu", "character_select", "loadout", "boss_rush"]:
+		if screen_name in ["main", "main_menu", "character_select", "loadout", "quest_select", "boss_rush"]:
 			ui_root.visible = false
 		else:
 			ui_root.visible = true
