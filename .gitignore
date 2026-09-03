@@ -6,3 +6,4 @@
 poe_snapshot.tgz
 *.msi
 .claude/worktrees/
+*.tgz
