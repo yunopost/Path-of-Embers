@@ -1,0 +1,46 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Path of Embers"
+run/main_scene="uid://c8x7k2nav1n4p"
+config/features=PackedStringArray("4.5", "Mobile")
+config/icon="res://icon.svg"
+
+[autoload]
+
+RunState="*res://Path-of-Embers/autoload/RunState.gd"
+SceneRouter="*res://Path-of-Embers/autoload/SceneRouter.gd"
+SaveManager="*res://Path-of-Embers/autoload/SaveManager.gd"
+DataRegistry="*res://Path-of-Embers/autoload/DataRegistry.gd"
+ScreenManager="*res://Path-of-Embers/autoload/ScreenManager.gd"
+MusicManager="*res://Path-of-Embers/autoload/MusicManager.gd"
+AutoSaveManager="*res://Path-of-Embers/autoload/AutoSaveManager.gd"
+PartyManager="*res://Path-of-Embers/autoload/PartyManager.gd"
+ResourceManager="*res://Path-of-Embers/autoload/ResourceManager.gd"
+QuestManager="*res://Path-of-Embers/autoload/QuestManager.gd"
+MapManager="*res://Path-of-Embers/autoload/MapManager.gd"
+MilestoneManager="*res://Path-of-Embers/autoload/MilestoneManager.gd"
+LeaderboardManager="*res://Path-of-Embers/autoload/LeaderboardManager.gd"
+ModifierManager="*res://Path-of-Embers/autoload/ModifierManager.gd"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")
+
+[rendering]
+
+renderer/rendering_method="mobile"
