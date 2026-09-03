@@ -35,10 +35,11 @@ func _load_portrait(character_id: String) -> void:
 	var texture = null
 	
 	# Load texture - use direct path matching for known characters first
+	# NOTE: Monster Hunter art is pending regeneration (female, per Creative Director); files moved to Art Assets/_reference/
 	if char_data.display_name == "Monster Hunter":
-		texture = load("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter.png")
+		texture = (load("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter.png") if ResourceLoader.exists("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter.png") else null)
 		if texture == null:
-			texture = load("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter 2.png")
+			texture = (load("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter 2.png") if ResourceLoader.exists("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter 2.png") else null)
 		if texture:
 			portrait.texture = texture
 			return
