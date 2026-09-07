@@ -502,8 +502,12 @@ func _on_turn_ended():
 	_check_combat_end()
 
 func _on_end_turn_pressed():
-	combat_controller.end_player_turn()
-	# Check for combat end after turn (in case enemies died during turn resolution)
+	## STOPGAP (Card-Clock Combat spec §10): there is no "end turn" any more.
+	## This button/handler should be replaced by the Ability Bar's Focus button
+	## as part of the UI rebuild (spec item 8, separate task) — calling focus()
+	## here keeps the screen loading and playable in the meantime.
+	combat_controller.focus()
+	# Check for combat end after Focus (in case enemies died during resolution)
 	_check_combat_end()
 
 func _on_enemy_died(enemy_id: String):
