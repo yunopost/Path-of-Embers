@@ -11,7 +11,7 @@ params = {"amount": 6}
 [sub_resource type="Resource" id="EffectData_2" script_class="EffectData"]
 script = ExtResource("2_effectdata")
 effect_type = "vulnerable"
-params = {"amount": 1}
+params = {"duration": 4}
 
 [resource]
 script = ExtResource("1_carddata")
