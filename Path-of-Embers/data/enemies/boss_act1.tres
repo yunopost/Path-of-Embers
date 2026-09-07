@@ -38,6 +38,7 @@ script = ExtResource("1_enemydata")
 id = "boss_act1"
 display_name = "Cinderborn"
 name = "Cinderborn"
+sprite_path = "res://Path-of-Embers/Art Assets/Boss Sprites/Cinderborn, the Ruined Cathedral Colossus.png"
 act = 1
 enemy_type = 2
 min_hp = 120

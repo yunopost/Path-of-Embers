@@ -28,6 +28,7 @@ script = ExtResource("1_enemydata")
 id = "boss_act2"
 display_name = "Obsidian Colossus"
 name = "Obsidian Colossus"
+sprite_path = "res://Path-of-Embers/Art Assets/Boss Sprites/Fallen Obsidian Colossus.png"
 act = 2
 enemy_type = 2
 min_hp = 190

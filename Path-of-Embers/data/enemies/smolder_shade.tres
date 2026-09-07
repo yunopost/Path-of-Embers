@@ -23,6 +23,7 @@ script = ExtResource("1_enemydata")
 id = "smolder_shade"
 display_name = "Smolder Shade"
 name = "Smolder Shade"
+sprite_path = "res://Path-of-Embers/Art Assets/Enemy Sprites/Smolder Shade.png"
 act = 1
 enemy_type = 0
 min_hp = 28

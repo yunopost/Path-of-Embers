@@ -43,6 +43,7 @@ script = ExtResource("1_enemydata")
 id = "boss_act3"
 display_name = "The Eternal Ember"
 name = "The Eternal Ember"
+sprite_path = "res://Path-of-Embers/Art Assets/Boss Sprites/the_eternal_ember.png"
 act = 3
 enemy_type = 2
 min_hp = 260
