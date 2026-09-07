@@ -12,7 +12,7 @@ extends Node
 ##   --pool=fight:N | elite:N | boss   composition from EncounterDirector constants (boss uses act)
 ##   --act=1|2|3          applies EncounterDirector ACT_HP_MULT / ACT_DMG_MULT (bosses unscaled, as in-game)
 ##   --n=100              fights per configuration
-##   --policy=greedy|random
+##   --policy=greedy|random|timed
 ##   --seed=12345         base seed; fight i uses seed+i
 ##   --max_turns=60       fight is scored "timeout" past this
 ##   --label=text         free-text label used in outputs
@@ -368,6 +368,7 @@ func _policy_choose(cc: CombatController, playable: Array) -> Dictionary:
 	match str(cfg.policy):
 		"greedy": return policy_greedy(cc, playable)
 		"random": return policy_random(cc, playable)
+		"timed": return policy_timed(cc, playable)
 		_:
 			push_error("sim: unknown policy '%s'" % cfg.policy)
 			return {}
@@ -380,6 +381,54 @@ func policy_greedy(cc: CombatController, playable: Array) -> Dictionary:
 	for p in playable:
 		if p.cost < best.cost:
 			best = p
+	return {"dc": best.dc, "enemy": _lowest_hp_enemy(cc) if best.cd.targeting_mode == CardData.TargetingMode.ENEMY else null}
+
+func policy_timed(cc: CombatController, playable: Array) -> Dictionary:
+	## Minimal timing-aware policy: the cheapest test of whether card-clock rewards
+	## reading the clock. Under the Block rule (spec 4) Block survives until an enemy
+	## acts and is then wiped, so blocking early is waste and blocking late is value.
+	##
+	##   - If any alive enemy will act on this card play (timer <= that card's tick
+	##     cost), prefer a Block card; among Block cards prefer the largest block.
+	##   - Otherwise prefer damage: the highest-damage affordable card, targeting the
+	##     lowest-HP enemy so kills land and remove a timer from the board.
+	##   - Ties fall back to cheapest.
+	if playable.is_empty():
+		return {}
+
+	var incoming := false
+	for e in _alive_enemies(cc):
+		if e.time_current <= 1:
+			incoming = true
+			break
+
+	var best = null
+	var best_score := -99999.0
+	for p in playable:
+		var blk := 0
+		var dmg := 0
+		for eff in CardRules.get_resolved_effects(p.dc):
+			if not (eff is EffectData):
+				continue
+			match eff.effect_type:
+				EffectType.BLOCK:
+					blk += int(eff.params.get("amount", 0))
+				EffectType.DAMAGE:
+					dmg += int(eff.params.get("amount", 0)) * int(eff.params.get("hit_count", 1))
+				EffectType.DAMAGE_EQUAL_TO_BLOCK:
+					dmg += cc.player_stats.block
+				_:
+					pass
+		var score := 0.0
+		if incoming:
+			score = float(blk) * 10.0 + float(dmg) - float(p.cost)
+		else:
+			score = float(dmg) * 10.0 + float(blk) * 0.5 - float(p.cost)
+		if score > best_score:
+			best_score = score
+			best = p
+	if best == null:
+		best = playable[0]
 	return {"dc": best.dc, "enemy": _lowest_hp_enemy(cc) if best.cd.targeting_mode == CardData.TargetingMode.ENEMY else null}
 
 func policy_random(cc: CombatController, playable: Array) -> Dictionary:

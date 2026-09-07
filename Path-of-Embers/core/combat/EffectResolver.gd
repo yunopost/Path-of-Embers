@@ -204,7 +204,23 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 		EffectType.ADD_CURSE_TO_HAND:
 			# Curses are combat-temporary by default; cards must opt in to permanent curses
 			var is_temporary = effect.params.get("is_temporary", true)
-			if combat_controller and combat_controller.has_method("_add_curse_to_hand"):
+			# max_in_hand: skip the add when the hand already holds this many curses.
+			# The Witch's curses are a cost she pays for tempo, not a hand-flood — without
+			# this cap a low-cooldown curse generator fills the 8-card hand with
+			# unplayable cards and burns real draws (see Playtest Reports, 7 Sep).
+			var _max_in_hand: int = int(effect.params.get("max_in_hand", 0))
+			var _may_add: bool = true
+			if _max_in_hand > 0:
+				var _curses := 0
+				for _iid in RunState.deck_model.hand:
+					var _dc = RunState.deck.get(_iid)
+					if _dc == null:
+						continue
+					var _cd = DataRegistry.get_card_data(_dc.card_id)
+					if _cd and _cd.card_type == CardData.CardType.CURSE:
+						_curses += 1
+				_may_add = _curses < _max_in_hand
+			if _may_add and combat_controller and combat_controller.has_method("_add_curse_to_hand"):
 				combat_controller._add_curse_to_hand(is_temporary)
 		
 		EffectType.CONDITIONAL_STRENGTH_IF_NO_DAMAGE:

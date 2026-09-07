@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
 script = ExtResource("2_effectdata")
 effect_type = "add_curse_to_hand"
-params = {}
+params = {"max_in_hand": 2}
 
 [sub_resource type="Resource" id="EffectData_2" script_class="EffectData"]
 script = ExtResource("2_effectdata")
@@ -22,9 +22,9 @@ params = {"amount": 1}
 script = ExtResource("1_abilitydata")
 id = "the_small_ending"
 display_name = "The Small Ending"
-description = "Add a Curse to your hand. Gain 2 Energy, draw 1."
+description = "Add a Curse to your hand (max 2 in hand). Gain 2 Energy, draw 1."
 tick_cost = 0
-cooldown = 3
+cooldown = 5
 targeting_mode = 4
 effects = [SubResource("EffectData_1"), SubResource("EffectData_2"), SubResource("EffectData_3")]
 icon_path = ""

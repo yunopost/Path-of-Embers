@@ -279,7 +279,7 @@ func _test_party_abilities_mass_trio() -> void:
 	_check("The Small Ending: adds a Curse to hand", _count_curses_in_hand() == curses_before + 1)
 	_check("The Small Ending: gains 2 Energy", cc.current_energy == mini(energy_before + 2, cc.max_energy))
 	_check("The Small Ending: hand grows by 2 (1 Curse + 1 draw)", RunState.deck_model.hand.size() == hand_before + 2)
-	_check("The Small Ending: sets a 3-tick cooldown", cc.get_ability_cooldown("witch") == 3)
+	_check("The Small Ending: sets a 5-tick cooldown", cc.get_ability_cooldown("witch") == 5)
 
 	# ---- What Was Left: deal damage equal to current Block to target enemy ----
 	cc.player_stats.block = 0
