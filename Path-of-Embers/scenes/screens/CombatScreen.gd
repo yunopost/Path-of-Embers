@@ -9,7 +9,8 @@ extends Control
 @onready var draw_pile_label: Label = $CombatArea/PlayerAnchor/PlayerArea/DrawPileArea/DrawPileLabel
 @onready var energy_label: Label = $BottomUI/EnergyArea/EnergyLabel
 @onready var discard_pile_label: Label = $BottomUI/DiscardPileArea/DiscardPileLabel
-@onready var end_turn_button: Button = $BottomUI/EndTurnButton
+@onready var ability_bar: HBoxContainer = $BottomUI/AbilityBar
+@onready var tick_label: Label = $CombatArea/EnemyAnchor/EnemyArea/TickLabel
 @onready var play_area: ColorRect = $PlayArea
 @onready var player_hp_label: Label = $CombatArea/PlayerAnchor/PlayerArea/PlayerHPLabel
 @onready var player_area: VBoxContainer = $CombatArea/PlayerAnchor/PlayerArea
@@ -22,6 +23,14 @@ var enemy_displays: Array[Control] = []
 var alive_enemy_ids: Array[String] = []
 var combat_ending: bool = false
 
+# Ability Bar (Card-Clock Combat spec §8/§10.8)
+var ability_button_char_ids: Array[String] = []  # index -> character_id ("" = no ability / Focus slot)
+var pending_ability_character_id: String = ""    # "" when not in ability target-select mode
+var player_block_label: Label = null
+
+# Enemy timer "act now" pulse (spec §8: pulse when a timer is at 1)
+var enemy_pulse_tweens: Dictionary = {}  # enemy_id -> Tween
+
 func _ready():
 	# Connect signals
 	RunState.hand_changed.connect(_update_hand)
@@ -33,10 +42,8 @@ func _ready():
 	# Connect combat controller signals
 	combat_controller.combat_started.connect(_on_combat_started)
 	combat_controller.turn_ended.connect(_on_turn_ended)
-	
-	if end_turn_button:
-		end_turn_button.pressed.connect(_on_end_turn_pressed)
-		end_turn_button.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	set_process_unhandled_input(true)
 
 	# Setup play area (invisible but detects drops)
 	if play_area:
@@ -72,30 +79,37 @@ func _apply_combat_ui_style() -> void:
 			hand_area.add_child(tray)
 			hand_area.move_child(tray, 0)
 
-	# End Turn button: ember-themed styling
-	if end_turn_button:
-		var btn_normal = StyleBoxFlat.new()
-		btn_normal.bg_color = Color("#1A0808")
-		btn_normal.border_color = Color("#8B2020")
-		btn_normal.border_width_left = 2
-		btn_normal.border_width_right = 2
-		btn_normal.border_width_top = 2
-		btn_normal.border_width_bottom = 2
-		btn_normal.corner_radius_top_left = 4
-		btn_normal.corner_radius_top_right = 4
-		btn_normal.corner_radius_bottom_left = 4
-		btn_normal.corner_radius_bottom_right = 4
-		var btn_hover = btn_normal.duplicate()
-		btn_hover.bg_color = Color("#2D0F0F")
-		btn_hover.border_color = Color("#CC3333")
-		var btn_pressed = btn_normal.duplicate()
-		btn_pressed.bg_color = Color("#400808")
-		end_turn_button.add_theme_stylebox_override("normal", btn_normal)
-		end_turn_button.add_theme_stylebox_override("hover", btn_hover)
-		end_turn_button.add_theme_stylebox_override("pressed", btn_pressed)
-		end_turn_button.add_theme_color_override("font_color", Color("#FFD0A0"))
-		end_turn_button.add_theme_font_size_override("font_size", 14)
-		end_turn_button.text = "END TURN"
+	# Ability Bar buttons get the same ember theme as the old End Turn button.
+	pass
+
+func _style_ability_button(btn: Button) -> void:
+	var btn_normal = StyleBoxFlat.new()
+	btn_normal.bg_color = Color("#1A0808")
+	btn_normal.border_color = Color("#8B2020")
+	btn_normal.border_width_left = 2
+	btn_normal.border_width_right = 2
+	btn_normal.border_width_top = 2
+	btn_normal.border_width_bottom = 2
+	btn_normal.corner_radius_top_left = 4
+	btn_normal.corner_radius_top_right = 4
+	btn_normal.corner_radius_bottom_left = 4
+	btn_normal.corner_radius_bottom_right = 4
+	var btn_hover = btn_normal.duplicate()
+	btn_hover.bg_color = Color("#2D0F0F")
+	btn_hover.border_color = Color("#CC3333")
+	var btn_pressed = btn_normal.duplicate()
+	btn_pressed.bg_color = Color("#400808")
+	var btn_disabled = btn_normal.duplicate()
+	btn_disabled.bg_color = Color("#141414")
+	btn_disabled.border_color = Color("#3A3A3A")
+	btn.add_theme_stylebox_override("normal", btn_normal)
+	btn.add_theme_stylebox_override("hover", btn_hover)
+	btn.add_theme_stylebox_override("pressed", btn_pressed)
+	btn.add_theme_stylebox_override("disabled", btn_disabled)
+	btn.add_theme_color_override("font_color", Color("#FFD0A0"))
+	btn.add_theme_color_override("font_color_disabled", Color("#707070"))
+	btn.add_theme_font_size_override("font_size", 13)
+	btn.custom_minimum_size = Vector2(96, 44)
 
 func initialize(encounter_data: Dictionary = {}):
 	## Initialize the screen with encounter data
@@ -170,6 +184,9 @@ func _start_combat_with_data(encounter_data: Dictionary):
 	combat_controller.start_combat(enemy_data)
 	_setup_enemies()
 	_setup_character_portrait()
+	_setup_player_block_label()
+	_setup_ability_bar()
+	_update_tick_counter()
 	# Note: _update_hand() will be called automatically via hand_changed signal when draw_cards() is called
 	# Similarly, other updates will be triggered by their respective signals
 	refresh_from_state()
@@ -268,6 +285,232 @@ func _setup_character_portrait() -> void:
 	player_area.add_child(portrait_panel)
 	player_area.move_child(portrait_panel, 0)
 
+# -- Player Block tooltip (spec S8) --------------------------------------------
+
+func _setup_player_block_label() -> void:
+	if not player_area or not combat_controller or not combat_controller.player_stats:
+		return
+	if player_block_label and is_instance_valid(player_block_label):
+		player_block_label.queue_free()
+		player_block_label = null
+
+	player_block_label = Label.new()
+	player_block_label.name = "PlayerBlockLabel"
+	player_block_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	player_block_label.tooltip_text = "Block absorbs damage. It lasts until an enemy acts, then it shatters -- put it up just in time."
+	player_block_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	_update_player_block_label(combat_controller.player_stats.block)
+
+	var hp_label_index = player_area.get_child_count()
+	for i in range(player_area.get_child_count()):
+		if player_area.get_child(i) == player_hp_label:
+			hp_label_index = i + 1
+			break
+	player_area.add_child(player_block_label)
+	player_area.move_child(player_block_label, hp_label_index)
+
+	if not combat_controller.player_stats.block_changed.is_connected(_update_player_block_label):
+		combat_controller.player_stats.block_changed.connect(_update_player_block_label)
+
+func _update_player_block_label(new_block: int) -> void:
+	if not player_block_label or not is_instance_valid(player_block_label):
+		return
+	player_block_label.text = "Block: %d" % new_block if new_block > 0 else ""
+
+# -- Ability Bar (spec S8/S10.8) -----------------------------------------------
+## [FOCUS] [A1] [A2] [A3] replaces End Turn. Hotkeys: Space = Focus, 1/2/3 = abilities.
+## ENEMY-targeted abilities enter target-select (click an enemy to confirm, Escape cancels).
+
+func _setup_ability_bar() -> void:
+	if not ability_bar:
+		return
+	for child in ability_bar.get_children():
+		child.queue_free()
+	ability_button_char_ids.clear()
+	pending_ability_character_id = ""
+
+	# Slot 0: Focus (universal, no character, no cooldown)
+	var focus_btn = Button.new()
+	focus_btn.name = "FocusButton"
+	focus_btn.text = "FOCUS\n[Space]"
+	focus_btn.tooltip_text = "Focus: +2 Energy (capped), draw 2, starts a new cycle. 1 tick. No cooldown."
+	focus_btn.pressed.connect(_on_focus_pressed)
+	_style_ability_button(focus_btn)
+	ability_bar.add_child(focus_btn)
+	ability_button_char_ids.append("")
+
+	var party_ids: Array = PartyManager.party_ids if PartyManager else []
+	for i in range(min(party_ids.size(), 3)):
+		var char_id: String = party_ids[i]
+		var char_data: CharacterData = DataRegistry.get_character(char_id) if DataRegistry else null
+		var btn = Button.new()
+		btn.name = "AbilityButton_%d" % (i + 1)
+		_style_ability_button(btn)
+		if char_data and not char_data.ability_id.is_empty():
+			var ability: PartyAbilityData = DataRegistry.get_ability(char_data.ability_id)
+			if ability:
+				btn.tooltip_text = "%s (%s): %s" % [ability.display_name, char_data.display_name, ability.description]
+				btn.pressed.connect(_on_ability_button_pressed.bind(char_id))
+			else:
+				btn.disabled = true
+		else:
+			# Early Access-locked character (spec: only the six EA abilities are built)
+			btn.text = "-\n[%d]" % (i + 1)
+			btn.tooltip_text = "%s has no ability in this build." % (char_data.display_name if char_data else char_id)
+			btn.disabled = true
+		ability_bar.add_child(btn)
+		ability_button_char_ids.append(char_id if char_data and not (char_data.ability_id.is_empty()) else "")
+
+	_refresh_ability_bar()
+
+func _refresh_ability_bar() -> void:
+	if not ability_bar or not combat_controller:
+		return
+	var children := ability_bar.get_children()
+	for i in range(1, children.size()):
+		var char_id: String = ability_button_char_ids[i] if i < ability_button_char_ids.size() else ""
+		if char_id.is_empty():
+			continue
+		var btn: Button = children[i]
+		var char_data: CharacterData = DataRegistry.get_character(char_id) if DataRegistry else null
+		if not char_data or char_data.ability_id.is_empty():
+			continue
+		var ability: PartyAbilityData = DataRegistry.get_ability(char_data.ability_id)
+		if not ability:
+			continue
+		var cd: int = combat_controller.get_ability_cooldown(char_id)
+		var name_line: String = ability.display_name
+		if ability.icon_path != "" and ResourceLoader.exists(ability.icon_path):
+			btn.icon = load(ability.icon_path)
+		if cd > 0:
+			btn.text = "%s\n(%d)" % [name_line, cd]
+			btn.disabled = true
+		else:
+			btn.text = "%s\n[%d]" % [name_line, i]
+			btn.disabled = (char_id == pending_ability_character_id)
+
+func _on_focus_pressed() -> void:
+	_cancel_ability_targeting()
+	combat_controller.focus()
+	_check_combat_end()
+	_refresh_ability_bar()
+	_update_tick_counter()
+
+func _on_ability_button_pressed(character_id: String) -> void:
+	if not combat_controller.can_use_ability(character_id):
+		return
+	var char_data: CharacterData = DataRegistry.get_character(character_id)
+	var ability: PartyAbilityData = DataRegistry.get_ability(char_data.ability_id)
+	if ability.targeting_mode == CardData.TargetingMode.ENEMY:
+		_begin_ability_targeting(character_id)
+	else:
+		combat_controller.use_ability(character_id, null)
+		_check_combat_end()
+		_refresh_ability_bar()
+		_update_tick_counter()
+
+func _begin_ability_targeting(character_id: String) -> void:
+	pending_ability_character_id = character_id
+	_refresh_ability_bar()
+
+func _cancel_ability_targeting() -> void:
+	if pending_ability_character_id.is_empty():
+		return
+	pending_ability_character_id = ""
+	_refresh_ability_bar()
+
+func _on_enemy_panel_gui_input(event: InputEvent, enemy_panel: Panel) -> void:
+	if pending_ability_character_id.is_empty():
+		return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		var character_id := pending_ability_character_id
+		pending_ability_character_id = ""
+		var ok: bool = combat_controller.use_ability(character_id, enemy_panel)
+		if ok:
+			_check_combat_end()
+		_refresh_ability_bar()
+		_update_tick_counter()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not combat_controller or not combat_controller.combat_active:
+		return
+	if event is InputEventKey and event.pressed and not event.echo:
+		match event.keycode:
+			KEY_SPACE:
+				_on_focus_pressed()
+				get_viewport().set_input_as_handled()
+			KEY_1, KEY_2, KEY_3:
+				var idx: int = event.keycode - KEY_1 + 1  # ability_button_char_ids index (1..3)
+				if idx < ability_button_char_ids.size():
+					var char_id: String = ability_button_char_ids[idx]
+					if not char_id.is_empty():
+						_on_ability_button_pressed(char_id)
+						get_viewport().set_input_as_handled()
+			KEY_ESCAPE:
+				if not pending_ability_character_id.is_empty():
+					_cancel_ability_targeting()
+					get_viewport().set_input_as_handled()
+
+func _update_tick_counter() -> void:
+	if tick_label and combat_controller:
+		tick_label.text = "Tick %d" % combat_controller.get_total_ticks()
+
+# -- Enemy timer "act now" pulse (spec S8) -------------------------------------
+
+func _update_enemy_pulse(enemy: Enemy, timer_label: Label, current: int) -> void:
+	var should_pulse: bool = current == 1 and enemy.stats.is_alive()
+	var existing: Tween = enemy_pulse_tweens.get(enemy.enemy_id, null)
+	if should_pulse:
+		if existing and existing.is_valid():
+			return  # already pulsing
+		var tween := create_tween().set_loops()
+		tween.tween_property(timer_label, "modulate", Color(1.0, 0.35, 0.2, 1.0), 0.35)
+		tween.tween_property(timer_label, "modulate", Color(1, 1, 1, 1), 0.35)
+		enemy_pulse_tweens[enemy.enemy_id] = tween
+	else:
+		if existing and existing.is_valid():
+			existing.kill()
+		enemy_pulse_tweens.erase(enemy.enemy_id)
+		if is_instance_valid(timer_label):
+			timer_label.modulate = Color(1, 1, 1, 1)
+
+# -- Enemy timer ghost preview on card hover (spec S8) -------------------------
+
+func _on_card_hover_start(card_ui: CardUI) -> void:
+	if not card_ui or not card_ui.deck_card_data or not combat_controller:
+		return
+	var instance_id: String = str(card_ui.deck_card_data.instance_id)
+	var predicted: int = RunState.predict_timer_tick_amount_for_card(instance_id)
+	for enemy in combat_controller.get_enemies():
+		if not enemy.stats.is_alive():
+			continue
+		var ghost_value: int = max(0, enemy.time_current - predicted)
+		_set_enemy_ghost(enemy, ghost_value, predicted)
+
+func _on_card_hover_end(_card_ui: CardUI = null) -> void:
+	if not combat_controller:
+		return
+	for enemy in combat_controller.get_enemies():
+		_set_enemy_ghost(enemy, -1, 0)
+
+func _set_enemy_ghost(enemy: Enemy, ghost_value: int, predicted: int) -> void:
+	var panel: Control = null
+	for d in enemy_displays:
+		if is_instance_valid(d) and d.get_meta("enemy", null) == enemy:
+			panel = d
+			break
+	if not panel:
+		return
+	var ghost_label: Label = panel.find_child("GhostLabel", true, false)
+	if not ghost_label:
+		return
+	if ghost_value < 0:
+		ghost_label.visible = false
+		ghost_label.text = ""
+	else:
+		ghost_label.visible = true
+		ghost_label.text = "-> %d" % ghost_value if predicted > 0 else "(no change -- Haste)"
+
 func _setup_enemies():
 	## Create enemy displays
 	# Clear existing
@@ -352,6 +595,17 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 	timer_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	timer_label.custom_minimum_size = Vector2(0, 20)  # Minimum height for wrapped text
 	vbox.add_child(timer_label)
+
+	# Ghost preview label (spec §8): dimmed "-> N" showing where this enemy's timer
+	# lands after the hovered card resolves. Hidden except during a hover.
+	var ghost_label = Label.new()
+	ghost_label.name = "GhostLabel"
+	ghost_label.text = ""
+	ghost_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ghost_label.modulate = Color(1, 1, 1, 0.55)
+	ghost_label.add_theme_font_size_override("font_size", 12)
+	ghost_label.visible = false
+	vbox.add_child(ghost_label)
 	
 	# Intent label with text wrapping
 	var intent_label = Label.new()
@@ -364,8 +618,14 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 	vbox.add_child(intent_label)
 	
 	# Connect to timer and intent signals
-	enemy.time_changed.connect(func(current, max_time): timer_label.text = "Timer: %d/%d" % [current, max_time])
+	enemy.time_changed.connect(func(current, max_time):
+		timer_label.text = "Timer: %d/%d" % [current, max_time]
+		_update_enemy_pulse(enemy, timer_label, current))
 	enemy.intent_changed.connect(func(new_intent): intent_label.text = "Intent: %s" % (new_intent.telegraph_text if new_intent else "None"))
+	_update_enemy_pulse(enemy, timer_label, enemy.time_current)
+
+	# Click-to-target for ability target-select mode (spec §8: click an enemy to confirm)
+	enemy_panel.gui_input.connect(_on_enemy_panel_gui_input.bind(enemy_panel))
 	
 	return enemy_panel
 
@@ -403,6 +663,10 @@ func _update_hand():
 		
 		# Set valid targets (enemies) - do this before waiting
 		card_ui.valid_targets = enemy_displays
+
+		# Enemy timer ghost preview on hover (spec §8)
+		card_ui.mouse_entered.connect(_on_card_hover_start.bind(card_ui))
+		card_ui.mouse_exited.connect(_on_card_hover_end.bind(card_ui))
 		
 		card_ui_instances.append(card_ui)
 		
@@ -432,10 +696,13 @@ func _on_card_played(card_ui: CardUI, target: Node = null):
 	if not deck_card:
 		return
 	
+	_on_card_hover_end()  # card is leaving the hand either way; drop any ghost preview
 	var success = combat_controller.play_card(deck_card, target)
 	if not success:
 		# Card couldn't be played (not enough energy)
 		card_ui._snap_back()
+	_refresh_ability_bar()
+	_update_tick_counter()
 
 func _update_draw_pile_count():
 	if draw_pile_label:
@@ -499,15 +766,6 @@ func _setup_player_status_indicator():
 func _on_turn_ended():
 	_update_player_hp()
 	# Check for combat end after turn (enemies may have died during enemy actions)
-	_check_combat_end()
-
-func _on_end_turn_pressed():
-	## STOPGAP (Card-Clock Combat spec §10): there is no "end turn" any more.
-	## This button/handler should be replaced by the Ability Bar's Focus button
-	## as part of the UI rebuild (spec item 8, separate task) — calling focus()
-	## here keeps the screen loading and playable in the meantime.
-	combat_controller.focus()
-	# Check for combat end after Focus (in case enemies died during resolution)
 	_check_combat_end()
 
 func _on_enemy_died(enemy_id: String):

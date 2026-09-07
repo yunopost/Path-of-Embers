@@ -105,6 +105,11 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
+[node name="TickLabel" type="Label" parent="CombatArea/EnemyAnchor/EnemyArea"]
+layout_mode = 2
+text = "Tick 0"
+horizontal_alignment = 1
+
 [node name="EnemySlots" type="HBoxContainer" parent="CombatArea/EnemyAnchor/EnemyArea"]
 layout_mode = 2
 alignment = 1
@@ -172,9 +177,10 @@ layout_mode = 2
 text = "Energy: 0/3"
 horizontal_alignment = 1
 
-[node name="EndTurnButton" type="Button" parent="BottomUI"]
+[node name="AbilityBar" type="HBoxContainer" parent="BottomUI"]
 layout_mode = 2
-text = "End Turn"
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
 
 [node name="DiscardPileArea" type="VBoxContainer" parent="BottomUI"]
 layout_mode = 2
