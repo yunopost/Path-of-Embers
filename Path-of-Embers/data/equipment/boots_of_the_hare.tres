@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EquipmentData.gd" id="1_equipdata"]
+
+[resource]
+script = ExtResource("1_equipdata")
+id = "boots_of_the_hare"
+name = "Boots of the Hare"
+description = "Light on the feet, light on the sword arm. +2 DEF, +5 HP."
+slot_type = 3
+rarity = 0
+stat_modifiers = {"def": 2, "hp": 5}
+shop_price = 70

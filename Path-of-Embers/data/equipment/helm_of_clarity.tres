@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/EquipmentData.gd" id="1_equipdata"]
+
+[resource]
+script = ExtResource("1_equipdata")
+id = "helm_of_clarity"
+name = "Helm of Clarity"
+description = "A cracked visor that quiets the noise. +3 SPIRIT, +5 HP."
+slot_type = 0
+rarity = 2
+stat_modifiers = {"spirit": 3, "hp": 5}
+shop_price = 150
