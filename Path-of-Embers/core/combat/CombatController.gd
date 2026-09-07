@@ -11,7 +11,7 @@ signal boss_rush_combat_finished(victory: bool, score: int)
 var player_stats: EntityStats
 var enemies: Array[Enemy] = []
 var current_energy: int = 3
-var max_energy: int = 3
+var max_energy: int = 4  # spec Card-Clock Combat §3
 var combat_active: bool = false
 
 # Per-character stat objects — keyed by character_id, seeded from CharacterData base stats.
@@ -24,12 +24,12 @@ var enemy_time_system: EnemyTimeSystem
 var intent_system: IntentSystem
 var pet_board: PetBoard
 
-# Turn tracking
-var damage_taken_this_turn: bool = false  # Track if damage was taken this turn (for Fade Step)
-var cards_played_this_turn: int = 0  # Track cards played for Clear the way
-var block_at_start_of_turn: int = 0  # Track block for block gain detection
-var player_start_hp: int = 50  # Track starting HP for damage detection
-var min_hp_this_turn: int = 50  # Track minimum HP this turn
+# Cycle tracking (a "cycle" is the span from one Focus to the next — spec §5)
+var damage_taken_this_cycle: bool = false  # Track if damage was taken this cycle (for Fade Step)
+var cards_played_this_cycle: int = 0  # Track cards played this cycle (for Opener keyword)
+var block_at_start_of_cycle: int = 0  # Track block for block gain detection
+var cycle_start_hp: int = 50  # Track starting HP for damage detection
+var min_hp_this_cycle: int = 50  # Track minimum HP this cycle
 
 # Combat-wide tracking
 var damage_taken_this_combat: bool = false  # Track if any damage taken this entire combat (Revenant)
@@ -42,11 +42,16 @@ var last_card_target_node: Node = null  # Target Node of last card (Echo MIRROR)
 # Pending state flags (set during effect resolution, consumed after card fully resolves)
 var _mirror_active: bool = false  # Prevent infinite MIRROR recursion
 var _regrowth_pending: bool = false  # Grove: return played card to draw pile instead of discard
-var _end_turn_pending: bool = false  # Hollow: end turn after this card fully resolves
 
-# Delayed effects resolved at START_OF_NEXT_PLAYER_TURN (e.g. Delayed Slam)
+# Effects resolved at the start of the next cycle (i.e. next Focus). Not currently
+# populated by any effect (FORCE_END_TURN/Hollow Dominance was removed — see Slow 3
+# in DataRegistry) but kept as the cycle-boundary hook per spec §10.2.
 # Each entry: { "type": String, "amount": int }
 var _pending_next_turn_effects: Array = []
+
+# Delayed effects that fire after N ticks pass on the shared clock (spec §5: "next
+# turn" → "N ticks", default 4). Each entry: { "type": String, "amount": int, "ticks_remaining": int }
+var _delayed_tick_effects: Array = []
 
 func _ready():
 	# Get HP from ResourceManager if available, otherwise RunState (backward compatibility)
@@ -193,59 +198,64 @@ func start_combat(enemy_data: Array):
 				if ResourceManager:
 					ResourceManager.set_hp(player_stats.current_hp, player_stats.max_hp)
 
-	# Start player turn
-	start_player_turn()
+	# Player starts with 3 energy and a 5-card hand. No other turn setup (spec §10.3) —
+	# no block reset (there is no block yet), no status ticking, no pet cycle hooks.
+	current_energy = 3
+	if ResourceManager:
+		ResourceManager.set_energy(current_energy, max_energy)
+	cards_played_this_cycle = 0
+	damage_taken_this_cycle = false
+	block_at_start_of_cycle = player_stats.block
+	previous_block = player_stats.block  # Initialize previous_block for block gain detection
+	cycle_start_hp = player_stats.current_hp
+	min_hp_this_cycle = player_stats.current_hp
+	RunState.draw_cards(5)
+
 	combat_started.emit()
 
-func start_player_turn():
-	## Begin a new player turn
+func focus() -> void:
+	## Universal player action (spec §2/§10.2): +2 energy (capped), draw 2,
+	## start a new cycle, then advance the clock by 1 tick. Replaces the old
+	## start_player_turn()/end_player_turn() pair — there is no "end turn" any more.
 	if not combat_active:
 		return
 
-	# Advance pet board turn counter and fire START_OF_PLAYER_TURN hooks
-	if pet_board:
-		pet_board.on_start_player_turn()
-
-	# Resolve START_OF_NEXT_PLAYER_TURN pending effects (e.g. Delayed Slam)
-	_resolve_pending_next_turn_effects()
-
-	# Reset turn tracking
-	damage_taken_this_turn = false
-	cards_played_this_turn = 0
-	block_at_start_of_turn = player_stats.block
-	previous_block = player_stats.block  # Initialize previous_block for block gain detection
-	# Store starting HP for damage tracking
-	player_start_hp = player_stats.current_hp
-	min_hp_this_turn = player_stats.current_hp
-
-	# Expire status effects at start of turn
-	player_stats.expire_status_effects()
-	for enemy in enemies:
-		if enemy.stats.is_alive():
-			enemy.stats.expire_status_effects()
-
-	# Reset block at start of turn (combat rule) - unless retain_block_this_turn is active
-	if player_stats.get_status(StatusEffectType.RETAIN_BLOCK_THIS_TURN) == null:
-		player_stats.reset_block()
-		if ResourceManager:
-			ResourceManager.set_block(0)
-	else:
-		# Remove the status after using it (it only applies once)
-		player_stats.status_effects.erase(StatusEffectType.RETAIN_BLOCK_THIS_TURN)
-		player_stats.status_effects_changed.emit()
-
-	# Refill energy
-	current_energy = max_energy
-	# Use set_energy() which will emit the signal if value changed
+	current_energy = min(current_energy + 2, max_energy)
 	if ResourceManager:
 		ResourceManager.set_energy(current_energy, max_energy)
 
-	# Draw 5 cards + any bonus from Overclocked / DRAW_PER_TURN powers
-	var base_draw := 5
+	# Draw 2 + any bonus from Overclocked / DRAW_PER_TURN powers (spec §5: "+N draw on each Focus")
+	var base_draw := 2
 	var bonus_draw_status = player_stats.get_status(StatusEffectType.DRAW_PER_TURN)
 	if bonus_draw_status != null:
 		base_draw += int(bonus_draw_status)
 	RunState.draw_cards(base_draw)
+
+	_start_new_cycle()
+	advance_clock(1)
+
+func _start_new_cycle() -> void:
+	## Cycle boundary (spec §5): the span from one Focus to the next. Runs the
+	## checks that used to fire at end-of-turn against the OUTGOING cycle's
+	## counters, fires the PetBoard cycle hooks, then resets counters for the
+	## INCOMING cycle.
+	if pet_board:
+		pet_board.on_end_player_turn()
+		pet_board.on_start_player_turn()
+
+	# Fade Step: check damage_taken_this_cycle from the cycle that's ending
+	_check_end_of_turn_effects()
+	# Resolve any effects queued for "start of next cycle"
+	_resolve_pending_next_turn_effects()
+
+	# Reset counters for the incoming cycle
+	cards_played_this_cycle = 0
+	damage_taken_this_cycle = false
+	block_at_start_of_cycle = player_stats.block
+	cycle_start_hp = player_stats.current_hp
+	min_hp_this_cycle = player_stats.current_hp
+
+	turn_ended.emit()  # kept for UI subscribers; fires once per cycle boundary now
 
 func can_play_card(card_cost: int, card_data: CardData = null) -> bool:
 	## Check if card can be played based on cost type
@@ -278,13 +288,13 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	if not can_play_card(card_cost, card_data):
 		return false
 	
-	# Check FirstCardOnly keyword (Clear the way) - use CardRules to account for upgrades
+	# Check Opener keyword (first card played this cycle) - use CardRules to account for upgrades
 	var card_keywords = CardRules.get_card_keywords(deck_card)
-	if card_keywords.has("FirstCardOnly") and cards_played_this_turn > 0:
+	if card_keywords.has("Opener") and cards_played_this_cycle > 0:
 		return false
 	
 	# Increment cards played counter
-	cards_played_this_turn += 1
+	cards_played_this_cycle += 1
 	if RunState and RunState.is_boss_rush and RunState.boss_rush_stats.has("cards_played"):
 		RunState.boss_rush_stats["cards_played"] += 1
 	
@@ -371,11 +381,10 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	if QuestManager:
 		QuestManager.emit_game_event("CARD_PLAYED", {"card_type": card_data.card_type, "card_id": deck_card.card_id})
 
-	# Tick all enemies with the timer amount for THIS card
-	enemy_time_system.tick_all_enemies(timer_tick_amount)
-	
-	# Resolve any enemies that hit 0
-	enemy_time_system.resolve_enemy_time_triggers("card_played")
+	# Advance the clock by this card's tick amount (spec §10.1 — the single
+	# entry point for time passing: ticks enemies, statuses, resolves any
+	# enemy action, and wipes Block per the rule in §4).
+	advance_clock(timer_tick_amount)
 	
 	# Move card to discard pile (or draw pile if REGROWTH is pending)
 	# Re-fetch instance_id with explicit String conversion to ensure type safety
@@ -394,11 +403,6 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 			if discard_index < 0:  # Not found, add it
 				RunState.deck_model.discard_pile.append(discard_instance_id)
 				RunState.deck_model.discard_pile_changed.emit()
-
-	# FORCE_END_TURN: card is now fully resolved and discarded — safe to end the turn
-	if _end_turn_pending:
-		_end_turn_pending = false
-		end_player_turn()
 
 	return true
 
@@ -493,44 +497,76 @@ func _get_card_effects(deck_card: DeckCardData) -> Array:
 	return CardRules.get_resolved_effects(deck_card)
 
 func _get_card_timer_tick(deck_card: DeckCardData) -> int:
-	## Get the timer tick amount for a card
-	## Returns 0 if card has Haste upgrade, 1 otherwise
+	## Get the number of ticks this card advances the clock by (Haste 0 / Slow N / default 1).
 	var instance_id_str: String = str(deck_card.instance_id)
 	return RunState.get_timer_tick_amount_for_card(instance_id_str)
 
-func end_player_turn():
-	## End the player turn and start enemy turn
+func advance_clock(ticks: int) -> void:
+	## THE single entry point for time passing (spec §10.1). play_card() and
+	## focus() call this instead of touching EnemyTimeSystem/statuses directly.
+	## In order: (a) tick every alive enemy's timer, (b) tick-based ability
+	## cooldowns (hook only — no abilities implemented yet), (c) tick-based
+	## status durations on player and enemies, (d) resolve any enemy whose
+	## timer hit 0. Each resolved enemy action fires _on_enemy_acted(), which
+	## performs (e): wiping player Block unless "retain through next enemy
+	## action" is set.
+	## ticks <= 0 (Haste) does nothing at all — no time passes, nothing resolves.
 	if not combat_active:
 		return
+	if ticks <= 0:
+		return
 
-	# Fire pet END_OF_PLAYER_TURN hooks
-	if pet_board:
-		pet_board.on_end_player_turn()
+	# (a) Tick every alive enemy's timer (EnemyTimeSystem applies the ModifierManager multiplier)
+	enemy_time_system.tick_all_enemies(ticks)
 
-	# Discard hand
-	RunState.discard_hand()
+	# (b) Tick-based ability cooldowns — hook for party abilities (spec §7/§10.6), none yet
+	_tick_ability_cooldowns(ticks)
 
-	# Force all enemies to 0 and resolve triggers
-	enemy_time_system.force_all_enemies_to_zero()
-	enemy_time_system.resolve_enemy_time_triggers("end_turn")
-	
-	# Check if combat should end (enemies may have died during enemy actions)
-	# Note: CombatScreen will handle the actual transition via signal
-	
-	# Check pending effects that trigger at end of turn (Fade Step)
-	_check_end_of_turn_effects()
-	
-	# Only start new player turn if combat is still active
-	if combat_active:
-		start_player_turn()
-		turn_ended.emit()
+	# (c) Tick-based status durations on player and all alive enemies
+	player_stats.tick_statuses(ticks)
+	for enemy in enemies:
+		if enemy.stats.is_alive():
+			enemy.stats.tick_statuses(ticks)
+	_tick_delayed_effects(ticks)
+
+	# (d)/(e) Resolve enemies whose timer hit 0. Enemy.perform_intent() calls
+	# _on_enemy_acted() per resolved action, which performs the Block wipe.
+	enemy_time_system.resolve_enemy_time_triggers("advance_clock")
+
+func _tick_ability_cooldowns(_ticks: int) -> void:
+	## Hook for party ability cooldowns (spec §7/§10.6). No PartyAbilityData /
+	## cooldown state exists yet — abilities are a separate task (spec item 6).
+	pass
+
+func _tick_delayed_effects(ticks: int) -> void:
+	## Ticks down DELAYED_DAMAGE-style effects queued on the shared clock
+	## (spec §5: "next turn" effects now fire after N ticks, default 4 — see
+	## EffectResolver.DELAYED_DAMAGE).
+	if _delayed_tick_effects.is_empty():
+		return
+	var still_pending: Array = []
+	for entry in _delayed_tick_effects:
+		entry["ticks_remaining"] = int(entry.get("ticks_remaining", 0)) - ticks
+		if entry["ticks_remaining"] <= 0:
+			_resolve_delayed_tick_effect(entry)
+		else:
+			still_pending.append(entry)
+	_delayed_tick_effects = still_pending
+
+func _resolve_delayed_tick_effect(entry: Dictionary) -> void:
+	match str(entry.get("type", "")):
+		"damage_random_enemy":
+			_apply_damage_to_random_enemy(int(entry.get("amount", 0)))
+		_:
+			push_warning("CombatController: unknown delayed_tick_effect type '%s'" % entry.get("type", ""))
 
 func _check_end_of_turn_effects():
-	## Check effects that trigger at end of turn
-	# Fade Step: gain Strength if no damage was taken
+	## Check effects that trigger at the end of a cycle (called from _start_new_cycle
+	## against the OUTGOING cycle's counters, before they're reset)
+	# Fade Step: gain Strength if no damage was taken this cycle
 	var pending_strength = player_stats.get_status(StatusEffectType.PENDING_STRENGTH_IF_NO_DAMAGE)
 	if pending_strength != null:
-		if not damage_taken_this_turn:
+		if not damage_taken_this_cycle:
 			var amount = int(pending_strength)
 			player_stats.apply_status(StatusEffectType.STRENGTH, amount)
 		# Remove pending status
@@ -559,10 +595,10 @@ func _remove_temporary_cards():
 
 func _on_player_hp_changed(new_hp: int):
 	## Track minimum HP for damage detection (Fade Step) and fire ON_PLAYER_DAMAGED relic hook.
-	if new_hp < min_hp_this_turn:
-		min_hp_this_turn = new_hp
-		if min_hp_this_turn < player_start_hp:
-			damage_taken_this_turn = true
+	if new_hp < min_hp_this_cycle:
+		min_hp_this_cycle = new_hp
+		if min_hp_this_cycle < cycle_start_hp:
+			damage_taken_this_cycle = true
 			damage_taken_this_combat = true  # Never resets during combat (Revenant)
 
 var previous_block: int = 0  # Track previous block value for block gain detection
@@ -665,8 +701,20 @@ func _pre_enemy_act(enemy) -> void:
 		pet_board.current_acting_enemy = enemy
 
 func _on_enemy_acted() -> void:
-	## Called when an enemy performs an action.
-	## Handles: Survey-the-Path block and pet hooks.
+	## Called when an enemy performs an action (from Enemy.perform_intent, right
+	## after that action's effects resolve). Handles, in order:
+	## (e) the Block wipe — spec §4, "the single most important rule in the
+	##     model": all player Block is wiped after any enemy acts, unless
+	##     RETAIN_BLOCK_THIS_TURN ("Block survives the next enemy action") is
+	##     set, in which case the flag is consumed instead of wiping Block.
+	## then Survey-the-Path block and pet hooks (as before).
+	if player_stats.get_status(StatusEffectType.RETAIN_BLOCK_THIS_TURN) != null:
+		player_stats.status_effects.erase(StatusEffectType.RETAIN_BLOCK_THIS_TURN)
+		player_stats.status_effects_changed.emit()
+	elif player_stats.block != 0:
+		player_stats.reset_block()
+		if ResourceManager:
+			ResourceManager.set_block(0)
 
 	var block_amount = player_stats.get_status(StatusEffectType.BLOCK_ON_ENEMY_ACT)
 	if block_amount != null and int(block_amount) > 0:
