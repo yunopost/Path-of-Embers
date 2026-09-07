@@ -1,5 +1,9 @@
 extends Control
 
+## Preloaded rather than referenced by class_name: a missing .uid meant Godot
+## never registered the global class and the screen failed to parse at runtime.
+const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
+
 ## Combat screen with full combat implementation
 
 @onready var combat_controller: CombatController = $CombatController
@@ -200,7 +204,7 @@ func _setup_debug_panel() -> void:
 		return
 	if get_node_or_null("DebugPanel"):
 		return  # already added (re-initialize guard)
-	var panel := DebugPanel.new()
+	var panel = DEBUG_PANEL_SCRIPT.new()
 	add_child(panel)
 	panel.setup("combat")
 	panel.instant_win_pressed.connect(_on_debug_instant_win)
