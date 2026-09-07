@@ -21,7 +21,10 @@ extends Node
 ##   --md=path            stand-alone markdown report for this single config
 ##
 ## Model-swap point: advance(cc) is the single "advance the clock when nothing is playable"
-## action. Card-clock combat: it calls cc.focus().
+## action. Card-clock combat (Addendum §1, Focus split into Breathe/Focus): it calls
+## cc.breathe() when the hand holds a card the policy cannot afford (fuel is the
+## blocker -- Breathe buys energy), and cc.focus() when the hand is empty or holds
+## nothing playable for any other reason (options are the blocker -- Focus buys cards).
 
 const CFG := {
 	"party": ["warrior_1", "warrior_2", "golemancer"],
@@ -231,25 +234,9 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 	var result := "timeout"
 	var blocked: Dictionary = {}          # instance ids that play_card refused this turn
 	var ability_uses: Dictionary = {}     # character_id -> times used this fight
+	_zero_tick_ability_used_since_card.clear()
 
 	while cc.combat_active:
-		# Party abilities (Card-Clock Combat spec §7/§10.6): use one whenever
-		# off cooldown, before considering cards -- mirrors the "greedy" policy's
-		# philosophy of never leaving a free resource on the table. Runs at
-		# most once per decision point, in party order.
-		var ability_result := _try_use_ability(cc)
-		if not ability_result.is_empty():
-			ability_uses[ability_result.char_id] = ability_uses.get(ability_result.char_id, 0) + 1
-			ticks += ability_result.tick_cost
-			_flush_pending_damage()
-			if cc.player_stats.current_hp <= 0:
-				result = "loss"
-				cc.end_combat(false)
-			elif _all_dead(cc):
-				result = "win"
-				cc.end_combat(true)
-			continue
-
 		# Decision-point bookkeeping (drives "never played" diagnosis)
 		var playable := _playable_cards(cc, blocked)
 		for iid in RunState.deck_model.hand:
@@ -257,6 +244,29 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 			cards_seen[cid] = cards_seen.get(cid, 0) + 1
 		for pc in playable:
 			cards_affordable[pc.dc.card_id] = cards_affordable.get(pc.dc.card_id, 0) + 1
+
+		# Party abilities (Card-Clock Combat spec §7/§10.6, re-costed by Addendum
+		# §2): only fall back to an ability when no card is playable. Some EA
+		# abilities now have cooldown 0 (Addendum §2), so trying them BEFORE
+		# cards -- as the old "never leave a free resource on the table" greedy
+		# policy did -- creates an unproductive Breathe/ability loop that never
+		# plays a card (0-tick, 0-cooldown, 1-energy abilities just recycle the
+		# energy Breathe grants). Cards first models a policy that would rather
+		# advance the fight than spend energy on an ability with nothing to show
+		# for it.
+		if playable.is_empty():
+			var ability_result := _try_use_ability(cc)
+			if not ability_result.is_empty():
+				ability_uses[ability_result.char_id] = ability_uses.get(ability_result.char_id, 0) + 1
+				ticks += ability_result.tick_cost
+				_flush_pending_damage()
+				if cc.player_stats.current_hp <= 0:
+					result = "loss"
+					cc.end_combat(false)
+				elif _all_dead(cc):
+					result = "win"
+					cc.end_combat(true)
+				continue
 
 		var choice: Dictionary = _policy_choose(cc, playable)
 		_enemy_acted_this_action = false
@@ -275,6 +285,7 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 				ticks += tick
 				card_ticks += tick
 				cards_played[dc.card_id] = cards_played.get(dc.card_id, 0) + 1
+				_zero_tick_ability_used_since_card.clear()
 				# healing at full HP is wasted
 				var cd := DataRegistry.get_card_data(dc.card_id)
 				if cd and hp_before >= cc.player_stats.max_hp and _card_has_effect(dc, EffectType.HEAL) and not _enemy_acted_this_action:
@@ -284,13 +295,15 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 				_note("play_card refused a card the policy considered playable: %s (turn %d)" % [dc.card_id, end_turns + 1])
 		else:
 			# Card-clock: energy carries over between cycles (no reset), so it is
-			# only "wasted" when Focus's +2 would push past the cap.
+			# only "wasted" when Breathe's +1 would push past the cap (Focus never
+			# grants energy under the Addendum §1 split, so it never wastes any).
 			var pre_focus_energy := cc.current_energy
-			end_turns += 1  # counts Focus uses == cycles completed
+			end_turns += 1  # counts Breathe/Focus uses == cycles completed
 			blocked.clear()
-			advance(cc)
+			var action := advance(cc)
 			ticks += 1
-			energy_unspent += maxi(0, (pre_focus_energy + 2) - cc.max_energy)
+			if action == "breathe":
+				energy_unspent += maxi(0, (pre_focus_energy + 1) - cc.max_energy)
 			if cc.player_stats.block == 0:
 				block_wasted += _block_prev
 		_flush_pending_damage()
@@ -330,9 +343,29 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 	cc.free()
 	return row
 
-func advance(cc: CombatController) -> void:
-	## THE swap point (card-clock combat): Focus is the "nothing playable" action.
+func advance(cc: CombatController) -> String:
+	## THE swap point (card-clock combat, Addendum §1): Breathe when the hand
+	## holds a card the policy cannot afford by energy (fuel is the blocker);
+	## Focus when the hand is empty or holds nothing playable for any other
+	## reason (options are the blocker). Returns which action fired, for the
+	## caller's energy-wasted-at-cap bookkeeping.
+	for iid in RunState.deck_model.hand:
+		var dc: DeckCardData = RunState.deck.get(iid)
+		if dc == null:
+			continue
+		var cd := DataRegistry.get_card_data(dc.card_id)
+		if cd == null or cd.card_type == CardData.CardType.CURSE:
+			continue
+		if cd.cost_type == CardData.CostType.DISCARD:
+			continue  # discard-cost cards are never energy-unaffordable
+		var cost := CardRules.get_effective_cost(cd, dc)
+		if cost > cc.current_energy:
+			cc.breathe()
+			return "breathe"
 	cc.focus()
+	return "focus"
+
+var _zero_tick_ability_used_since_card: Dictionary = {}  # char_id -> bool, reset per fight and on every card play
 
 func _try_use_ability(cc: CombatController) -> Dictionary:
 	## Use the first ready party ability, in party order (spec §7/§10.6). Mirrors
@@ -340,6 +373,14 @@ func _try_use_ability(cc: CombatController) -> Dictionary:
 	## cooldown, since none of the six EA abilities have a downside for the
 	## "cheapest card, else Focus" policy to weigh against. ENEMY-targeted
 	## abilities target the lowest-HP alive enemy, same as attack cards.
+	##
+	## Throttle (Addendum §2 fallout): some EA abilities now have cooldown 0 --
+	## with no clock cost either (tick_cost 0), a purely greedy policy would
+	## reuse them every decision point forever (they cost only energy, which
+	## Breathe immediately refills), never converting the energy into a played
+	## card. A real player only presses a 0-tick ability once per opportunity;
+	## this policy does the same by refusing to reuse a 0-tick ability again
+	## until a card has actually been played since its last use.
 	## Returns {char_id, tick_cost} on success, {} if nothing was used.
 	for cid in cfg.party:
 		var char_id := str(cid)
@@ -347,6 +388,8 @@ func _try_use_ability(cc: CombatController) -> Dictionary:
 			continue
 		var char_data := DataRegistry.get_character(char_id)
 		var ability: PartyAbilityData = DataRegistry.get_ability(char_data.ability_id)
+		if ability.tick_cost == 0 and _zero_tick_ability_used_since_card.get(char_id, false):
+			continue
 		var target: Node = null
 		if ability.targeting_mode == CardData.TargetingMode.ENEMY:
 			var e := _lowest_hp_enemy(cc)
@@ -358,6 +401,8 @@ func _try_use_ability(cc: CombatController) -> Dictionary:
 		if target:
 			target.free()
 		if ok:
+			if ability.tick_cost == 0:
+				_zero_tick_ability_used_since_card[char_id] = true
 			return {"char_id": char_id, "tick_cost": ability.tick_cost}
 	return {}
 

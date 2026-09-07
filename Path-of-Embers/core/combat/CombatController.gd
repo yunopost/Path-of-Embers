@@ -233,16 +233,26 @@ func start_combat(enemy_data: Array):
 
 	combat_started.emit()
 
-func focus() -> void:
-	## Universal player action (spec §2/§10.2): +2 energy (capped), draw 2,
-	## start a new cycle, then advance the clock by 1 tick. Replaces the old
-	## start_player_turn()/end_player_turn() pair — there is no "end turn" any more.
+func breathe() -> void:
+	## Universal player action (Addendum §1): +1 energy (capped), starts a new
+	## cycle, then advances the clock by 1 tick. Half of the old focus() —
+	## energy generation now costs a dedicated action so it is scarce.
 	if not combat_active:
 		return
 
-	current_energy = min(current_energy + 2, max_energy)
+	current_energy = min(current_energy + 1, max_energy)
 	if ResourceManager:
 		ResourceManager.set_energy(current_energy, max_energy)
+
+	_start_new_cycle()
+	advance_clock(1)
+
+func focus() -> void:
+	## Universal player action (Addendum §1): draw 2, starts a new cycle, then
+	## advances the clock by 1 tick. The other half of the old focus() — pure
+	## card draw, no energy.
+	if not combat_active:
+		return
 
 	# Draw 2 + any bonus from Overclocked / DRAW_PER_TURN powers (spec §5: "+N draw on each Focus")
 	var base_draw := 2
@@ -569,9 +579,11 @@ func get_ability_cooldown(character_id: String) -> int:
 	return int(ability_cooldowns.get(character_id, 0))
 
 func can_use_ability(character_id: String) -> bool:
-	## True if character_id has an ability and it is off cooldown. Does not check
-	## targeting -- ENEMY-targeted abilities additionally need a live target passed
-	## to use_ability().
+	## True if character_id has an ability, it is off cooldown, and every cost
+	## it declares (Addendum §2: energy_cost, discard_cost, hp_cost,
+	## consumes_block) is currently payable. Does not check targeting --
+	## ENEMY-targeted abilities additionally need a live target passed to
+	## use_ability().
 	if not combat_active:
 		return false
 	var char_data = DataRegistry.get_character(character_id) if DataRegistry else null
@@ -580,14 +592,24 @@ func can_use_ability(character_id: String) -> bool:
 	var ability: PartyAbilityData = DataRegistry.get_ability(char_data.ability_id) if DataRegistry else null
 	if not ability:
 		return false
-	return get_ability_cooldown(character_id) <= 0
+	if get_ability_cooldown(character_id) > 0:
+		return false
+	if ability.energy_cost > 0 and current_energy < ability.energy_cost:
+		return false
+	if ability.discard_cost > 0 and RunState.deck_model.hand.size() < ability.discard_cost:
+		return false
+	if ability.hp_cost > 0 and player_stats.current_hp <= ability.hp_cost:
+		return false
+	if ability.consumes_block and player_stats.block <= 0:
+		return false
+	return true
 
 func use_ability(character_id: String, target: Node = null) -> bool:
-	## Use character_id's party ability (spec §7/§10.6). Checks cooldown, resolves
-	## the ability's effects through EffectResolver (same path as card effects),
-	## sets the cooldown, then advances the clock by the ability's tick_cost. None
-	## of the six Early Access abilities have an Energy cost (see spec §7 table),
-	## so there is no energy check here; ability_cooldowns is the sole gate.
+	## Use character_id's party ability (Card-Clock Combat spec §7/§10.6, re-costed
+	## by Addendum §2). Checks cooldown and every declared cost, pays them all
+	## (energy, discard, HP, consumed Block), resolves the ability's effects
+	## through EffectResolver (same path as card effects), sets the cooldown,
+	## then advances the clock by the ability's tick_cost.
 	if not can_use_ability(character_id):
 		return false
 
@@ -606,7 +628,23 @@ func use_ability(character_id: String, target: Node = null) -> bool:
 		if enemy_context == null:
 			return false  # ENEMY-targeted ability requires a valid, alive target
 
+	# Pay costs BEFORE resolving effects (Addendum §2: "use_ability() must pay
+	# them all before resolving effects"). consumes_block is paid AFTER effects
+	# resolve instead — What Was Left needs the current Block value to compute
+	# its damage, then consumes it.
+	if ability.energy_cost > 0:
+		current_energy -= ability.energy_cost
+		if ResourceManager:
+			ResourceManager.set_energy(current_energy, max_energy)
+	if ability.discard_cost > 0:
+		_pay_discard_cost(ability.discard_cost)
+	if ability.hp_cost > 0:
+		player_stats.take_damage(ability.hp_cost, true)  # ignore_block -- HP cost, not an attack
+
 	var draw_count: int = EffectResolver.resolve_effects(ability.effects, player_stats, target_stats, enemy_context, self, owner_stats)
+
+	if ability.consumes_block:
+		player_stats.reset_block()
 
 	if ResourceManager:
 		ResourceManager.set_block(player_stats.block)

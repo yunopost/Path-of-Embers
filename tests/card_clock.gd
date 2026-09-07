@@ -43,6 +43,7 @@ func _ready() -> void:
 	_test_combat_flow()
 	_test_party_abilities_timer_trio()
 	_test_party_abilities_mass_trio()
+	_test_ability_cost_gating()
 
 	print("--- card_clock summary: %d passed, %d failed ---" % [pass_count, fail_count])
 	get_tree().quit(1 if fail_count > 0 else 0)
@@ -97,16 +98,30 @@ func _test_combat_flow() -> void:
 	_check("start_combat: current_energy == 3", cc.current_energy == 3)
 	_check("start_combat: hand size == 5", RunState.deck_model.hand.size() == 5)
 
-	# ---- Focus: +2 energy (capped), draw 2, advance 1 tick (spec §10.2) ----
+	# ---- Breathe: +1 energy (capped), advance 1 tick, no draw (Addendum §1) ----
+	cc.current_energy = 3
+	var hand_before_breathe := RunState.deck_model.hand.size()
+	var timer_before_breathe := enemy.time_current
+	cc.breathe()
+	_check("breathe: energy +1 exactly (3 -> 4)", cc.current_energy == 4)
+	_check("breathe: does not draw", RunState.deck_model.hand.size() == hand_before_breathe)
+	_check("breathe: advances the clock by exactly 1 tick", enemy.time_current == timer_before_breathe - 1)
+
+	var timer_before_breathe_cap := enemy.time_current
+	cc.breathe()
+	_check("breathe: energy stays capped at max_energy when already at cap", cc.current_energy == 4)
+	_check("breathe: still advances the clock even at energy cap", enemy.time_current == timer_before_breathe_cap - 1)
+
+	# ---- Focus: draw 2, advance 1 tick, no energy (Addendum §1) ----
+	cc.current_energy = 1
 	var hand_before := RunState.deck_model.hand.size()
 	var timer_before := enemy.time_current
+	var energy_before_focus := cc.current_energy
 	cc.focus()
-	_check("focus: energy 3 -> 4 (capped, not 5)", cc.current_energy == 4)
-	_check("focus: drew 2 cards", RunState.deck_model.hand.size() == hand_before + 2)
-	_check("focus: advanced the clock by 1 tick", enemy.time_current == timer_before - 1)
-
-	cc.focus()
-	_check("focus: energy stays capped at max_energy when already at cap", cc.current_energy == 4)
+	_check("focus: drew exactly 2 cards", RunState.deck_model.hand.size() == hand_before + 2)
+	_check("focus: advances the clock by exactly 1 tick", enemy.time_current == timer_before - 1)
+	_check("focus: does not change energy", cc.current_energy == energy_before_focus)
+	cc.current_energy = 4
 
 	# ---- Haste card advances 0 ticks ----
 	var t_haste := enemy.time_current
@@ -179,11 +194,14 @@ func _test_party_abilities_timer_trio() -> void:
 	enemy.time_max = 10
 	enemy.time_current = 6
 
-	# ---- The Wait: delay target enemy's timer by 2, clamped to time_max, 0 ticks, cooldown 5 ----
+	# ---- The Wait: delay target enemy's timer by 2, clamped to time_max, 1 energy, 0 ticks, cooldown 5 ----
+	cc.current_energy = 4
 	var target := _make_enemy_target(enemy)
+	var energy_before_wait := cc.current_energy
 	var ok_wait := cc.use_ability("warrior_1", target)
 	_check("The Wait: use_ability succeeds", ok_wait)
 	_check("The Wait: delays the enemy timer by 2 (6 -> 8)", enemy.time_current == 8)
+	_check("The Wait: charges exactly 1 energy", cc.current_energy == energy_before_wait - 1)
 	_check("The Wait: sets a 5-tick cooldown", cc.get_ability_cooldown("warrior_1") == 5)
 	_check("The Wait: costs 0 ticks (cooldown itself doesn't tick down)", cc.get_ability_cooldown("warrior_1") == 5)
 
@@ -200,19 +218,32 @@ func _test_party_abilities_timer_trio() -> void:
 	_play_test_card(cc, "tc_slow")  # 2 more ticks (already registered by _test_combat_flow)
 	_check("The Wait: cooldown reaches 0 after 5 total ticks", cc.get_ability_cooldown("warrior_1") == 0)
 
+	# can_use_ability must independently gate on an unpayable energy cost, now that
+	# the cooldown itself is clear (Addendum §2: "can_use_ability returns false
+	# when any single cost is unpayable").
+	cc.current_energy = 0
+	_check("can_use_ability: false when energy cost unpayable (cooldown clear)", not cc.can_use_ability("warrior_1"))
+	cc.current_energy = 4
+
 	var enemy2: Enemy = cc.enemies[0]
 	enemy2.time_current = 4
 	enemy2.time_max = 4
 	var target2 := _make_enemy_target(enemy2)
+	var energy_before_wait2 := cc.current_energy
 	var ok_wait_clamped := cc.use_ability("warrior_1", target2)
 	_check("The Wait: use_ability succeeds again once off cooldown", ok_wait_clamped)
 	_check("The Wait: delay clamps at time_max instead of overshooting", enemy2.time_current == enemy2.time_max)
+	_check("The Wait: charges 1 energy on reuse", cc.current_energy == energy_before_wait2 - 1)
 	target2.free()
 
-	# ---- One Night Sooner: next card gets Haste (0 ticks) and costs 1 less, then expires ----
+	# ---- One Night Sooner: 1 energy, cooldown 0, next card gets Haste only (no discount, Addendum §2) ----
+	cc.current_energy = 4
+	var energy_before_sooner := cc.current_energy
 	var ok_sooner := cc.use_ability("warrior_2", null)
 	_check("One Night Sooner: use_ability succeeds (SELF-targeted)", ok_sooner)
-	_check("One Night Sooner: sets a 4-tick cooldown", cc.get_ability_cooldown("warrior_2") == 4)
+	_check("One Night Sooner: charges exactly 1 energy", cc.current_energy == energy_before_sooner - 1)
+	_check("One Night Sooner: cooldown 0 (no cooldown)", cc.get_ability_cooldown("warrior_2") == 0)
+	_check("One Night Sooner: usable again immediately (cooldown 0)", cc.can_use_ability("warrior_2"))
 
 	var dc := DeckCardData.new("tc_ability_cost2", "warrior_1")
 	RunState.deck[dc.instance_id] = dc
@@ -220,14 +251,14 @@ func _test_party_abilities_timer_trio() -> void:
 	RunState.deck_model.hand.append(dc.instance_id)
 	var card_data := DataRegistry.get_card_data("tc_ability_cost2")
 	card_data.cost = 2
-	var discounted_cost := CardRules.get_effective_cost(card_data, dc)
-	_check("One Night Sooner: next card's cost is discounted by 1 (2 -> 1)", discounted_cost == 1)
+	var no_discount_cost := CardRules.get_effective_cost(card_data, dc)
+	_check("One Night Sooner: next card's cost is NOT discounted (Addendum §2 drops the discount)", no_discount_cost == 2)
 
 	var t_before_sooner_card := enemy2.time_current
 	var energy_before := cc.current_energy
 	var ok_card: bool = cc.play_card(dc, null)
-	_check("One Night Sooner: discounted card is playable", ok_card)
-	_check("One Night Sooner: the card actually spent the discounted cost", cc.current_energy == energy_before - 1)
+	_check("One Night Sooner: card is playable", ok_card)
+	_check("One Night Sooner: the card spends its full (non-discounted) cost", cc.current_energy == energy_before - 2)
 	_check("One Night Sooner: the card ticks the clock by 0 (Haste)", enemy2.time_current == t_before_sooner_card)
 
 	_register_test_card("tc_ability_cost2_b", [])
@@ -237,17 +268,26 @@ func _test_party_abilities_timer_trio() -> void:
 	RunState.deck_model.hand.append(dc2.instance_id)
 	var card_data2 := DataRegistry.get_card_data("tc_ability_cost2_b")
 	card_data2.cost = 2
-	_check("One Night Sooner: the discount/haste is consumed -- does not carry to a second card", CardRules.get_effective_cost(card_data2, dc2) == 2)
+	_check("One Night Sooner: the haste is consumed -- does not carry to a second card", CardRules.get_effective_cost(card_data2, dc2) == 2)
 
-	# ---- Hold the Door: 5 Block + Dexterity, 1 tick, cooldown 4 ----
+	# ---- Hold the Door: 5 Block + Dexterity, 1 energy + 1 tick, cooldown 0 (Addendum §2) ----
 	cc.player_stats.block = 0
+	cc.current_energy = 4
 	var block_before_hold := cc.player_stats.block
+	var energy_before_hold := cc.current_energy
 	var t_before_hold := enemy2.time_current
 	var ok_hold := cc.use_ability("golemancer", null)
 	_check("Hold the Door: use_ability succeeds", ok_hold)
 	_check("Hold the Door: grants at least 5 Block", cc.player_stats.block >= block_before_hold + 5)
+	_check("Hold the Door: charges exactly 1 energy", cc.current_energy == energy_before_hold - 1)
 	_check("Hold the Door: costs 1 tick", enemy2.time_current == t_before_hold - 1)
-	_check("Hold the Door: sets a 4-tick cooldown", cc.get_ability_cooldown("golemancer") == 4)
+	_check("Hold the Door: cooldown 0 (no cooldown)", cc.get_ability_cooldown("golemancer") == 0)
+	_check("Hold the Door: usable again immediately once affordable (cooldown 0)", cc.can_use_ability("golemancer"))
+
+	# can_use_ability must gate on the energy cost specifically, not just cooldown
+	cc.current_energy = 0
+	_check("can_use_ability: false when energy cost unpayable (Hold the Door, cooldown clear)", not cc.can_use_ability("golemancer"))
+	cc.current_energy = 4
 
 	cc.end_combat(true)
 
@@ -281,8 +321,11 @@ func _test_party_abilities_mass_trio() -> void:
 	_check("The Small Ending: hand grows by 2 (1 Curse + 1 draw)", RunState.deck_model.hand.size() == hand_before + 2)
 	_check("The Small Ending: sets a 5-tick cooldown", cc.get_ability_cooldown("witch") == 5)
 
-	# ---- What Was Left: deal damage equal to current Block to target enemy ----
+	# ---- What Was Left: deal damage equal to current Block, then consume all Block (Addendum §2) ----
+	# can_use_ability must gate on the consumes_block cost when Block is 0
 	cc.player_stats.block = 0
+	_check("can_use_ability: false when consumes_block cost unpayable (no Block)", not cc.can_use_ability("living_armor"))
+
 	cc.player_stats.add_block(9)
 	var enemy_hp_before := enemy.stats.current_hp
 	var target := _make_enemy_target(enemy)
@@ -290,7 +333,8 @@ func _test_party_abilities_mass_trio() -> void:
 	target.free()
 	_check("What Was Left: use_ability succeeds", ok_retaliate)
 	_check("What Was Left: deals damage equal to current Block (>= 9)", enemy.stats.current_hp <= enemy_hp_before - 9)
-	_check("What Was Left: sets a 5-tick cooldown", cc.get_ability_cooldown("living_armor") == 5)
+	_check("What Was Left: zeroes Block after dealing its damage", cc.player_stats.block == 0)
+	_check("What Was Left: sets a 3-tick cooldown", cc.get_ability_cooldown("living_armor") == 3)
 
 	# ---- Leaf-fall: 1 Energy per 4 cards in discard pile, capped at 3, 1 tick ----
 	RunState.deck_model.discard_pile.clear()
@@ -313,6 +357,101 @@ func _test_party_abilities_mass_trio() -> void:
 	var ok_leaf2 := cc.use_ability("grove", null)
 	_check("Leaf-fall: use_ability succeeds again once off cooldown", ok_leaf2)
 	_check("Leaf-fall: caps the Energy gain at 3 even with a larger discard pile", cc.current_energy == 3)
+
+	cc.end_combat(true)
+
+func _test_ability_cost_gating() -> void:
+	## Addendum §2: can_use_ability() must check EVERY declared cost independently
+	## (energy, discard, HP, consumes_block) and use_ability() must charge them
+	## all. Uses a synthetic character + ability injected directly into
+	## DataRegistry's caches so each cost type can be isolated one at a time.
+	var fake_char := CharacterData.new()
+	fake_char.id = "tc_costguy"
+	fake_char.display_name = "Cost Guy"
+	fake_char.ability_id = "tc_cost_ability"
+	DataRegistry.character_cache["tc_costguy"] = fake_char
+
+	var fake_ability := PartyAbilityData.new()
+	fake_ability.id = "tc_cost_ability"
+	fake_ability.display_name = "Test Cost Ability"
+	fake_ability.tick_cost = 0
+	fake_ability.cooldown = 0
+	fake_ability.targeting_mode = CardData.TargetingMode.SELF
+	fake_ability.energy_cost = 1
+	fake_ability.discard_cost = 2
+	fake_ability.hp_cost = 5
+	fake_ability.consumes_block = true
+	fake_ability.effects = []
+	DataRegistry.ability_cache["tc_cost_ability"] = fake_ability
+
+	PartyManager.party_ids = ["warrior_1", "witch", "golemancer"]
+	var chars: Array[CharacterData] = []
+	for id in PartyManager.party_ids:
+		var c = DataRegistry.get_character(id)
+		if c:
+			chars.append(c)
+	RunState.generate_starter_deck(chars)
+
+	var cc := CombatController.new()
+	add_child(cc)
+	cc.start_combat([{"id": "dummy", "name": "Dummy", "max_hp": 9999, "time_max": 1000}])
+
+	# All costs payable: energy, hand size, HP, Block all comfortably above cost.
+	cc.current_energy = 4
+	cc.player_stats.current_hp = 50
+	cc.player_stats.max_hp = 50
+	cc.player_stats.block = 0
+	cc.player_stats.add_block(10)
+	while RunState.deck_model.hand.size() < 5:
+		RunState.draw_cards(1)
+	_check("can_use_ability: true when every cost is payable", cc.can_use_ability("tc_costguy"))
+
+	# Energy cost unpayable
+	var _saved_energy := cc.current_energy
+	cc.current_energy = 0
+	_check("can_use_ability: false when energy_cost unpayable", not cc.can_use_ability("tc_costguy"))
+	cc.current_energy = _saved_energy
+
+	# Discard cost unpayable (hand smaller than discard_cost)
+	var _saved_hand := RunState.deck_model.hand.duplicate()
+	RunState.deck_model.hand.clear()
+	RunState.deck_model.hand.append(_saved_hand[0])  # 1 card, discard_cost is 2
+	_check("can_use_ability: false when discard_cost unpayable", not cc.can_use_ability("tc_costguy"))
+	RunState.deck_model.hand = _saved_hand
+
+	# HP cost unpayable (current HP at or below hp_cost)
+	var _saved_hp := cc.player_stats.current_hp
+	cc.player_stats.current_hp = 5
+	_check("can_use_ability: false when hp_cost unpayable", not cc.can_use_ability("tc_costguy"))
+	cc.player_stats.current_hp = _saved_hp
+
+	# consumes_block cost unpayable (no Block)
+	var _saved_block := cc.player_stats.block
+	cc.player_stats.block = 0
+	_check("can_use_ability: false when consumes_block cost unpayable", not cc.can_use_ability("tc_costguy"))
+	cc.player_stats.block = _saved_block
+
+	# Now actually use it and verify every cost was charged, and cooldown 0 means
+	# it's usable again immediately once costs are payable again.
+	cc.current_energy = 4
+	cc.player_stats.current_hp = 50
+	cc.player_stats.block = 0
+	cc.player_stats.add_block(10)
+	while RunState.deck_model.hand.size() < 5:
+		RunState.draw_cards(1)
+	var energy_before := cc.current_energy
+	var hand_before := RunState.deck_model.hand.size()
+	var hp_before := cc.player_stats.current_hp
+	var ok_use := cc.use_ability("tc_costguy", null)
+	_check("cost gating: use_ability succeeds when all costs payable", ok_use)
+	_check("cost gating: charged exactly the energy cost", cc.current_energy == energy_before - fake_ability.energy_cost)
+	_check("cost gating: discarded exactly the discard cost", RunState.deck_model.hand.size() == hand_before - fake_ability.discard_cost)
+	_check("cost gating: charged exactly the HP cost", cc.player_stats.current_hp == hp_before - fake_ability.hp_cost)
+	_check("cost gating: consumed all Block", cc.player_stats.block == 0)
+	_check("cost gating: cooldown 0 -- reports ready immediately (cooldown alone)", cc.get_ability_cooldown("tc_costguy") == 0)
+
+	cc.player_stats.add_block(10)  # re-pay the consumes_block cost so it's affordable again
+	_check("cooldown 0: usable again immediately once costs are payable again", cc.can_use_ability("tc_costguy"))
 
 	cc.end_combat(true)
 
