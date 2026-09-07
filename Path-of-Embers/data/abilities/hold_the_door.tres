@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
 script = ExtResource("2_effectdata")
 effect_type = "block"
-params = {"amount": 5}
+params = {"amount": 8}
 
 [resource]
 script = ExtResource("1_abilitydata")

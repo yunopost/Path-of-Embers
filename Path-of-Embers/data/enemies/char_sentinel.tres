@@ -31,18 +31,18 @@ name = "Char Sentinel"
 sprite_path = "res://Path-of-Embers/Art Assets/Enemy Sprites/Char Sentinel (elite).png"
 act = 1
 enemy_type = 1
-min_hp = 70
-max_hp = 80
+min_hp = 48
+max_hp = 56
 moves = [{
 "effects": [SubResource("EffectData_1")],
 "id": "move_1",
 "telegraph_text": "Guard Crush 12",
-"timer": 5
+"timer": 7
 }, {
 "effects": [SubResource("EffectData_2"), SubResource("EffectData_3")],
 "id": "move_2",
 "telegraph_text": "Sentinel Strike 10 + Vulnerable",
-"timer": 4
+"timer": 6
 }, {
 "effects": [SubResource("EffectData_4")],
 "id": "move_3",

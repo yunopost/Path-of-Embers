@@ -41,23 +41,23 @@ name = "The Eternal Ember"
 sprite_path = "res://Path-of-Embers/Art Assets/Boss Sprites/the_eternal_ember.png"
 act = 1
 enemy_type = 2
-min_hp = 120
-max_hp = 135
+min_hp = 82
+max_hp = 92
 moves = [{
 "effects": [SubResource("EffectData_1")],
 "id": "move_1",
 "telegraph_text": "Sear 14",
-"timer": 4
+"timer": 6
 }, {
 "effects": [SubResource("EffectData_2")],
 "id": "move_2",
 "telegraph_text": "Ember Trap",
-"timer": 3
+"timer": 4
 }, {
 "effects": [SubResource("EffectData_3")],
 "id": "move_3",
 "telegraph_text": "Blazing Assault 10x2",
-"timer": 5
+"timer": 8
 }, {
 "effects": [SubResource("EffectData_4")],
 "id": "move_4",
@@ -67,5 +67,5 @@ moves = [{
 "effects": [SubResource("EffectData_5"), SubResource("EffectData_6")],
 "id": "move_5",
 "telegraph_text": "Cinder Fall 12 + Vulnerable",
-"timer": 5
+"timer": 7
 }]

@@ -245,28 +245,23 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 		for pc in playable:
 			cards_affordable[pc.dc.card_id] = cards_affordable.get(pc.dc.card_id, 0) + 1
 
-		# Party abilities (Card-Clock Combat spec §7/§10.6, re-costed by Addendum
-		# §2): only fall back to an ability when no card is playable. Some EA
-		# abilities now have cooldown 0 (Addendum §2), so trying them BEFORE
-		# cards -- as the old "never leave a free resource on the table" greedy
-		# policy did -- creates an unproductive Breathe/ability loop that never
-		# plays a card (0-tick, 0-cooldown, 1-energy abilities just recycle the
-		# energy Breathe grants). Cards first models a policy that would rather
-		# advance the fight than spend energy on an ability with nothing to show
-		# for it.
-		if playable.is_empty():
-			var ability_result := _try_use_ability(cc)
-			if not ability_result.is_empty():
-				ability_uses[ability_result.char_id] = ability_uses.get(ability_result.char_id, 0) + 1
-				ticks += ability_result.tick_cost
-				_flush_pending_damage()
-				if cc.player_stats.current_hp <= 0:
-					result = "loss"
-					cc.end_combat(false)
-				elif _all_dead(cc):
-					result = "win"
-					cc.end_combat(true)
-				continue
+		# Party abilities (spec sec7 / Addendum sec2) are considered BEFORE cards.
+		# Trying them only as a last resort deadlocks every energy-costing ability:
+		# "no card is playable" is almost always "energy is 0", which is exactly the
+		# moment such an ability cannot be paid for, so it never fires at all.
+		# _should_use_ability() supplies the guard against 0-cooldown spam instead.
+		var ability_result := _try_use_ability(cc)
+		if not ability_result.is_empty():
+			ability_uses[ability_result.char_id] = ability_uses.get(ability_result.char_id, 0) + 1
+			ticks += ability_result.tick_cost
+			_flush_pending_damage()
+			if cc.player_stats.current_hp <= 0:
+				result = "loss"
+				cc.end_combat(false)
+			elif _all_dead(cc):
+				result = "win"
+				cc.end_combat(true)
+			continue
 
 		var choice: Dictionary = _policy_choose(cc, playable)
 		_enemy_acted_this_action = false
@@ -367,6 +362,20 @@ func advance(cc: CombatController) -> String:
 
 var _zero_tick_ability_used_since_card: Dictionary = {}  # char_id -> bool, reset per fight and on every card play
 
+func _should_use_ability(cc: CombatController, ability: PartyAbilityData) -> bool:
+	## Represents a competent player rather than a greedy one.
+	## Cooldown-gated abilities are worth using whenever they are ready.
+	## Cooldown-0 abilities would otherwise be pressed every decision point and
+	## eat all the energy that should be buying cards, so they need a reason:
+	## either a hit is landing within their tick cost (the Block rule -- defend
+	## just in time), or there is energy to spare beyond their cost.
+	if ability.cooldown > 0:
+		return true
+	for e in _alive_enemies(cc):
+		if e.time_current <= maxi(1, ability.tick_cost):
+			return true
+	return cc.current_energy > ability.energy_cost
+
 func _try_use_ability(cc: CombatController) -> Dictionary:
 	## Use the first ready party ability, in party order (spec §7/§10.6). Mirrors
 	## the greedy policy: abilities are treated as always worth using once off
@@ -389,6 +398,8 @@ func _try_use_ability(cc: CombatController) -> Dictionary:
 		var char_data := DataRegistry.get_character(char_id)
 		var ability: PartyAbilityData = DataRegistry.get_ability(char_data.ability_id)
 		if ability.tick_cost == 0 and _zero_tick_ability_used_since_card.get(char_id, false):
+			continue
+		if not _should_use_ability(cc, ability):
 			continue
 		var target: Node = null
 		if ability.targeting_mode == CardData.TargetingMode.ENEMY:

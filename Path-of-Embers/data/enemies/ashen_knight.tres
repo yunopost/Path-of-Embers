@@ -31,23 +31,23 @@ name = "Ashen Knight"
 sprite_path = "res://Path-of-Embers/Art Assets/Enemy Sprites/Ashen Knight (elite).png"
 act = 1
 enemy_type = 1
-min_hp = 60
-max_hp = 72
+min_hp = 42
+max_hp = 50
 moves = [{
 "effects": [SubResource("EffectData_1")],
 "id": "move_1",
 "telegraph_text": "Blade Rush 10x2",
-"timer": 4
+"timer": 6
 }, {
 "effects": [SubResource("EffectData_2")],
 "id": "move_2",
 "telegraph_text": "Ash Cloud",
-"timer": 2
+"timer": 3
 }, {
 "effects": [SubResource("EffectData_3")],
 "id": "move_3",
 "telegraph_text": "Charged Strike 18",
-"timer": 6
+"timer": 8
 }, {
 "effects": [SubResource("EffectData_4")],
 "id": "move_4",
