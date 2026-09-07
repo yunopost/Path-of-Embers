@@ -168,14 +168,23 @@ func shuffle_discard_into_draw():
 	deck_model.shuffle_draw_pile()
 	deck_model.discard_pile_changed.emit()
 
-func draw_cards(count: int = 5):
-	## Draw cards from draw pile into hand
-	## If draw pile is empty, shuffle discard into draw first
-	deck_model.draw_cards(count)
+const HAND_MAX: int = 8
+
+func draw_cards(count: int = 5) -> Dictionary:
+	## Draw cards from draw pile into hand.
+	## If draw pile is empty, shuffle discard into draw first.
+	## Hand is capped at HAND_MAX: a card drawn while the hand is full is
+	## "burned" — sent straight to the discard pile instead of into hand.
+	## Returns {"drawn": Array[String], "burned": Array[String]} (instance_ids).
+	var result: Dictionary = deck_model.draw_cards(count, HAND_MAX)
 	# Signals are emitted by deck_model
+	return result
 
 func discard_hand():
-	## Move all cards from hand to discard pile
+	## Move all cards from hand to discard pile.
+	## NOTE: under card-clock combat, cards are retained indefinitely — this is
+	## no longer called from the combat flow (CombatController), but is kept
+	## as a utility (e.g. for effects that explicitly discard the whole hand).
 	deck_model.discard_hand()
 	# Signals are emitted by deck_model
 
@@ -408,8 +417,8 @@ func has_upgrade(instance_id: String, upgrade_id: String) -> bool:
 	return card_instance.applied_upgrades.has(upgrade_id)
 
 func get_timer_tick_amount_for_card(instance_id: String) -> int:
-	## Get the timer tick amount for a card
-	## Returns 0 if has Haste or haste_next_card status, 2 if has Slow keyword, 1 otherwise
+	## Get the number of ticks a played card advances the clock by (spec Card-Clock Combat §5).
+	## Haste = 0 ticks. Slow = 2 ticks; "Slow N" = N ticks. Default = 1 tick.
 	
 	# Check for haste_next_card status (from Shoulder Tackle or similar effects)
 	# This applies to the CURRENT card being played (which was granted haste by the previous card)
@@ -422,12 +431,22 @@ func get_timer_tick_amount_for_card(instance_id: String) -> int:
 	if has_upgrade(instance_id, "upgrade_haste"):
 		return 0
 	
-	# Check for Slow keyword on card (using CardRules to account for upgrades that remove keywords)
+	# Check for Haste / Slow[ N] keywords on the card itself (using CardRules to
+	# account for upgrades that add/remove keywords)
 	var card_instance = deck.get(instance_id)
 	if card_instance:
 		var keywords = CardRules.get_card_keywords(card_instance)
-		if keywords.has("Slow"):
-			return 2
+		for kw in keywords:
+			if kw == "Haste":
+				return 0
+		for kw in keywords:
+			if kw == "Slow":
+				return 2
+			if kw.begins_with("Slow "):
+				var mag_str: String = kw.substr(5).strip_edges()
+				if mag_str.is_valid_int():
+					return int(mag_str)
+				return 2
 	
 	return 1
 

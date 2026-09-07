@@ -13,6 +13,7 @@ signal deck_changed()
 signal draw_pile_changed()
 signal hand_changed()
 signal discard_pile_changed()
+signal hand_overflow(burned_instance_ids: Array[String])  ## Cards drawn while hand was full, sent to discard instead
 
 func initialize(p_instance_ids: Array[String]):
 	## Initialize deck model with instance_ids
@@ -41,10 +42,15 @@ func shuffle_draw_pile():
 	draw_pile.shuffle()
 	draw_pile_changed.emit()
 
-func draw_cards(count: int) -> Array[String]:
-	## Draw cards from draw pile
-	## Returns array of instance_ids that were drawn
+func draw_cards(count: int, hand_max: int = -1) -> Dictionary:
+	## Draw cards from draw pile.
+	## hand_max < 0 means unlimited (legacy behaviour). When the hand is at
+	## hand_max, a card that would be drawn is "burned" — sent straight to the
+	## discard pile instead of into hand (card-clock: hand is never force-discarded,
+	## so a drawn overflow needs somewhere to go).
+	## Returns {"drawn": Array[String], "burned": Array[String]} (instance_ids).
 	var drawn: Array[String] = []
+	var burned: Array[String] = []
 	
 	for i in range(count):
 		if draw_pile.is_empty():
@@ -57,14 +63,22 @@ func draw_cards(count: int) -> Array[String]:
 		
 		if not draw_pile.is_empty():
 			var instance_id = draw_pile.pop_front()
-			hand.append(instance_id)
-			drawn.append(instance_id)
+			if hand_max >= 0 and hand.size() >= hand_max:
+				discard_pile.append(instance_id)
+				burned.append(instance_id)
+			else:
+				hand.append(instance_id)
+				drawn.append(instance_id)
 	
 	if drawn.size() > 0:
 		hand_changed.emit()
+	if drawn.size() > 0 or burned.size() > 0:
 		draw_pile_changed.emit()
+	if burned.size() > 0:
+		discard_pile_changed.emit()
+		hand_overflow.emit(burned)
 	
-	return drawn
+	return {"drawn": drawn, "burned": burned}
 
 func discard_hand():
 	## Move all cards from hand to discard pile
