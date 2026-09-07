@@ -5,16 +5,20 @@
 
 [sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
 script = ExtResource("2_effectdata")
-effect_type = "next_card_haste_and_discount"
-params = {"discount": 1}
+effect_type = "grant_haste_next_card"
+params = {}
 
 [resource]
 script = ExtResource("1_abilitydata")
 id = "one_night_sooner"
 display_name = "One Night Sooner"
-description = "The next card you play has Haste and costs 1 less."
+description = "The next card you play has Haste."
 tick_cost = 0
-cooldown = 4
+cooldown = 0
 targeting_mode = 4
 effects = [SubResource("EffectData_1")]
 icon_path = ""
+energy_cost = 1
+discard_cost = 0
+hp_cost = 0
+consumes_block = false

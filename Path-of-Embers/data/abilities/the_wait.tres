@@ -18,3 +18,7 @@ cooldown = 5
 targeting_mode = 1
 effects = [SubResource("EffectData_1")]
 icon_path = ""
+energy_cost = 1
+discard_cost = 0
+hp_cost = 0
+consumes_block = false

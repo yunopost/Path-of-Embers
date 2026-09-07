@@ -28,3 +28,7 @@ cooldown = 5
 targeting_mode = 4
 effects = [SubResource("EffectData_1"), SubResource("EffectData_2"), SubResource("EffectData_3")]
 icon_path = ""
+energy_cost = 0
+discard_cost = 0
+hp_cost = 0
+consumes_block = false
