@@ -7,6 +7,8 @@ extends Control
 ## Run initialisation (starter deck + map) happens HERE so that
 ## equipment injected_cards are included in the starting deck.
 
+const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
+
 # ── UI refs (built in _build_ui) ──────────────────────────────────────────────
 var scroll_root: ScrollContainer = null       # unused; kept for API compatibility
 var character_panels: Dictionary = {}          # char_id -> slot_name -> Button
@@ -69,6 +71,14 @@ func _get_font(variant: String) -> Font:
 
 func _ready():
 	_build_ui()
+	_load_stash_from_meta()
+	refresh_from_state()
+	DEBUG_PANEL_SCRIPT.attach_to(self, "loadout")
+
+func debug_refresh_stash() -> void:
+	## Debug panel hook (Task 2/3): after "Grant All Equipment" writes new ids
+	## into the persistent stash, pull them into run_stash and redraw so the
+	## new items show up without a restart.
 	_load_stash_from_meta()
 	refresh_from_state()
 

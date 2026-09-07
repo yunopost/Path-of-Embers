@@ -37,6 +37,8 @@ const EQUIP_DROP_WEIGHT: Dictionary = {
 	EquipmentData.Rarity.RARE:     15,
 }
 
+const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
+
 # ── Persistent stock (kept for current node visit only) ───────────────────────
 # Each entry: { "type": "card"/"upgrade_bundle"/"transcendence"/"equipment",
 #               "id": String, "price": int, "sold": bool }
@@ -53,6 +55,7 @@ func initialize():
 	_generate_stock()
 	_build_ui()
 	refresh_from_state()
+	DEBUG_PANEL_SCRIPT.attach_to(self, "shop")
 
 func refresh_from_state():
 	if _gold_label and ResourceManager:

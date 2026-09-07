@@ -34,6 +34,7 @@ func _ready():
 	_setup_ui()
 	_setup_title()
 	_setup_mute_button()
+	_setup_debug_toggle()
 
 	# Load settings popup
 	_load_settings_popup()
@@ -281,6 +282,35 @@ func _on_mute_toggled() -> void:
 	var btn: Button = get_node_or_null("MuteButton")
 	if is_instance_valid(btn):
 		btn.text = "✕  MUSIC OFF" if _music_muted else "♪  MUSIC ON"
+
+func _setup_debug_toggle() -> void:
+	## Developer-only control: lets Aaron flip debug mode on/off at runtime
+	## without editing source or relaunching with flags, so he can compare
+	## debug and normal play. Only ever exists in a debug build -- never
+	## created at all in a release export, so it can't appear there by
+	## accident regardless of DebugMode's own state.
+	if not OS.is_debug_build():
+		return
+	var toggle := CheckButton.new()
+	toggle.name = "DebugModeToggle"
+	toggle.text = "debug mode"
+	toggle.button_pressed = DebugMode.is_enabled() if DebugMode else false
+	toggle.add_theme_font_size_override("font_size", 12)
+	toggle.add_theme_color_override("font_color", Color(0.75, 0.75, 0.8, 0.8))
+	# Small and tucked in a bottom corner -- clearly a developer control, not
+	# part of the game's normal menu furniture.
+	toggle.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	toggle.offset_left = 12
+	toggle.offset_bottom = -10
+	toggle.offset_top = -34
+	toggle.offset_right = 160
+	toggle.mouse_filter = Control.MOUSE_FILTER_STOP
+	toggle.toggled.connect(_on_debug_toggle_changed)
+	add_child(toggle)
+
+func _on_debug_toggle_changed(pressed: bool) -> void:
+	if DebugMode:
+		DebugMode.set_enabled(pressed)
 
 func _on_new_game_pressed():
 	## Start a new game - reset state and go to character select

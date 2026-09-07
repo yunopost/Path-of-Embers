@@ -2,6 +2,8 @@ extends Control
 
 ## Map screen - displays STS-style node map with branching paths
 
+const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
+
 var map_generator: MapGenerator = null
 var node_widgets: Dictionary = {}  # Key: node_id, Value: MapNodeWidget
 var connection_data: Array[Dictionary] = []  # Store connection data for _draw() rendering
@@ -70,6 +72,25 @@ func refresh_from_state():
 	# Debug tools (debug builds only)
 	if OS.is_debug_build():
 		_setup_debug_ui()
+	DEBUG_PANEL_SCRIPT.attach_to(self, "map")
+
+func debug_jump_to_node_type(node_type: int) -> bool:
+	## Debug panel hook (Task 2): jump to the next available node of the given
+	## MapNodeData.NodeType by driving the SAME click path a real player click
+	## uses (_on_node_clicked) -- so it behaves exactly like a normal click and
+	## never invents a second navigation route. Only reaches nodes that are
+	## already reachable (in MapManager.available_next_node_ids); returns false
+	## if none of that type is currently available.
+	if not DebugMode or not DebugMode.is_enabled():
+		return false
+	if not MapManager.current_map:
+		return false
+	for node_id in MapManager.available_next_node_ids:
+		var node = MapManager.current_map.get_node(node_id)
+		if node and node.node_type == node_type:
+			_on_node_clicked(node_id)
+			return true
+	return false
 
 func _setup_scroll_input():
 	## Setup mouse wheel scrolling for map (handled in _gui_input)

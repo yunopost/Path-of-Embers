@@ -2,6 +2,8 @@ extends Control
 
 ## Rewards screen - displays and allows player to claim rewards
 
+const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
+
 @onready var title_label: Label = $CenterPanel/VBoxContainer/TitleLabel
 @onready var rewards_container: VBoxContainer = $CenterPanel/VBoxContainer/RewardsContainer
 @onready var continue_button: Button = $CenterPanel/VBoxContainer/ContinueButton
@@ -56,6 +58,7 @@ func initialize(reward_data: RewardBundle = null):
 
 	# Display rewards
 	refresh_from_state()
+	DEBUG_PANEL_SCRIPT.attach_to(self, "rewards")
 
 func refresh_from_state():
 	## Refresh UI from RunState (architecture rule 11.2)

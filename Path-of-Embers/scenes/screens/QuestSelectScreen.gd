@@ -5,6 +5,8 @@ extends Control
 ## character. Selections default to whatever QuestManager already assigned
 ## (random pick from CharacterSelect), so "Begin Run" is always enabled.
 
+const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
+
 const ROLE_COLORS := {
 	"warrior": Color("#C0392B"),
 	"healer": Color("#27AE60"),
@@ -23,6 +25,7 @@ var _begin_btn: Button = null
 
 func _ready() -> void:
 	_build_ui()
+	DEBUG_PANEL_SCRIPT.attach_to(self, "quest_select")
 
 func _build_ui() -> void:
 	for child in get_children():

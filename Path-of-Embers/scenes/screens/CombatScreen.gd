@@ -199,15 +199,11 @@ func _start_combat_with_data(encounter_data: Dictionary):
 func _setup_debug_panel() -> void:
 	## Addendum §6: debug mode's Instant Win button. Resolves as a normal
 	## victory (same path as beating every enemy) so rewards/quests/milestones
-	## all fire correctly.
-	if not DebugMode or not DebugMode.is_enabled():
-		return
-	if get_node_or_null("DebugPanel"):
-		return  # already added (re-initialize guard)
-	var panel = DEBUG_PANEL_SCRIPT.new()
-	add_child(panel)
-	panel.setup("combat")
-	panel.instant_win_pressed.connect(_on_debug_instant_win)
+	## all fire correctly. Uses the shared DebugPanel.attach_to() helper so the
+	## "already added" / debug-mode-off guards live in one place.
+	var panel = DEBUG_PANEL_SCRIPT.attach_to(self, "combat")
+	if panel:
+		panel.instant_win_pressed.connect(_on_debug_instant_win)
 
 func _on_debug_instant_win() -> void:
 	if combat_ending:
