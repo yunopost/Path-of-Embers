@@ -34,6 +34,7 @@ reward = {"gold": 25}
 [resource]
 script = ExtResource("1_chardata")
 id = "grove"
+ability_id = "leaf_fall"
 display_name = "Grove"
 role = "Healer"
 str_base = 1

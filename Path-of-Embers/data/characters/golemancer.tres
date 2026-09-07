@@ -34,6 +34,7 @@ reward = {"gold": 30}
 [resource]
 script = ExtResource("1_chardata")
 id = "golemancer"
+ability_id = "hold_the_door"
 display_name = "Golemancer"
 role = "Defender"
 str_base = 1

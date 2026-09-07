@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="PartyAbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/PartyAbilityData.gd" id="1_abilitydata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/EffectData.gd" id="2_effectdata"]
+
+[sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "energy_per_discard_pile"
+params = {"per": 4, "max": 3}
+
+[resource]
+script = ExtResource("1_abilitydata")
+id = "leaf_fall"
+display_name = "Leaf-fall"
+description = "Gain 1 Energy per 4 cards in your discard pile (max 3)."
+tick_cost = 1
+cooldown = 6
+targeting_mode = 4
+effects = [SubResource("EffectData_1")]
+icon_path = ""

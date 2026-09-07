@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="PartyAbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/PartyAbilityData.gd" id="1_abilitydata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/EffectData.gd" id="2_effectdata"]
+
+[sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "delay_enemy_timer"
+params = {"amount": 2}
+
+[resource]
+script = ExtResource("1_abilitydata")
+id = "the_wait"
+display_name = "The Wait"
+description = "Target enemy: delay its timer by 2 (clamped to its max)."
+tick_cost = 0
+cooldown = 5
+targeting_mode = 1
+effects = [SubResource("EffectData_1")]
+icon_path = ""

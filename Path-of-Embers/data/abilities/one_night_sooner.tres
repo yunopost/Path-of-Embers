@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="PartyAbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/PartyAbilityData.gd" id="1_abilitydata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/EffectData.gd" id="2_effectdata"]
+
+[sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "next_card_haste_and_discount"
+params = {"discount": 1}
+
+[resource]
+script = ExtResource("1_abilitydata")
+id = "one_night_sooner"
+display_name = "One Night Sooner"
+description = "The next card you play has Haste and costs 1 less."
+tick_cost = 0
+cooldown = 4
+targeting_mode = 4
+effects = [SubResource("EffectData_1")]
+icon_path = ""

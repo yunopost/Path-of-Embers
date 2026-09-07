@@ -34,6 +34,7 @@ reward = {"gold": 25}
 [resource]
 script = ExtResource("1_chardata")
 id = "living_armor"
+ability_id = "what_was_left"
 display_name = "Living Armor"
 role = "Defender"
 str_base = 1

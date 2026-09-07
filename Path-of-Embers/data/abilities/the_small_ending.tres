@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="PartyAbilityData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://Path-of-Embers/data/PartyAbilityData.gd" id="1_abilitydata"]
+[ext_resource type="Script" path="res://Path-of-Embers/data/EffectData.gd" id="2_effectdata"]
+
+[sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "add_curse_to_hand"
+params = {}
+
+[sub_resource type="Resource" id="EffectData_2" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "gain_energy"
+params = {"amount": 2}
+
+[sub_resource type="Resource" id="EffectData_3" script_class="EffectData"]
+script = ExtResource("2_effectdata")
+effect_type = "draw"
+params = {"amount": 1}
+
+[resource]
+script = ExtResource("1_abilitydata")
+id = "the_small_ending"
+display_name = "The Small Ending"
+description = "Add a Curse to your hand. Gain 2 Energy, draw 1."
+tick_cost = 0
+cooldown = 3
+targeting_mode = 4
+effects = [SubResource("EffectData_1"), SubResource("EffectData_2"), SubResource("EffectData_3")]
+icon_path = ""

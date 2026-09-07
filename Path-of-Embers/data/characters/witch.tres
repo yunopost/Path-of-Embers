@@ -34,6 +34,7 @@ reward = {"gold": 35}
 [resource]
 script = ExtResource("1_chardata")
 id = "witch"
+ability_id = "the_small_ending"
 display_name = "Witch"
 role = "Healer"
 str_base = 1
