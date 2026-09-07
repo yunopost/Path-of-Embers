@@ -38,6 +38,12 @@ class_name CharacterData
 @export var spirit_base: int = 1
 @export var hp_base: int = 25
 
+## Party ability id (Card-Clock Combat spec S7/S10.6) -- one per character,
+## resolved via DataRegistry.get_ability(). Empty for the six Early Access-locked
+## characters (Revenant, Tempest, Mechanist, Sibyl, Echo, Hollow) until their
+## abilities are designed.
+@export var ability_id: String = ""
+
 func _init():
 	starter_unique_cards = []
 	reward_card_pool = []

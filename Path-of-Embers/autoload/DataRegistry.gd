@@ -11,6 +11,7 @@ const DATA_DIR_UPGRADES = "res://Path-of-Embers/data/upgrades/"
 const DATA_DIR_EQUIPMENT = "res://Path-of-Embers/data/equipment/"
 const DATA_DIR_MILESTONES = "res://Path-of-Embers/data/milestones/"
 const DATA_DIR_ENCOUNTERS = "res://Path-of-Embers/data/encounters/"
+const DATA_DIR_ABILITIES = "res://Path-of-Embers/data/abilities/"
 
 var character_cache: Dictionary = {}  # Maps character_id -> CharacterData
 
@@ -29,6 +30,9 @@ var milestone_cache: Dictionary = {}  # Maps milestone_id -> MilestoneData
 
 # Encounter cache
 var encounter_cache: Dictionary = {}  # Maps encounter_id -> EncounterData
+
+# Party ability cache (Card-Clock Combat spec S7/S10.6)
+var ability_cache: Dictionary = {}  # Maps ability_id -> PartyAbilityData
 
 # Transcendent placeholder cards cache
 var transcendent_card_cache: Dictionary = {}  # Maps card_id -> CardData for transcendent placeholders
@@ -71,6 +75,7 @@ func _load_all_resources():
 	var loaded_equipment = _load_resources_from_directory(DATA_DIR_EQUIPMENT, "EquipmentData")
 	var loaded_milestones = _load_resources_from_directory(DATA_DIR_MILESTONES, "MilestoneData")
 	var loaded_encounters = _load_resources_from_directory(DATA_DIR_ENCOUNTERS, "EncounterData")
+	var loaded_abilities = _load_resources_from_directory(DATA_DIR_ABILITIES, "PartyAbilityData")
 
 	# Cache loaded cards
 	for card in loaded_cards:
@@ -117,17 +122,23 @@ func _load_all_resources():
 		if encounter and encounter is EncounterData and not encounter.id.is_empty():
 			encounter_cache[encounter.id] = encounter
 
+	# Cache loaded party abilities
+	for ability in loaded_abilities:
+		if ability and ability is PartyAbilityData and not ability.id.is_empty():
+			ability_cache[ability.id] = ability
+
 	# Log loading summary
 	var total_loaded = (loaded_cards.size() + loaded_enemies.size()
 			+ loaded_characters.size() + loaded_upgrades.size()
-			+ loaded_equipment.size() + loaded_milestones.size() + loaded_encounters.size())
+			+ loaded_equipment.size() + loaded_milestones.size() + loaded_encounters.size()
+			+ loaded_abilities.size())
 	if total_loaded == 0:
 		push_error("DataRegistry: No resource files found! Please create .tres files in data directories.")
 	else:
-		print("DataRegistry: Loaded %d cards, %d enemies, %d characters, %d upgrades, %d equipment, %d milestones, %d encounters" % [
+		print("DataRegistry: Loaded %d cards, %d enemies, %d characters, %d upgrades, %d equipment, %d milestones, %d encounters, %d abilities" % [
 			loaded_cards.size(), loaded_enemies.size(), loaded_characters.size(),
 			loaded_upgrades.size(), loaded_equipment.size(),
-			loaded_milestones.size(), loaded_encounters.size()
+			loaded_milestones.size(), loaded_encounters.size(), loaded_abilities.size()
 		])
 
 func _load_resources_from_directory(path: String, resource_type_name: String) -> Array:
@@ -257,6 +268,13 @@ func get_all_milestones() -> Array[MilestoneData]:
 func get_encounter(encounter_id: String) -> EncounterData:
 	## Get EncounterData by ID. Returns null if not found.
 	return encounter_cache.get(encounter_id, null)
+
+func get_ability(ability_id: String) -> PartyAbilityData:
+	## Get PartyAbilityData by ID (Card-Clock Combat spec S7/S10.6). Returns null if not found
+	## or if ability_id is empty (the six Early Access-locked characters).
+	if ability_id.is_empty():
+		return null
+	return ability_cache.get(ability_id, null)
 
 func get_random_encounter(act: int = 1) -> EncounterData:
 	## Return a random EncounterData valid for the given act. Returns null if none found.

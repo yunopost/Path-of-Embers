@@ -70,6 +70,19 @@ const BLOCK_TO_ENERGY = "block_to_energy"  # Convert all current Block into Ener
 # Living Armor - Iron Tide
 const DAMAGE_EQUAL_TO_BLOCK = "damage_equal_to_block"  # Deal damage equal to current Block value: {}
 
+# ── Party Abilities (Card-Clock Combat spec §7/§10.6) ──────────────────────────
+## Delay a targeted enemy's timer (increase time_current, clamped to time_max): {amount}
+const DELAY_ENEMY_TIMER = "delay_enemy_timer"
+
+## The next card played gains Haste (0 ticks) and costs `discount` less energy: {discount}
+const NEXT_CARD_HASTE_AND_DISCOUNT = "next_card_haste_and_discount"
+
+## Gain floor(discard_pile_size / per) Energy, capped at `max`: {per, max}
+const ENERGY_PER_DISCARD_PILE = "energy_per_discard_pile"
+
+## Flat Energy gain (capped at max_energy): {amount}
+const GAIN_ENERGY = "gain_energy"
+
 # ── Golemancer / Pet System ────────────────────────────────────────────────────
 ## Summon a pet defined in PetBoard's registry.
 ## params: { "pet_def_id": String, "hp_bonus": int (optional, default 0) }
@@ -129,6 +142,10 @@ static func get_all_types() -> Array[String]:
 		GRAND_ASSEMBLY_POWER,
 		DELAYED_DAMAGE,
 		DAMAGE_EQUAL_TO_BLOCK,
+		DELAY_ENEMY_TIMER,
+		NEXT_CARD_HASTE_AND_DISCOUNT,
+		ENERGY_PER_DISCARD_PILE,
+		GAIN_ENERGY,
 	]
 
 # Validate if a string is a valid effect type

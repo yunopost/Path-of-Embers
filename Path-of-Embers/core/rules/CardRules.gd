@@ -31,6 +31,12 @@ static func get_effective_cost(card_def: CardData, card_inst: DeckCardData) -> i
 			var cost_delta = upgrade_def["effects"]["cost_delta"]
 			if cost_delta is int:
 				effective_cost += cost_delta
+
+	# One Night Sooner (Card-Clock Combat spec §7): next card played costs N less.
+	# Read-only here (not consumed) -- RunState.get_timer_tick_amount_for_card clears
+	# it exactly once, when the card is actually played.
+	if RunState:
+		effective_cost -= RunState.next_card_discount
 	
 	return max(0, effective_cost)
 

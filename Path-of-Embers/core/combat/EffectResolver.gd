@@ -529,6 +529,51 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 				if pb:
 					pb.check_assembly()
 
+		# ── Party Abilities (Card-Clock Combat spec S7/S10.6) ──────────────────────
+		EffectType.DELAY_ENEMY_TIMER:
+			## Push a targeted enemy's timer back (increase time_current), clamped to time_max.
+			var delay_amount: int = int(effect.params.get("amount", 2))
+			if enemy_context:
+				enemy_context.time_current = mini(enemy_context.time_current + delay_amount, enemy_context.time_max)
+				enemy_context.time_changed.emit(enemy_context.time_current, enemy_context.time_max)
+			else:
+				push_warning("EffectResolver.DELAY_ENEMY_TIMER: no enemy_context target")
+
+		EffectType.NEXT_CARD_HASTE_AND_DISCOUNT:
+			## The next card played gets Haste (0 ticks, via RunState.haste_next_card,
+			## already consumed by RunState.get_timer_tick_amount_for_card) and a cost
+			## discount (via RunState.next_card_discount, consumed alongside it).
+			var discount_amount: int = int(effect.params.get("discount", 1))
+			if RunState:
+				RunState.haste_next_card = true
+				RunState.next_card_discount = discount_amount
+
+		EffectType.ENERGY_PER_DISCARD_PILE:
+			## Gain floor(discard_pile_size / per) Energy, capped at `max`.
+			var per_cards: int = int(effect.params.get("per", 4))
+			var cap: int = int(effect.params.get("max", 3))
+			if per_cards > 0 and RunState and RunState.deck_model and combat_controller:
+				var discard_size: int = RunState.deck_model.discard_pile.size()
+				var gained: int = mini(int(discard_size / per_cards), cap)
+				if gained > 0:
+					var max_e: int = int(combat_controller.get("max_energy"))
+					var cur_e: int = int(combat_controller.get("current_energy"))
+					var new_e: int = mini(cur_e + gained, max_e)
+					combat_controller.set("current_energy", new_e)
+					if ResourceManager:
+						ResourceManager.set_energy(new_e, max_e)
+
+		EffectType.GAIN_ENERGY:
+			## Flat Energy gain, capped at max_energy.
+			var energy_amount: int = int(effect.params.get("amount", 1))
+			if combat_controller and energy_amount > 0:
+				var max_e2: int = int(combat_controller.get("max_energy"))
+				var cur_e2: int = int(combat_controller.get("current_energy"))
+				var new_e2: int = mini(cur_e2 + energy_amount, max_e2)
+				combat_controller.set("current_energy", new_e2)
+				if ResourceManager:
+					ResourceManager.set_energy(new_e2, max_e2)
+
 		EffectType.DELAYED_DAMAGE:
 			## Queue damage to a random alive enemy to fire after N ticks pass on the
 			## shared clock (Card-Clock Combat spec §5: "next turn" -> N ticks, default 4).

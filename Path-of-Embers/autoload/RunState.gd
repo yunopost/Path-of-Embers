@@ -20,6 +20,7 @@ var deck_model: DeckModel = null
 
 # Combat status effects
 var haste_next_card: bool = false  # Next card played doesn't advance enemy timer
+var next_card_discount: int = 0  # Card-Clock Combat spec S7: One Night Sooner -- next card costs N less
 
 # Reward pool
 var reward_card_pool: Array[CardData] = []  # Merged reward card pool from selected characters
@@ -55,6 +56,7 @@ func _ready():
 	deck = {}
 	deck_order = []
 	haste_next_card = false
+	next_card_discount = 0
 	reward_card_pool = []
 	rare_pity_counter = -2
 	buffs = []
@@ -416,23 +418,16 @@ func has_upgrade(instance_id: String, upgrade_id: String) -> bool:
 		return false
 	return card_instance.applied_upgrades.has(upgrade_id)
 
-func get_timer_tick_amount_for_card(instance_id: String) -> int:
-	## Get the number of ticks a played card advances the clock by (spec Card-Clock Combat §5).
-	## Haste = 0 ticks. Slow = 2 ticks; "Slow N" = N ticks. Default = 1 tick.
-	
-	# Check for haste_next_card status (from Shoulder Tackle or similar effects)
-	# This applies to the CURRENT card being played (which was granted haste by the previous card)
+func predict_timer_tick_amount_for_card(instance_id: String) -> int:
+	## Non-mutating preview of get_timer_tick_amount_for_card: same rule, but does
+	## NOT consume haste_next_card / next_card_discount. Used by the combat UI's
+	## enemy-timer hover-ghost preview (spec §8) and by headless sim decision-point
+	## tracking, neither of which should spend the one-shot "next card" flags just
+	## by looking at them.
 	if haste_next_card:
-		# Clear the status after using it (it only applies once)
-		haste_next_card = false
 		return 0
-	
-	# Check for Haste upgrade
 	if has_upgrade(instance_id, "upgrade_haste"):
 		return 0
-	
-	# Check for Haste / Slow[ N] keywords on the card itself (using CardRules to
-	# account for upgrades that add/remove keywords)
 	var card_instance = deck.get(instance_id)
 	if card_instance:
 		var keywords = CardRules.get_card_keywords(card_instance)
@@ -447,8 +442,19 @@ func get_timer_tick_amount_for_card(instance_id: String) -> int:
 				if mag_str.is_valid_int():
 					return int(mag_str)
 				return 2
-	
 	return 1
+
+func get_timer_tick_amount_for_card(instance_id: String) -> int:
+	## Get the number of ticks a played card advances the clock by (spec Card-Clock Combat §5).
+	## Haste = 0 ticks. Slow = 2 ticks; "Slow N" = N ticks. Default = 1 tick.
+	## Called exactly once per actual card play, right after cost was spent -- this is
+	## also where the one-shot "next card" flags (haste_next_card, next_card_discount;
+	## see One Night Sooner, spec §7) are consumed, since both apply to the CURRENT
+	## card (the one that was granted them by the previous card/ability).
+	var amount := predict_timer_tick_amount_for_card(instance_id)
+	next_card_discount = 0
+	haste_next_card = false
+	return amount
 
 func transcend_card(instance_id: String, new_card_id: String) -> bool:
 	## Transform a card instance into a transcendent card
@@ -568,6 +574,7 @@ func reset_run() -> void:
 		ResourceManager.reset_resources()
 	
 	haste_next_card = false
+	next_card_discount = 0
 	
 	# Reset map/progress (delegates to MapManager)
 	if MapManager:

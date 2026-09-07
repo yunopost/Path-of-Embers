@@ -20,6 +20,11 @@ var combat_active: bool = false
 # these objects carry the fixed base-stat bonuses for the owning character's cards only.
 var character_stats: Dictionary = {}  # String → EntityStats
 
+# Party ability cooldown state (Card-Clock Combat spec §7/§10.6). Per-combat,
+# keyed by character_id, value = ticks remaining (0 = ready). Only characters
+# with a non-empty ability_id get an entry.
+var ability_cooldowns: Dictionary = {}  # String → int
+
 var enemy_time_system: EnemyTimeSystem
 var intent_system: IntentSystem
 var pet_board: PetBoard
@@ -33,11 +38,18 @@ var min_hp_this_cycle: int = 50  # Track minimum HP this cycle
 
 # Combat-wide tracking
 var damage_taken_this_combat: bool = false  # Track if any damage taken this entire combat (Revenant)
+var total_ticks: int = 0  # Running clock total this combat (spec §8 tick counter UI)
 
 # Last-card tracking (for sequencing effects)
 var last_card_type_played: int = -1  # CardData.CardType value; -1 = no card yet (Tempest, Echo)
 var last_card_played: DeckCardData = null  # Last card played instance (Echo MIRROR)
-var last_card_target_node: Node = null  # Target Node of last card (Echo MIRROR)
+var last_card_target_enemy: Enemy = null  # Target Enemy of last card (Echo MIRROR).
+# Stored as the Enemy object itself, not the transient UI target Node passed into
+# play_card() -- that Node is often freed by its caller right after the call
+# returns (e.g. the headless sim), which used to throw "previously freed" when
+# MIRROR replayed later. Enemy instances live for the whole combat, so this
+# reference stays valid; is_instance_valid() still guards the case where the
+# enemy itself is no longer around (freed at end of combat).
 
 # Pending state flags (set during effect resolution, consumed after card fully resolves)
 var _mirror_active: bool = false  # Prevent infinite MIRROR recursion
@@ -77,9 +89,10 @@ func start_combat(enemy_data: Array):
 	## enemy_data can be Array of enemy_info Dicts with "enemy_id" and "count" OR legacy format with "id", "name", "max_hp", "time_max"
 	combat_active = true
 	damage_taken_this_combat = false
+	total_ticks = 0
 	last_card_type_played = -1
 	last_card_played = null
-	last_card_target_node = null
+	last_card_target_enemy = null
 
 	# Boss Rush: record start time and total enemy HP for leaderboard scoring
 	if RunState and RunState.is_boss_rush:
@@ -170,6 +183,13 @@ func start_combat(enemy_data: Array):
 			cstats.apply_status(StatusEffectType.DEXTERITY, char_data.def_base)
 			cstats.apply_status(StatusEffectType.FAITH, char_data.spirit_base)
 			character_stats[char_id] = cstats
+
+	# Reset party ability cooldowns for the fresh combat (spec §7/§10.6 -- per-combat state)
+	ability_cooldowns.clear()
+	for char_id in party_ids:
+		var _cd = DataRegistry.get_character(char_id) if DataRegistry else null
+		if _cd and not _cd.ability_id.is_empty():
+			ability_cooldowns[char_id] = 0
 
 	# Apply equipment stat_modifiers on top of base stats (Phase 6)
 	for char_id in character_stats:
@@ -375,7 +395,11 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	# CURRENT card see the PREVIOUS card's type, while the NEXT card sees this card's type
 	last_card_type_played = card_data.card_type
 	last_card_played = deck_card
-	last_card_target_node = target
+	last_card_target_enemy = null
+	if target and target.has_meta("enemy"):
+		var _mirror_target = target.get_meta("enemy") as Enemy
+		if _mirror_target:
+			last_card_target_enemy = _mirror_target
 
 	# Quest event: CARD_PLAYED
 	if QuestManager:
@@ -516,6 +540,8 @@ func advance_clock(ticks: int) -> void:
 	if ticks <= 0:
 		return
 
+	total_ticks += ticks
+
 	# (a) Tick every alive enemy's timer (EnemyTimeSystem applies the ModifierManager multiplier)
 	enemy_time_system.tick_all_enemies(ticks)
 
@@ -533,10 +559,66 @@ func advance_clock(ticks: int) -> void:
 	# _on_enemy_acted() per resolved action, which performs the Block wipe.
 	enemy_time_system.resolve_enemy_time_triggers("advance_clock")
 
-func _tick_ability_cooldowns(_ticks: int) -> void:
-	## Hook for party ability cooldowns (spec §7/§10.6). No PartyAbilityData /
-	## cooldown state exists yet — abilities are a separate task (spec item 6).
-	pass
+func _tick_ability_cooldowns(ticks: int) -> void:
+	## Decrement every party ability's cooldown by `ticks`, floored at 0 (spec §7/§10.6).
+	for char_id in ability_cooldowns.keys():
+		ability_cooldowns[char_id] = maxi(0, int(ability_cooldowns[char_id]) - ticks)
+
+func get_ability_cooldown(character_id: String) -> int:
+	## Ticks remaining before character_id's ability is off cooldown (0 = ready).
+	return int(ability_cooldowns.get(character_id, 0))
+
+func can_use_ability(character_id: String) -> bool:
+	## True if character_id has an ability and it is off cooldown. Does not check
+	## targeting -- ENEMY-targeted abilities additionally need a live target passed
+	## to use_ability().
+	if not combat_active:
+		return false
+	var char_data = DataRegistry.get_character(character_id) if DataRegistry else null
+	if not char_data or char_data.ability_id.is_empty():
+		return false
+	var ability: PartyAbilityData = DataRegistry.get_ability(char_data.ability_id) if DataRegistry else null
+	if not ability:
+		return false
+	return get_ability_cooldown(character_id) <= 0
+
+func use_ability(character_id: String, target: Node = null) -> bool:
+	## Use character_id's party ability (spec §7/§10.6). Checks cooldown, resolves
+	## the ability's effects through EffectResolver (same path as card effects),
+	## sets the cooldown, then advances the clock by the ability's tick_cost. None
+	## of the six Early Access abilities have an Energy cost (see spec §7 table),
+	## so there is no energy check here; ability_cooldowns is the sole gate.
+	if not can_use_ability(character_id):
+		return false
+
+	var char_data: CharacterData = DataRegistry.get_character(character_id)
+	var ability: PartyAbilityData = DataRegistry.get_ability(char_data.ability_id)
+	var owner_stats: EntityStats = character_stats.get(character_id, null)
+
+	var target_stats: EntityStats = null
+	var enemy_context: Enemy = null
+	if ability.targeting_mode == CardData.TargetingMode.ENEMY:
+		if target and target.has_meta("enemy"):
+			var meta_enemy = target.get_meta("enemy") as Enemy
+			if meta_enemy and meta_enemy.stats.is_alive():
+				target_stats = meta_enemy.stats
+				enemy_context = meta_enemy
+		if enemy_context == null:
+			return false  # ENEMY-targeted ability requires a valid, alive target
+
+	var draw_count: int = EffectResolver.resolve_effects(ability.effects, player_stats, target_stats, enemy_context, self, owner_stats)
+
+	if ResourceManager:
+		ResourceManager.set_block(player_stats.block)
+		ResourceManager.set_hp(player_stats.current_hp, player_stats.max_hp)
+	if draw_count > 0:
+		RunState.draw_cards(draw_count)
+
+	# Set the cooldown AFTER advancing the clock so a 1-tick ability's own
+	# tick_cost doesn't immediately shave a tick off the cooldown it just set.
+	advance_clock(ability.tick_cost)
+	ability_cooldowns[character_id] = ability.cooldown
+	return true
 
 func _tick_delayed_effects(ticks: int) -> void:
 	## Ticks down DELAYED_DAMAGE-style effects queued on the shared clock
@@ -572,6 +654,9 @@ func _check_end_of_turn_effects():
 		# Remove pending status
 		player_stats.status_effects.erase(StatusEffectType.PENDING_STRENGTH_IF_NO_DAMAGE)
 		player_stats.status_effects_changed.emit()
+
+func get_total_ticks() -> int:
+	return total_ticks
 
 func get_player_stats() -> EntityStats:
 	return player_stats
@@ -670,8 +755,17 @@ func _replay_last_card_effects(enemy_override: Enemy = null):
 		if draw_count > 0:
 			RunState.draw_cards(draw_count)
 	else:
-		# Re-use the stored target node (handles ALL_ENEMIES, self-targeting, etc.)
-		_resolve_card_effects_with_effects(last_card_played, last_card_target_node, filtered_effects)
+		# Re-use the stored target Enemy (nil for SELF/ALL_ENEMIES-targeted cards). The
+		# target Node passed into _resolve_card_effects_with_effects is a throwaway
+		# built here for the duration of this call, since the original UI/sim Node
+		# that carried the "enemy" meta may already be gone (see last_card_target_enemy).
+		var replay_target: Node = null
+		if is_instance_valid(last_card_target_enemy) and last_card_target_enemy.stats.is_alive():
+			replay_target = Node.new()
+			replay_target.set_meta("enemy", last_card_target_enemy)
+		_resolve_card_effects_with_effects(last_card_played, replay_target, filtered_effects)
+		if replay_target:
+			replay_target.free()
 
 	_mirror_active = false
 
