@@ -658,6 +658,94 @@ func use_ability(character_id: String, target: Node = null) -> bool:
 	ability_cooldowns[character_id] = ability.cooldown
 	return true
 
+func get_ability_cost_summary(character_id: String) -> String:
+	## Human-readable cost badge for character_id's ability button/tooltip
+	## (Addendum §4 item 3: "cost on the button, inline").
+	if not DataRegistry:
+		return ""
+	var char_data = DataRegistry.get_character(character_id)
+	if not char_data or char_data.ability_id.is_empty():
+		return ""
+	var ability: PartyAbilityData = DataRegistry.get_ability(char_data.ability_id)
+	if not ability:
+		return ""
+	var parts: Array[String] = []
+	if ability.energy_cost > 0:
+		parts.append("%d⚡" % ability.energy_cost)
+	if ability.tick_cost > 0:
+		parts.append("%d⏱" % ability.tick_cost)
+	if ability.discard_cost > 0:
+		parts.append("discard %d" % ability.discard_cost)
+	if ability.hp_cost > 0:
+		parts.append("%d HP" % ability.hp_cost)
+	if ability.consumes_block:
+		parts.append("all Block")
+	if parts.is_empty():
+		parts.append("free")
+	return " · ".join(parts)
+
+func get_ability_preview_text(character_id: String) -> String:
+	## Real numbers this ability would produce right NOW, given current state
+	## (Addendum §4 item 5: "Hold the Door its actual Block including DEX, What
+	## Was Left its actual damage given current Block"). Walks the same effects
+	## the ability resolves through EffectResolver.
+	if not DataRegistry:
+		return ""
+	var char_data = DataRegistry.get_character(character_id)
+	if not char_data or char_data.ability_id.is_empty():
+		return ""
+	var ability: PartyAbilityData = DataRegistry.get_ability(char_data.ability_id)
+	if not ability:
+		return ""
+	var owner_stats: EntityStats = character_stats.get(character_id, null)
+	var lines: Array[String] = []
+	for effect in ability.effects:
+		if effect is EffectData:
+			lines.append(_describe_effect_value(effect, owner_stats))
+	if ability.consumes_block:
+		lines.append("then loses all Block")
+	return "; ".join(lines) if not lines.is_empty() else ability.description
+
+func _describe_effect_value(effect: EffectData, owner_stats: EntityStats) -> String:
+	## One human-readable line for a single ability effect, with current-state
+	## math (STR/DEX/Block) applied -- shared by the ability hover preview.
+	var dex := 0
+	if owner_stats:
+		var dv = owner_stats.get_status(StatusEffectType.DEXTERITY)
+		if dv != null:
+			dex = int(dv)
+	var str_bonus := 0
+	if owner_stats:
+		var sv = owner_stats.get_status(StatusEffectType.STRENGTH)
+		if sv != null:
+			str_bonus = int(sv)
+	match effect.effect_type:
+		EffectType.BLOCK:
+			return "Gain %d Block" % (int(effect.params.get("amount", 0)) + dex)
+		EffectType.DAMAGE:
+			return "Deal %d damage" % (int(effect.params.get("amount", 0)) + str_bonus)
+		EffectType.DAMAGE_EQUAL_TO_BLOCK:
+			return "Deal %d damage (= current Block)" % player_stats.block
+		EffectType.DELAY_ENEMY_TIMER:
+			return "Delay target's timer by %d" % int(effect.params.get("amount", 0))
+		EffectType.GRANT_HASTE_NEXT_CARD:
+			return "Next card played gets Haste"
+		EffectType.ADD_CURSE_TO_HAND:
+			return "Add a Curse to your hand"
+		EffectType.GAIN_ENERGY:
+			return "Gain %d Energy" % int(effect.params.get("amount", 0))
+		EffectType.DRAW:
+			return "Draw %d" % int(effect.params.get("amount", 1))
+		EffectType.ENERGY_PER_DISCARD_PILE:
+			var per: int = int(effect.params.get("per", 4))
+			var cap: int = int(effect.params.get("max", 3))
+			var gained: int = 0
+			if per > 0 and RunState and RunState.deck_model:
+				gained = mini(int(RunState.deck_model.discard_pile.size() / per), cap)
+			return "Gain %d Energy (from discard pile)" % gained
+		_:
+			return effect.effect_type.capitalize()
+
 func _tick_delayed_effects(ticks: int) -> void:
 	## Ticks down DELAYED_DAMAGE-style effects queued on the shared clock
 	## (spec §5: "next turn" effects now fire after N ticks, default 4 — see
