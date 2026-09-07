@@ -2,11 +2,19 @@ extends Control
 
 ## Reusable Party HUD component showing party members with portraits, names, and quest info
 
+## Addendum §4 item 1: in combat, each character block also carries that
+## character's ability button. PartyHUD forwards bind/unbind/refresh calls
+## from CombatScreen down to each CharacterHUDBlock, and re-forwards
+## ability_pressed(character_id) up so CombatScreen can dispatch it.
+
+signal ability_pressed(character_id: String)
+
 # Constants
 const CHARACTER_HUD_BLOCK_SCENE = preload("res://Path-of-Embers/scenes/ui/hud/CharacterHUDBlock.tscn")
 
 # Private variables
 var _character_hud_blocks: Array[Control] = []
+var _combat_controller: CombatController = null
 
 # @onready variables
 @onready var party_margin: MarginContainer = $PartyMargin
@@ -50,6 +58,39 @@ func refresh():
 			var block = _create_character_hud_block(char_id)
 			party_row.add_child(block)
 			_character_hud_blocks.append(block)
+
+		# If a combat is already in progress (e.g. refresh() triggered mid-fight),
+		# re-bind the freshly created blocks to it.
+		if _combat_controller:
+			bind_combat(_combat_controller)
+
+# -- Combat ability buttons (Addendum §4 item 1) -----------------------------
+
+func bind_combat(cc: CombatController) -> void:
+	## Show and wire every character block's ability button for this combat.
+	_combat_controller = cc
+	for block in _character_hud_blocks:
+		if not is_instance_valid(block):
+			continue
+		block.bind_combat(cc)
+		if not block.ability_pressed.is_connected(_on_block_ability_pressed):
+			block.ability_pressed.connect(_on_block_ability_pressed)
+
+func unbind_combat() -> void:
+	_combat_controller = null
+	for block in _character_hud_blocks:
+		if is_instance_valid(block):
+			block.unbind_combat()
+
+func refresh_ability_states() -> void:
+	## Call after any action that could change energy, hand, HP, Block, or
+	## cooldowns, so the three ready/cooldown/cannot-afford states stay live.
+	for block in _character_hud_blocks:
+		if is_instance_valid(block):
+			block.refresh_ability_state()
+
+func _on_block_ability_pressed(character_id: String) -> void:
+	ability_pressed.emit(character_id)
 
 # Private functions
 func _apply_layout_overrides():

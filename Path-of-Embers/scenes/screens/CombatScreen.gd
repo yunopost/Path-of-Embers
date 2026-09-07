@@ -190,6 +190,25 @@ func _start_combat_with_data(encounter_data: Dictionary):
 	# Note: _update_hand() will be called automatically via hand_changed signal when draw_cards() is called
 	# Similarly, other updates will be triggered by their respective signals
 	refresh_from_state()
+	_setup_debug_panel()
+
+func _setup_debug_panel() -> void:
+	## Addendum §6: debug mode's Instant Win button. Resolves as a normal
+	## victory (same path as beating every enemy) so rewards/quests/milestones
+	## all fire correctly.
+	if not DebugMode or not DebugMode.is_enabled():
+		return
+	if get_node_or_null("DebugPanel"):
+		return  # already added (re-initialize guard)
+	var panel := DebugPanel.new()
+	add_child(panel)
+	panel.setup("combat")
+	panel.instant_win_pressed.connect(_on_debug_instant_win)
+
+func _on_debug_instant_win() -> void:
+	if combat_ending:
+		return
+	_end_combat_and_transition()
 
 ## Role-based placeholder colors (mirrors CharacterEntry)
 const PORTRAIT_ROLE_COLORS = {
@@ -322,6 +341,9 @@ func _update_player_block_label(new_block: int) -> void:
 ## ENEMY-targeted abilities enter target-select (click an enemy to confirm, Escape cancels).
 
 func _setup_ability_bar() -> void:
+	## Addendum §4 item 1: the bottom bar keeps only Breathe and Focus. Each
+	## character's ability button now lives under their portrait in the party
+	## HUD (see _bind_party_hud_abilities / CharacterHUDBlock).
 	if not ability_bar:
 		return
 	for child in ability_bar.get_children():
@@ -329,65 +351,59 @@ func _setup_ability_bar() -> void:
 	ability_button_char_ids.clear()
 	pending_ability_character_id = ""
 
-	# Slot 0: Focus (universal, no character, no cooldown)
+	var breathe_btn = Button.new()
+	breathe_btn.name = "BreatheButton"
+	breathe_btn.text = "BREATHE\n[Space]"
+	breathe_btn.tooltip_text = "Breathe: +1 Energy (capped), starts a new cycle. 1 tick. No cooldown."
+	breathe_btn.pressed.connect(_on_breathe_pressed)
+	_style_ability_button(breathe_btn)
+	ability_bar.add_child(breathe_btn)
+
 	var focus_btn = Button.new()
 	focus_btn.name = "FocusButton"
-	focus_btn.text = "FOCUS\n[Space]"
-	focus_btn.tooltip_text = "Focus: +2 Energy (capped), draw 2, starts a new cycle. 1 tick. No cooldown."
+	focus_btn.text = "FOCUS\n[F]"
+	focus_btn.tooltip_text = "Focus: draw 2, starts a new cycle. 1 tick. No cooldown."
 	focus_btn.pressed.connect(_on_focus_pressed)
 	_style_ability_button(focus_btn)
 	ability_bar.add_child(focus_btn)
-	ability_button_char_ids.append("")
 
-	var party_ids: Array = PartyManager.party_ids if PartyManager else []
-	for i in range(min(party_ids.size(), 3)):
-		var char_id: String = party_ids[i]
-		var char_data: CharacterData = DataRegistry.get_character(char_id) if DataRegistry else null
-		var btn = Button.new()
-		btn.name = "AbilityButton_%d" % (i + 1)
-		_style_ability_button(btn)
-		if char_data and not char_data.ability_id.is_empty():
-			var ability: PartyAbilityData = DataRegistry.get_ability(char_data.ability_id)
-			if ability:
-				btn.tooltip_text = "%s (%s): %s" % [ability.display_name, char_data.display_name, ability.description]
-				btn.pressed.connect(_on_ability_button_pressed.bind(char_id))
-			else:
-				btn.disabled = true
-		else:
-			# Early Access-locked character (spec: only the six EA abilities are built)
-			btn.text = "-\n[%d]" % (i + 1)
-			btn.tooltip_text = "%s has no ability in this build." % (char_data.display_name if char_data else char_id)
-			btn.disabled = true
-		ability_bar.add_child(btn)
-		ability_button_char_ids.append(char_id if char_data and not (char_data.ability_id.is_empty()) else "")
-
+	_bind_party_hud_abilities()
 	_refresh_ability_bar()
 
-func _refresh_ability_bar() -> void:
-	if not ability_bar or not combat_controller:
+func _bind_party_hud_abilities() -> void:
+	## Wire the party HUD's per-character ability buttons (Addendum §4 item 1)
+	## to this combat, and listen for presses.
+	var party_hud := _get_party_hud()
+	if not party_hud:
 		return
-	var children := ability_bar.get_children()
-	for i in range(1, children.size()):
-		var char_id: String = ability_button_char_ids[i] if i < ability_button_char_ids.size() else ""
-		if char_id.is_empty():
-			continue
-		var btn: Button = children[i]
-		var char_data: CharacterData = DataRegistry.get_character(char_id) if DataRegistry else null
-		if not char_data or char_data.ability_id.is_empty():
-			continue
-		var ability: PartyAbilityData = DataRegistry.get_ability(char_data.ability_id)
-		if not ability:
-			continue
-		var cd: int = combat_controller.get_ability_cooldown(char_id)
-		var name_line: String = ability.display_name
-		if ability.icon_path != "" and ResourceLoader.exists(ability.icon_path):
-			btn.icon = load(ability.icon_path)
-		if cd > 0:
-			btn.text = "%s\n(%d)" % [name_line, cd]
-			btn.disabled = true
-		else:
-			btn.text = "%s\n[%d]" % [name_line, i]
-			btn.disabled = (char_id == pending_ability_character_id)
+	party_hud.bind_combat(combat_controller)
+	if not party_hud.ability_pressed.is_connected(_on_ability_button_pressed):
+		party_hud.ability_pressed.connect(_on_ability_button_pressed)
+
+func _unbind_party_hud_abilities() -> void:
+	var party_hud := _get_party_hud()
+	if not party_hud:
+		return
+	if party_hud.ability_pressed.is_connected(_on_ability_button_pressed):
+		party_hud.ability_pressed.disconnect(_on_ability_button_pressed)
+	party_hud.unbind_combat()
+
+func _get_party_hud() -> Control:
+	if not ScreenManager or not ScreenManager.ui_root:
+		return null
+	return ScreenManager.ui_root.party_hud
+
+func _refresh_ability_bar() -> void:
+	var party_hud := _get_party_hud()
+	if party_hud:
+		party_hud.refresh_ability_states()
+
+func _on_breathe_pressed() -> void:
+	_cancel_ability_targeting()
+	combat_controller.breathe()
+	_check_combat_end()
+	_refresh_ability_bar()
+	_update_tick_counter()
 
 func _on_focus_pressed() -> void:
 	_cancel_ability_targeting()
@@ -437,15 +453,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_SPACE:
+				_on_breathe_pressed()
+				get_viewport().set_input_as_handled()
+			KEY_F:
 				_on_focus_pressed()
 				get_viewport().set_input_as_handled()
-			KEY_1, KEY_2, KEY_3:
-				var idx: int = event.keycode - KEY_1 + 1  # ability_button_char_ids index (1..3)
-				if idx < ability_button_char_ids.size():
-					var char_id: String = ability_button_char_ids[idx]
-					if not char_id.is_empty():
-						_on_ability_button_pressed(char_id)
-						get_viewport().set_input_as_handled()
 			KEY_ESCAPE:
 				if not pending_ability_character_id.is_empty():
 					_cancel_ability_targeting()
@@ -531,6 +543,121 @@ func _setup_enemies():
 		enemy_slots.add_child(enemy_display)
 		enemy_displays.append(enemy_display)
 
+# -- Enemy intent rendering from effects (Addendum §4 item 4) -----------------
+## Six intent icons exist at Art Assets/UI/icon_intent_*.png: attack, defend,
+## buff, debuff, heal, multi. There is NO icon_intent_special.png in the asset
+## drop despite the spec calling for a "special" fallback -- "multi" is used
+## as the generic fallback instead (closest existing icon); flagged for
+## Director/Art follow-up rather than guessed at further.
+const INTENT_ICON_PATHS := {
+	"attack": "res://Path-of-Embers/Art Assets/UI/icon_intent_attack.png",
+	"defend": "res://Path-of-Embers/Art Assets/UI/icon_intent_defend.png",
+	"buff": "res://Path-of-Embers/Art Assets/UI/icon_intent_buff.png",
+	"debuff": "res://Path-of-Embers/Art Assets/UI/icon_intent_debuff.png",
+	"heal": "res://Path-of-Embers/Art Assets/UI/icon_intent_heal.png",
+	"multi": "res://Path-of-Embers/Art Assets/UI/icon_intent_multi.png",
+}
+var _intent_icon_cache: Dictionary = {}
+
+func _get_intent_icon(icon_key: String) -> Texture2D:
+	if _intent_icon_cache.has(icon_key):
+		return _intent_icon_cache[icon_key]
+	var path: String = INTENT_ICON_PATHS.get(icon_key, INTENT_ICON_PATHS["multi"])
+	var tex: Texture2D = null
+	if ResourceLoader.exists(path):
+		tex = load(path)
+	_intent_icon_cache[icon_key] = tex
+	return tex
+
+func _intent_icon_key_for_effect(effect_type: String) -> String:
+	match effect_type:
+		EffectType.DAMAGE, EffectType.DAMAGE_EQUAL_TO_BLOCK, EffectType.DAMAGE_PER_CURSE, \
+		EffectType.DAMAGE_CONDITIONAL_ELITE, EffectType.DAMAGE_SPITE, EffectType.DAMAGE_SEQUENCING, \
+		EffectType.DAMAGE_CONDITIONAL_TOP_CARD, EffectType.DELAYED_DAMAGE:
+			return "attack"
+		EffectType.BLOCK, EffectType.RETAIN_BLOCK_THIS_TURN, EffectType.BLOCK_ON_ENEMY_ACT:
+			return "defend"
+		EffectType.VULNERABLE, EffectType.VULNERABLE_ALL_ENEMIES, EffectType.WEAKNESS:
+			return "debuff"
+		EffectType.STRENGTH, EffectType.DEXTERITY, EffectType.FAITH:
+			return "buff"
+		EffectType.HEAL:
+			return "heal"
+		_:
+			return "multi"
+
+func _intent_effect_value_text(effect: EffectData) -> String:
+	var p: Dictionary = effect.params
+	match effect.effect_type:
+		EffectType.DAMAGE, EffectType.DAMAGE_EQUAL_TO_BLOCK, EffectType.DAMAGE_PER_CURSE, \
+		EffectType.DAMAGE_CONDITIONAL_ELITE, EffectType.DAMAGE_SPITE, EffectType.DAMAGE_SEQUENCING, \
+		EffectType.DAMAGE_CONDITIONAL_TOP_CARD, EffectType.DELAYED_DAMAGE:
+			var amt: int = int(p.get("amount", 0))
+			var hits: int = int(p.get("hit_count", 1))
+			return "%dx%d" % [amt, hits] if hits > 1 else str(amt)
+		EffectType.BLOCK:
+			return str(int(p.get("amount", 0)))
+		EffectType.VULNERABLE, EffectType.VULNERABLE_ALL_ENEMIES, EffectType.WEAKNESS:
+			return "%d" % int(p.get("duration", 0))
+		EffectType.HEAL:
+			return str(int(p.get("amount", 0)))
+		EffectType.STRENGTH, EffectType.DEXTERITY, EffectType.FAITH:
+			return "+%d" % int(p.get("amount", 0))
+		_:
+			return ""
+
+func _build_intent_entries(intent: IntentData) -> Array:
+	## Walk the intent's effects (not telegraph_text) to build one
+	## {icon_key, value_text} entry per effect. Handles the legacy dummy-enemy
+	## fallback (values={"damage":N}, no move_data) too.
+	var entries: Array = []
+	if intent == null:
+		return entries
+	var move_data = intent.values.get("move_data", null)
+	if move_data is Dictionary and move_data.has("effects"):
+		for effect in move_data.get("effects", []):
+			if not (effect is EffectData):
+				continue
+			entries.append({
+				"icon_key": _intent_icon_key_for_effect(effect.effect_type),
+				"value_text": _intent_effect_value_text(effect),
+			})
+	elif intent.values.has("damage"):
+		entries.append({"icon_key": "attack", "value_text": str(int(intent.values.get("damage", 0)))})
+	return entries
+
+func _populate_intent_row(intent_row: HBoxContainer, intent: IntentData) -> void:
+	if not is_instance_valid(intent_row):
+		return
+	for child in intent_row.get_children():
+		child.queue_free()
+	intent_row.tooltip_text = intent.telegraph_text if intent else ""
+
+	var entries: Array = _build_intent_entries(intent)
+	if entries.is_empty():
+		var none_label = Label.new()
+		none_label.text = "--"
+		intent_row.add_child(none_label)
+		return
+
+	for entry in entries:
+		var item = HBoxContainer.new()
+		item.add_theme_constant_override("separation", 2)
+		var icon_tex := _get_intent_icon(entry.icon_key)
+		if icon_tex:
+			var icon_rect = TextureRect.new()
+			icon_rect.texture = icon_tex
+			icon_rect.custom_minimum_size = Vector2(16, 16)
+			icon_rect.expand_mode = TextureRect.EXPAND_FIT_HEIGHT_PROPORTIONAL
+			icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			item.add_child(icon_rect)
+		if not entry.value_text.is_empty():
+			var val_label = Label.new()
+			val_label.text = entry.value_text
+			val_label.add_theme_font_size_override("font_size", 13)
+			item.add_child(val_label)
+		intent_row.add_child(item)
+
 func _create_enemy_display(enemy: Enemy) -> Control:
 	var enemy_panel = Panel.new()
 	enemy_panel.custom_minimum_size = Vector2(150, 200)
@@ -607,21 +734,23 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 	ghost_label.visible = false
 	vbox.add_child(ghost_label)
 	
-	# Intent label with text wrapping
-	var intent_label = Label.new()
-	intent_label.name = "IntentLabel"
-	intent_label.text = "Intent: %s" % (enemy.intent.telegraph_text if enemy.intent else "None")
-	intent_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	intent_label.clip_contents = true
-	intent_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	intent_label.custom_minimum_size = Vector2(0, 20)  # Minimum height for wrapped text
-	vbox.add_child(intent_label)
-	
+	# Intent row (Addendum §4 item 4): icon + value per effect the intent
+	# resolves to, derived from the move's `effects` array (not telegraph_text).
+	# telegraph_text is kept only as the row's tooltip/flavour.
+	var intent_row = HBoxContainer.new()
+	intent_row.name = "IntentRow"
+	intent_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	intent_row.add_theme_constant_override("separation", 6)
+	intent_row.custom_minimum_size = Vector2(0, 24)
+	intent_row.mouse_filter = Control.MOUSE_FILTER_PASS
+	vbox.add_child(intent_row)
+	_populate_intent_row(intent_row, enemy.intent)
+
 	# Connect to timer and intent signals
 	enemy.time_changed.connect(func(current, max_time):
 		timer_label.text = "Timer: %d/%d" % [current, max_time]
 		_update_enemy_pulse(enemy, timer_label, current))
-	enemy.intent_changed.connect(func(new_intent): intent_label.text = "Intent: %s" % (new_intent.telegraph_text if new_intent else "None"))
+	enemy.intent_changed.connect(func(new_intent): _populate_intent_row(intent_row, new_intent))
 	_update_enemy_pulse(enemy, timer_label, enemy.time_current)
 
 	# Click-to-target for ability target-select mode (spec §8: click an enemy to confirm)
@@ -733,6 +862,7 @@ func _on_player_defeated():
 	if combat_controller:
 		combat_controller.combat_active = false
 		combat_controller.end_combat(false)
+	_unbind_party_hud_abilities()
 	ScreenManager.go_to_game_over()
 
 func _on_combat_started():
@@ -765,6 +895,8 @@ func _setup_player_status_indicator():
 
 func _on_turn_ended():
 	_update_player_hp()
+	_refresh_ability_bar()
+	_update_tick_counter()
 	# Check for combat end after turn (enemies may have died during enemy actions)
 	_check_combat_end()
 
@@ -791,6 +923,7 @@ func _end_combat_and_transition():
 		return  # Guard against duplicate calls
 
 	combat_ending = true
+	_unbind_party_hud_abilities()
 
 	# Stop combat in controller, clear combat status effects, and remove temporary cards
 	if combat_controller:
