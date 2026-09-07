@@ -724,7 +724,10 @@ func _create_placeholder_characters():
 			void_tap.base_effects.append(EffectData.new(EffectType.BLOCK_TO_ENERGY, {"block_per_energy": 3}))
 			char_data.starter_unique_cards.append(void_tap)
 
-			# Hollow starter 2: Iron Curtain — gain 12 Block then end your turn (Dominance)
+			# Hollow starter 2: Iron Curtain — gain 12 Block, Slow 3 (Dominance).
+			# Card-Clock Combat spec §5/§10.7: FORCE_END_TURN removed; Dominance's cost
+			# is now "give enemies time" via Slow 3 (advance the clock 3 ticks) instead
+			# of ending the whole turn.
 			var iron_curtain = CardData.new()
 			iron_curtain.id = "hollow_iron_curtain"
 			iron_curtain.name = "Iron Curtain"
@@ -733,8 +736,8 @@ func _create_placeholder_characters():
 			iron_curtain.targeting_mode = CardData.TargetingMode.SELF
 			iron_curtain.owner_character_id = "defender_4"
 			iron_curtain.rarity = CardData.Rarity.COMMON
+			iron_curtain.keywords.append("Slow 3")
 			iron_curtain.base_effects.append(EffectData.new(EffectType.BLOCK, {"amount": 12}))
-			iron_curtain.base_effects.append(EffectData.new(EffectType.FORCE_END_TURN, {}))
 			char_data.starter_unique_cards.append(iron_curtain)
 
 		# Base stats — Defenders: STR 1 / DEF 2 / SPIRIT 1 / HP 28 (role default)

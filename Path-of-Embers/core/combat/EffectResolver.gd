@@ -460,11 +460,6 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 							ResourceManager.set_energy(new_energy, max_e)
 					# TODO: RunState.increment_quest_counter("block_converted_to_energy", current_block_val)
 
-		EffectType.FORCE_END_TURN:
-			# Signal CombatController to end the turn once this card is fully resolved
-			if combat_controller:
-				combat_controller.set("_end_turn_pending", true)
-
 		EffectType.DAMAGE_EQUAL_TO_BLOCK:
 			# Deal damage equal to the player's current block value
 			var block_value = 0
@@ -535,12 +530,15 @@ static func resolve_effect(effect: EffectData, source: EntityStats, target: Enti
 					pb.check_assembly()
 
 		EffectType.DELAYED_DAMAGE:
-			## Queue damage to a random enemy to fire at the START_OF_NEXT_PLAYER_TURN.
+			## Queue damage to a random alive enemy to fire after N ticks pass on the
+			## shared clock (Card-Clock Combat spec §5: "next turn" -> N ticks, default 4).
 			var amount: int = int(effect.params.get("amount", 8))
-			if combat_controller and combat_controller.has("_pending_next_turn_effects"):
-				combat_controller._pending_next_turn_effects.append({
+			var delay_ticks: int = int(effect.params.get("ticks", 4))
+			if combat_controller and combat_controller.has("_delayed_tick_effects"):
+				combat_controller._delayed_tick_effects.append({
 					"type": "damage_random_enemy",
-					"amount": amount
+					"amount": amount,
+					"ticks_remaining": delay_ticks,
 				})
 
 		_:

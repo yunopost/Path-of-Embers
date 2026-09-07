@@ -64,7 +64,8 @@ const RESONANCE_BLOCK = "resonance_block"  # Gain block; bonus block if last car
 
 # Hollow - Conversion & Dominance (stub)
 const BLOCK_TO_ENERGY = "block_to_energy"  # Convert all current Block into Energy at ratio: {block_per_energy}
-const FORCE_END_TURN = "force_end_turn"  # End your turn immediately after this card resolves: {}
+# FORCE_END_TURN removed (Card-Clock Combat spec §5/§10.7): Dominance cards now carry
+# the "Slow 3" keyword instead of forcing a full end-of-turn.
 
 # Living Armor - Iron Tide
 const DAMAGE_EQUAL_TO_BLOCK = "damage_equal_to_block"  # Deal damage equal to current Block value: {}
@@ -123,7 +124,6 @@ static func get_all_types() -> Array[String]:
 		MIRROR,
 		RESONANCE_BLOCK,
 		BLOCK_TO_ENERGY,
-		FORCE_END_TURN,
 		SUMMON_PET,
 		REINFORCE_PET,
 		GRAND_ASSEMBLY_POWER,
