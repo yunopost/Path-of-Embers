@@ -230,8 +230,26 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 	var end_turns := 0
 	var result := "timeout"
 	var blocked: Dictionary = {}          # instance ids that play_card refused this turn
+	var ability_uses: Dictionary = {}     # character_id -> times used this fight
 
 	while cc.combat_active:
+		# Party abilities (Card-Clock Combat spec §7/§10.6): use one whenever
+		# off cooldown, before considering cards -- mirrors the "greedy" policy's
+		# philosophy of never leaving a free resource on the table. Runs at
+		# most once per decision point, in party order.
+		var ability_result := _try_use_ability(cc)
+		if not ability_result.is_empty():
+			ability_uses[ability_result.char_id] = ability_uses.get(ability_result.char_id, 0) + 1
+			ticks += ability_result.tick_cost
+			_flush_pending_damage()
+			if cc.player_stats.current_hp <= 0:
+				result = "loss"
+				cc.end_combat(false)
+			elif _all_dead(cc):
+				result = "win"
+				cc.end_combat(true)
+			continue
+
 		# Decision-point bookkeeping (drives "never played" diagnosis)
 		var playable := _playable_cards(cc, blocked)
 		for iid in RunState.deck_model.hand:
@@ -304,6 +322,7 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 		"cards_played": cards_played, "cards_seen": cards_seen, "cards_affordable": cards_affordable,
 		"dmg_by_enemy": _dmg_by_enemy.duplicate(), "actions_by_enemy": _actions_by_enemy.duplicate(),
 		"enemy_hp_left": _enemy_hp_left(cc),
+		"ability_uses": ability_uses.duplicate(), "ability_uses_total": _sum(ability_uses),
 	}
 	cc.player_stats.hp_changed.disconnect(_on_hp_changed)
 	cc.player_stats.block_changed.disconnect(_on_block_changed)
@@ -314,6 +333,33 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 func advance(cc: CombatController) -> void:
 	## THE swap point (card-clock combat): Focus is the "nothing playable" action.
 	cc.focus()
+
+func _try_use_ability(cc: CombatController) -> Dictionary:
+	## Use the first ready party ability, in party order (spec §7/§10.6). Mirrors
+	## the greedy policy: abilities are treated as always worth using once off
+	## cooldown, since none of the six EA abilities have a downside for the
+	## "cheapest card, else Focus" policy to weigh against. ENEMY-targeted
+	## abilities target the lowest-HP alive enemy, same as attack cards.
+	## Returns {char_id, tick_cost} on success, {} if nothing was used.
+	for cid in cfg.party:
+		var char_id := str(cid)
+		if not cc.can_use_ability(char_id):
+			continue
+		var char_data := DataRegistry.get_character(char_id)
+		var ability: PartyAbilityData = DataRegistry.get_ability(char_data.ability_id)
+		var target: Node = null
+		if ability.targeting_mode == CardData.TargetingMode.ENEMY:
+			var e := _lowest_hp_enemy(cc)
+			if e == null:
+				continue
+			target = Node.new()
+			target.set_meta("enemy", e)
+		var ok: bool = cc.use_ability(char_id, target)
+		if target:
+			target.free()
+		if ok:
+			return {"char_id": char_id, "tick_cost": ability.tick_cost}
+	return {}
 
 # ── policies ─────────────────────────────────────────────────────────────────
 ## A policy is one function: (cc, playable: Array[{dc, cd, cost}]) -> {} (advance) or {dc, enemy}
@@ -479,6 +525,7 @@ func summarize(rows: Array, enemy_data: Array, label: String) -> Dictionary:
 	var affordable: Dictionary = {}
 	var dmg_enemy: Dictionary = {}
 	var act_enemy: Dictionary = {}
+	var ability_uses: Dictionary = {}
 	for r in rows:
 		match r.result:
 			"win": wins += 1
@@ -489,6 +536,17 @@ func summarize(rows: Array, enemy_data: Array, label: String) -> Dictionary:
 		for k in r.cards_affordable: affordable[k] = affordable.get(k, 0) + r.cards_affordable[k]
 		for k in r.dmg_by_enemy: dmg_enemy[k] = dmg_enemy.get(k, 0) + r.dmg_by_enemy[k]
 		for k in r.actions_by_enemy: act_enemy[k] = act_enemy.get(k, 0) + r.actions_by_enemy[k]
+		for k in r.get("ability_uses", {}): ability_uses[k] = ability_uses.get(k, 0) + r.ability_uses[k]
+
+	var per_ability: Array = []
+	for char_id in ability_uses:
+		var char_data := DataRegistry.get_character(char_id)
+		var ability_name := "?"
+		if char_data:
+			var ab: PartyAbilityData = DataRegistry.get_ability(char_data.ability_id)
+			if ab:
+				ability_name = ab.display_name
+		per_ability.append({"character_id": char_id, "ability_name": ability_name, "uses_per_fight": float(ability_uses[char_id]) / n})
 
 	# Deck catalogue (fresh deck of this party) → never-played diagnosis
 	var catalogue: Array = []
@@ -552,6 +610,7 @@ func summarize(rows: Array, enemy_data: Array, label: String) -> Dictionary:
 		"cards_played_total": stats(col.call("cards_played_total")),
 		"enemy_hp_left_on_loss": stats(_filter_col(rows, "enemy_hp_left", "loss")),
 		"per_card": per_card, "never_played": never, "catalogue": catalogue, "per_enemy": per_enemy,
+		"ability_uses_total": stats(col.call("ability_uses_total")), "per_ability": per_ability,
 	}
 
 func _filter_col(rows: Array, k: String, result: String) -> Array:
@@ -572,7 +631,7 @@ func _write_text(path: String, text: String) -> void:
 	f.close()
 
 const CSV_COLS := ["label", "party", "enemies", "act", "policy", "fight", "seed", "result", "turns", "ticks", "card_ticks",
-	"enemy_actions", "damage_taken", "hp_lost_gross", "hp_end", "hp_max", "block_gained", "block_wasted", "energy_unspent", "heal_wasted", "cards_played_total", "enemy_hp_left"]
+	"enemy_actions", "damage_taken", "hp_lost_gross", "hp_end", "hp_max", "block_gained", "block_wasted", "energy_unspent", "heal_wasted", "cards_played_total", "enemy_hp_left", "ability_uses_total"]
 
 func _append_csv(path: String, rows: Array, label: String) -> void:
 	var exists := FileAccess.file_exists(path)
@@ -619,7 +678,14 @@ func render_markdown(s: Dictionary) -> String:
 	L.append("| energy unspent per turn | %s |" % _fmt(s.energy_unspent_per_turn))
 	L.append("| heals at full HP | %s |" % _fmt(s.heal_wasted))
 	L.append("| cards played | %s |" % _fmt(s.cards_played_total))
+	L.append("| ability uses (total) | %s |" % _fmt(s.ability_uses_total))
 	L.append("")
+	if not s.per_ability.is_empty():
+		L.append("| character | ability | uses/fight |")
+		L.append("|---|---|---|")
+		for a in s.per_ability:
+			L.append("| %s | %s | %.2f |" % [a.character_id, a.ability_name, a.uses_per_fight])
+		L.append("")
 	L.append("| card | copies | plays/fight | seen | affordable |")
 	L.append("|---|---|---|---|---|")
 	for c in s.per_card:
