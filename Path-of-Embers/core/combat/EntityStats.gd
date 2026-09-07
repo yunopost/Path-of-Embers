@@ -69,13 +69,11 @@ func add_block(amount: int):
 	block_changed.emit(block)
 
 func reset_block():
-	## Reset block to 0 (unless retain_block_this_turn status is active)
-	if get_status(StatusEffectType.RETAIN_BLOCK_THIS_TURN) != null:
-		# Don't reset block - retain it
-		# Remove the status after using it (it only applies once)
-		status_effects.erase(StatusEffectType.RETAIN_BLOCK_THIS_TURN)
-		status_effects_changed.emit()
-		return
+	## Unconditionally reset block to 0.
+	## NOTE: under card-clock combat the "Block survives the next enemy action"
+	## rule (RETAIN_BLOCK_THIS_TURN) is checked and consumed by
+	## CombatController._on_enemy_acted(), not here — this setter is for
+	## effects that voluntarily zero their own block (e.g. Block-to-Energy).
 	block = 0
 	block_changed.emit(block)
 
@@ -103,11 +101,15 @@ func get_status(effect_type: String):
 func is_alive() -> bool:
 	return current_hp > 0
 
-func expire_status_effects():
-	## Decrease duration-based status effects by 1 turn, remove when duration reaches 0
-	## Called at the start/end of each turn
-	## Skips stacking status effects (strength, dexterity, faith) - they persist until combat ends
-	## Skips pending effects that are checked at specific times (pending_strength_if_no_damage)
+func tick_statuses(n: int):
+	## Decrease duration-based status effects by n ticks, remove when duration reaches 0.
+	## Card-Clock Combat spec §4/§10.5: statuses tick on the shared clock, not at
+	## turn start. Conversion from old per-turn data: 1 turn = 4 ticks.
+	## Skips stacking status effects (strength, dexterity, faith) - they persist until combat ends.
+	## Skips pending effects that are checked at specific times (pending_strength_if_no_damage).
+	## Skips RETAIN_BLOCK_THIS_TURN — a one-shot flag consumed on the next enemy action, not a duration.
+	if n <= 0:
+		return
 	var statuses_to_remove: Array[String] = []
 	
 	for effect_type in status_effects.keys():
@@ -117,12 +119,14 @@ func expire_status_effects():
 		# Skip pending statuses - they're handled at specific times
 		if StatusEffectType.is_pending(effect_type):
 			continue
+		# Skip the one-shot retain-block flag - it isn't a tick duration
+		if effect_type == StatusEffectType.RETAIN_BLOCK_THIS_TURN:
+			continue
 		
 		var value = status_effects[effect_type]
-		# If value is a number (duration), decrease it
+		# If value is a number (duration in ticks), decrease it
 		if value is int or value is float:
-			var duration = int(value)
-			duration -= 1
+			var duration = int(value) - n
 			if duration <= 0:
 				statuses_to_remove.append(effect_type)
 			else:
