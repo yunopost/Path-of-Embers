@@ -21,7 +21,7 @@ extends Node
 ##   --md=path            stand-alone markdown report for this single config
 ##
 ## Model-swap point: advance(cc) is the single "advance the clock when nothing is playable"
-## action. Today it calls cc.end_player_turn(); under card-clock replace with cc.focus().
+## action. Card-clock combat: it calls cc.focus().
 
 const CFG := {
 	"party": ["warrior_1", "warrior_2", "golemancer"],
@@ -265,11 +265,14 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 				blocked[dc.instance_id] = true
 				_note("play_card refused a card the policy considered playable: %s (turn %d)" % [dc.card_id, end_turns + 1])
 		else:
-			energy_unspent += cc.current_energy
-			end_turns += 1
+			# Card-clock: energy carries over between cycles (no reset), so it is
+			# only "wasted" when Focus's +2 would push past the cap.
+			var pre_focus_energy := cc.current_energy
+			end_turns += 1  # counts Focus uses == cycles completed
 			blocked.clear()
 			advance(cc)
 			ticks += 1
+			energy_unspent += maxi(0, (pre_focus_energy + 2) - cc.max_energy)
 			if cc.player_stats.block == 0:
 				block_wasted += _block_prev
 		_flush_pending_damage()
@@ -309,8 +312,8 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 	return row
 
 func advance(cc: CombatController) -> void:
-	## THE swap point. Turn-based today; card-clock: cc.focus()
-	cc.end_player_turn()
+	## THE swap point (card-clock combat): Focus is the "nothing playable" action.
+	cc.focus()
 
 # ── policies ─────────────────────────────────────────────────────────────────
 ## A policy is one function: (cc, playable: Array[{dc, cd, cost}]) -> {} (advance) or {dc, enemy}
@@ -360,7 +363,7 @@ func _playable_cards(cc: CombatController, blocked: Dictionary) -> Array:
 		var cost := CardRules.get_effective_cost(cd, dc)
 		if not cc.can_play_card(cost, cd):
 			continue
-		if CardRules.get_card_keywords(dc).has("FirstCardOnly") and cc.cards_played_this_turn > 0:
+		if CardRules.get_card_keywords(dc).has("Opener") and cc.cards_played_this_cycle > 0:
 			continue
 		out.append({"dc": dc, "cd": cd, "cost": cost})
 	return out
@@ -371,8 +374,15 @@ func _predict_tick(dc: DeckCardData) -> int:
 		return 0
 	if RunState.has_upgrade(dc.instance_id, "upgrade_haste"):
 		return 0
-	if CardRules.get_card_keywords(dc).has("Slow"):
-		return 2
+	var keywords: Array[String] = CardRules.get_card_keywords(dc)
+	if keywords.has("Haste"):
+		return 0
+	for kw in keywords:
+		if kw == "Slow":
+			return 2
+		if kw.begins_with("Slow "):
+			var mag_str := kw.substr(5).strip_edges()
+			return int(mag_str) if mag_str.is_valid_int() else 2
 	return 1
 
 func _card_has_effect(dc: DeckCardData, type: String) -> bool:
@@ -533,7 +543,7 @@ func summarize(rows: Array, enemy_data: Array, label: String) -> Dictionary:
 		"label": label, "party": cfg.party, "enemies": _enemies_str(enemy_data), "enemy_data": enemy_data,
 		"act": int(cfg.act), "policy": cfg.policy, "n": n, "seed": int(cfg.seed), "max_turns": int(cfg.max_turns),
 		"win_rate": float(wins) / n, "wins": wins, "deaths": losses, "timeouts": timeouts,
-		"turns": stats(turns_arr), "ticks": stats(col.call("ticks")), "card_ticks": stats(col.call("card_ticks")),
+		"turns": stats(turns_arr), "cycles": stats(turns_arr), "ticks": stats(col.call("ticks")), "card_ticks": stats(col.call("card_ticks")),
 		"enemy_actions": stats(col.call("enemy_actions")),
 		"damage_taken": stats(col.call("damage_taken")), "hp_lost_gross": stats(col.call("hp_lost_gross")), "hp_end": stats(col.call("hp_end")), "hp_max": rows[0].hp_max if n > 0 else 0,
 		"block_gained": stats(col.call("block_gained")), "block_wasted": stats(col.call("block_wasted")),
