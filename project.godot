@@ -31,6 +31,7 @@ MapManager="*res://Path-of-Embers/autoload/MapManager.gd"
 MilestoneManager="*res://Path-of-Embers/autoload/MilestoneManager.gd"
 LeaderboardManager="*res://Path-of-Embers/autoload/LeaderboardManager.gd"
 ModifierManager="*res://Path-of-Embers/autoload/ModifierManager.gd"
+DebugMode="*res://Path-of-Embers/autoload/DebugMode.gd"
 
 [display]
 

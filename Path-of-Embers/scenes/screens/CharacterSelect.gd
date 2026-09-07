@@ -609,6 +609,8 @@ func _load_characters() -> void:
 		available_characters = DataRegistry.get_all_characters()
 
 func _is_character_locked(char_id: String) -> bool:
+	if DebugMode and DebugMode.is_enabled():
+		return false  # Addendum §6: debug mode ignores unlock state
 	if not MilestoneManager:
 		return false
 	return not MilestoneManager.is_unlocked("character", char_id)
