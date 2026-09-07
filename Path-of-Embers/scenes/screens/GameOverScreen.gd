@@ -58,7 +58,28 @@ func _ready() -> void:
 
 # ── UI construction ───────────────────────────────────────────────────────────
 
+func _setup_background() -> void:
+	## Full-rect death-screen background; ignores mouse so buttons still work.
+	var bg_path := "res://Path-of-Embers/Art Assets/Backgrounds/death.png"
+	if not ResourceLoader.exists(bg_path):
+		return
+	var bg_tex = load(bg_path)
+	if not bg_tex:
+		return
+	var bg_rect := TextureRect.new()
+	bg_rect.name = "DeathBackground"
+	bg_rect.texture = bg_tex
+	bg_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	bg_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg_rect.z_index = -100
+	add_child(bg_rect)
+	move_child(bg_rect, 0)
+
 func _build_ui() -> void:
+	_setup_background()
+
 	var root = VBoxContainer.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.add_theme_constant_override("separation", 18)

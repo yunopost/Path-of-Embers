@@ -472,7 +472,7 @@ func _style_start_button(btn: Button) -> void:
 
 func _load_portrait_for(char_data: CharacterData) -> Control:
 	## Load portrait TextureRect, or a role-coloured placeholder with initials.
-	if not char_data.portrait_path.is_empty():
+	if not char_data.portrait_path.is_empty() and ResourceLoader.exists(char_data.portrait_path):
 		var tex = load(char_data.portrait_path)
 		if tex:
 			var tr := TextureRect.new()
@@ -533,12 +533,16 @@ func _refresh_slot_buttons():
 			var styles: Dictionary = char_styles.get(slot_name, {})
 			if equip_id.is_empty():
 				btn.text = "(empty)"
+				btn.tooltip_text = ""
 				btn.add_theme_color_override("font_color", Color("#606070"))
 				if styles.has("empty"):
 					btn.add_theme_stylebox_override("normal", styles["empty"])
 			else:
 				var equip_data = DataRegistry.get_equipment(equip_id) if DataRegistry else null
-				btn.text = equip_data.name if equip_data else equip_id
+				var stats_text := _format_stat_modifiers(equip_data)
+				btn.text = "%s (%s)" % [equip_data.name, stats_text] if (equip_data and not stats_text.is_empty()) \
+					else (equip_data.name if equip_data else equip_id)
+				btn.tooltip_text = stats_text
 				btn.add_theme_color_override("font_color", Color("#F0E6C8"))
 				if styles.has("filled"):
 					btn.add_theme_stylebox_override("normal", styles["filled"])
@@ -628,6 +632,17 @@ func _refresh_stash():
 		badge_lbl.mouse_filter = Control.MOUSE_FILTER_PASS
 		row.add_child(badge_lbl)
 
+		var stats_text := _format_stat_modifiers(equip_data)
+		if not stats_text.is_empty():
+			var stats_lbl := Label.new()
+			stats_lbl.text = stats_text
+			stats_lbl.add_theme_font_size_override("font_size", 11)
+			stats_lbl.add_theme_color_override("font_color", Color("#7FA870"))
+			stats_lbl.mouse_filter = Control.MOUSE_FILTER_PASS
+			row.add_child(stats_lbl)
+
+		item_panel.tooltip_text = stats_text
+
 		stash_container.add_child(item_panel)
 		_stash_panels[equip_id] = item_panel
 
@@ -641,9 +656,15 @@ func _on_stash_item_clicked(equip_id: String):
 func _on_slot_clicked(char_id: String, slot_name: String):
 	## If an item is selected from stash, equip it. Otherwise unequip the current item.
 	if not _selected_stash_id.is_empty():
-		# Validate lock constraint
 		var equip_data = DataRegistry.get_equipment(_selected_stash_id) if DataRegistry else null
 		if equip_data:
+			# Validate slot type — an item can only go in the slot it's made for
+			if equip_data.slot_type != EquipmentData.slot_from_string(slot_name):
+				_show_message("%s is a %s item and cannot go in the %s slot." % [
+					equip_data.name, EquipmentData.slot_name(equip_data.slot_type), slot_name
+				])
+				return
+			# Validate lock constraint
 			var char_data = DataRegistry.get_character(char_id) if DataRegistry else null
 			if not equip_data.can_be_equipped_by(char_data):
 				_show_message("That item cannot be equipped by %s." % (char_data.display_name if char_data else char_id))
@@ -654,6 +675,18 @@ func _on_slot_clicked(char_id: String, slot_name: String):
 		# No item selected — unequip whatever is in the slot
 		RunState.unequip_item(char_id, slot_name)
 	refresh_from_state()
+
+func _format_stat_modifiers(equip_data: EquipmentData) -> String:
+	## Short, readable summary of an item's stat_modifiers, e.g. "+2 STR, +5 HP".
+	if not equip_data or equip_data.stat_modifiers.is_empty():
+		return ""
+	var STAT_LABELS := {"str": "STR", "def": "DEF", "spirit": "SPIRIT", "hp": "HP"}
+	var parts: Array[String] = []
+	for key in ["str", "def", "spirit", "hp"]:
+		if equip_data.stat_modifiers.has(key):
+			var value: int = int(equip_data.stat_modifiers[key])
+			parts.append("%s%d %s" % ["+" if value >= 0 else "", value, STAT_LABELS[key]])
+	return ", ".join(parts)
 
 func _show_message(text: String):
 	## Show a brief popup message.

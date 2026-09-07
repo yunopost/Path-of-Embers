@@ -627,9 +627,16 @@ func get_equipped_item(char_id: String, slot_name: String) -> String:
 func equip_item(char_id: String, slot_name: String, equipment_id: String) -> bool:
 	## Equip an item into a character slot.
 	## If the slot is already occupied the old item is returned to the run stash.
-	## Returns false if the item is not in the run stash.
+	## Returns false if the item is not in the run stash, or its slot_type does
+	## not match the target slot (each item may only go in the slot it's made for).
 	if not run_stash.has(equipment_id):
 		push_warning("RunState.equip_item: '%s' is not in run stash" % equipment_id)
+		return false
+	var equip_data = DataRegistry.get_equipment(equipment_id) if DataRegistry else null
+	if equip_data and equip_data.slot_type != EquipmentData.slot_from_string(slot_name):
+		push_warning("RunState.equip_item: '%s' (slot=%s) cannot go in slot '%s'" % [
+			equipment_id, EquipmentData.slot_name(equip_data.slot_type), slot_name
+		])
 		return false
 	if not equipment_slots.has(char_id):
 		equipment_slots[char_id] = {}

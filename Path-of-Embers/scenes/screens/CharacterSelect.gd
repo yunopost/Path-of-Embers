@@ -900,7 +900,7 @@ func _build_character_card(char_data: CharacterData) -> PanelContainer:
 
 func _load_portrait_compact(char_data: CharacterData, size: int) -> Control:
 	## Returns a square portrait Control (TextureRect or ColorRect placeholder)
-	if not char_data.portrait_path.is_empty():
+	if not char_data.portrait_path.is_empty() and ResourceLoader.exists(char_data.portrait_path):
 		var tex = load(char_data.portrait_path)
 		if tex:
 			var tr := TextureRect.new()

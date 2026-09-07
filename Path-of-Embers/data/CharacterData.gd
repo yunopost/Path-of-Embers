@@ -8,6 +8,7 @@ class_name CharacterData
 @export var role: String = ""  # e.g., "Warrior", "Healer", "Defender"
 @export var portrait_path: String = ""
 @export var fullbody_path: String = ""
+@export var splash_path: String = ""  # Large splash art for detail panel / reward screens
 @export var starter_unique_cards: Array[CardData] = []  # Exactly 2 unique cards
 @export var reward_card_pool: Array[CardData] = []  # Cards available as rewards
 

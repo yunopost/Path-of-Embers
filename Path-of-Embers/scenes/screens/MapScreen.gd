@@ -13,6 +13,8 @@ var connection_data: Array[Dictionary] = []  # Store connection data for _draw()
 @onready var map_nodes: Control = $MapSafeArea/ScrollContainer/MapRoot/MapNodes
 
 func _ready():
+	_setup_background()
+
 	# Initialize map generator
 	map_generator = MapGenerator.new()
 	
@@ -30,6 +32,26 @@ func _ready():
 	
 	# Initialize screen (architecture rule 2.1)
 	initialize()
+
+func _setup_background() -> void:
+	## Full-rect background behind the map node graph; ignores mouse so
+	## nodes/scroll still receive input normally.
+	var bg_path := "res://Path-of-Embers/Art Assets/Backgrounds/map_act1.png"
+	if not ResourceLoader.exists(bg_path):
+		return
+	var bg_tex = load(bg_path)
+	if not bg_tex:
+		return
+	var bg_rect := TextureRect.new()
+	bg_rect.name = "MapBackground"
+	bg_rect.texture = bg_tex
+	bg_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	bg_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg_rect.z_index = -100
+	add_child(bg_rect)
+	move_child(bg_rect, 0)
 
 func initialize():
 	## Initialize the screen with current state

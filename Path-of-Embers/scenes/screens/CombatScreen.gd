@@ -100,11 +100,46 @@ func _apply_combat_ui_style() -> void:
 func initialize(encounter_data: Dictionary = {}):
 	## Initialize the screen with encounter data
 	## Must be called after instantiation, before use (architecture rule 2.1)
+	_setup_background()
 	# For now, use placeholder enemies if no data provided
 	if encounter_data.is_empty():
 		_start_combat()
 	else:
 		_start_combat_with_data(encounter_data)
+
+func _setup_background() -> void:
+	## Full-rect background behind all combat UI: boss art for BOSS/FINAL_BOSS
+	## nodes, one of two standard combat backgrounds otherwise (picked
+	## deterministically from the current map node id so it stays stable on
+	## rebuild, but varies fight-to-fight).
+	var node_type: int = MapNodeData.NodeType.FIGHT
+	if MapManager and MapManager.has_method("get_current_node_type"):
+		node_type = MapManager.get_current_node_type()
+
+	var bg_path := "res://Path-of-Embers/Art Assets/Backgrounds/combat_act1_a.png"
+	if node_type == MapNodeData.NodeType.BOSS or node_type == MapNodeData.NodeType.FINAL_BOSS:
+		bg_path = "res://Path-of-Embers/Art Assets/Backgrounds/boss_act1.png"
+	else:
+		var seed_str: String = MapManager.current_node_id if MapManager else ""
+		if seed_str.hash() % 2 == 1:
+			bg_path = "res://Path-of-Embers/Art Assets/Backgrounds/combat_act1_b.png"
+
+	if not ResourceLoader.exists(bg_path):
+		return
+	var bg_tex = load(bg_path)
+	if not bg_tex:
+		return
+
+	var bg_rect := TextureRect.new()
+	bg_rect.name = "CombatBackground"
+	bg_rect.texture = bg_tex
+	bg_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	bg_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg_rect.z_index = -100
+	add_child(bg_rect)
+	move_child(bg_rect, 0)
 
 func refresh_from_state():
 	## Refresh UI from managers (architecture rule 11.2)
@@ -187,16 +222,10 @@ func _setup_character_portrait() -> void:
 	frame_style.corner_radius_bottom_right = 3
 	portrait_panel.add_theme_stylebox_override("panel", frame_style)
 
-	# Try to load portrait texture
+	# Try to load portrait texture from CharacterData.portrait_path — one path for all characters.
 	var texture: Texture2D = null
-	if char_data:
-		var portrait_key = char_data.display_name.replace(" ", "%20")  # not needed, just use display_name
-		if char_data.display_name == "Monster Hunter":
-			texture = load("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter 2.png") \
-				if ResourceLoader.exists("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter 2.png") else null
-		elif char_data.display_name == "Witch":
-			texture = load("res://Path-of-Embers/Art Assets/Witch/Witch 2.png") \
-				if ResourceLoader.exists("res://Path-of-Embers/Art Assets/Witch/Witch 2.png") else null
+	if char_data and char_data.portrait_path != "" and ResourceLoader.exists(char_data.portrait_path):
+		texture = load(char_data.portrait_path)
 
 	if texture:
 		var tex_rect = TextureRect.new()
@@ -275,6 +304,20 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 	vbox.offset_right = -5
 	vbox.offset_bottom = -5
 	enemy_panel.add_child(vbox)
+	
+	# Sprite (above name/timer/intent), sized to fit the panel
+	var enemy_blueprint: EnemyData = enemy.enemy_data if enemy.enemy_data else (DataRegistry.get_enemy(enemy.enemy_id) if DataRegistry else null)
+	if enemy_blueprint and enemy_blueprint.sprite_path != "" and ResourceLoader.exists(enemy_blueprint.sprite_path):
+		var sprite_tex = load(enemy_blueprint.sprite_path)
+		if sprite_tex:
+			var sprite_rect = TextureRect.new()
+			sprite_rect.texture = sprite_tex
+			sprite_rect.custom_minimum_size = Vector2(0, 110)
+			sprite_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			sprite_rect.expand_mode = TextureRect.EXPAND_FIT_HEIGHT_PROPORTIONAL
+			sprite_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			sprite_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			vbox.add_child(sprite_rect)
 	
 	# Health bar (at top)
 	var health_bar_scene = load("res://Path-of-Embers/scenes/ui/HealthBar.tscn")

@@ -33,35 +33,16 @@ func _load_portrait(character_id: String) -> void:
 		return
 	
 	var texture = null
-	
-	# Load texture - use direct path matching for known characters first
-	# NOTE: Monster Hunter art is pending regeneration (female, per Creative Director); files moved to Art Assets/_reference/
-	if char_data.display_name == "Monster Hunter":
-		texture = (load("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter.png") if ResourceLoader.exists("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter.png") else null)
-		if texture == null:
-			texture = (load("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter 2.png") if ResourceLoader.exists("res://Path-of-Embers/Art Assets/Monster Hunter/Monster Hunter 2.png") else null)
-		if texture:
-			portrait.texture = texture
-			return
-	elif char_data.display_name == "Witch":
-		texture = load("res://Path-of-Embers/Art Assets/Witch/Witch.png")
-		if texture == null:
-			texture = load("res://Path-of-Embers/Art Assets/Witch/Witch 2.png")
-		if texture:
-			portrait.texture = texture
-			return
-	
-	# Fallback to portrait_path if available
-	if char_data.portrait_path != "" and char_data.portrait_path != null:
-		texture = load(char_data.portrait_path)
-		if texture == null:
-			# Try ResourceLoader as fallback
-			texture = ResourceLoader.load(char_data.portrait_path)
-		
-		if texture:
-			portrait.texture = texture
-		else:
-			push_warning("CharacterHUDBlock: Failed to load portrait for %s from path: %s" % [char_data.display_name, char_data.portrait_path])
+
+	# Load texture from CharacterData.portrait_path — one path for all characters.
+	if char_data.portrait_path != "" and char_data.portrait_path != null \
+			and ResourceLoader.exists(char_data.portrait_path):
+		texture = ResourceLoader.load(char_data.portrait_path)
+
+	if texture:
+		portrait.texture = texture
+	else:
+		push_warning("CharacterHUDBlock: No portrait art for %s (portrait_path='%s')" % [char_data.display_name, char_data.portrait_path])
 
 func _update_name(character_id: String) -> void:
 	## Update character name label
