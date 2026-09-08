@@ -19,6 +19,8 @@ const CARD_BG     := Color("#1A1F2BEE") # character card background
 const BORDER_DIM  := Color("#4A5060")   # unselected card border
 const BORDER_GLOW := Color("#3A2E1F")   # general border tint
 
+const PRE_RUN_CHROME = preload("res://Path-of-Embers/scenes/ui/PreRunChrome.gd")
+
 const HP_GREEN    := Color("#3A9050")
 const HP_GOLD     := Color("#C4821A")
 const HP_RED      := Color("#A03020")
@@ -146,106 +148,22 @@ func _build_ui() -> void:
 # ─────────────────────────────────────────────────────────────────────────────
 
 func _build_header() -> HBoxContainer:
+	## Shared pre-run header (PreRunChrome) — step bar + title + HP badge.
+	## Step index 0 = Party (this screen).
 	var header := HBoxContainer.new()
 	header.custom_minimum_size.y = 92
 	header.add_theme_constant_override("separation", 0)
 	header.mouse_filter = Control.MOUSE_FILTER_PASS
 
-	var header_style := StyleBoxFlat.new()
-	header_style.bg_color = INK
-	header_style.border_color = EMBER_MID
-	header_style.set_border_width_all(0)
-	header_style.border_width_bottom = 1
-	header_style.content_margin_left = 32
-	header_style.content_margin_right = 24
-	header_style.content_margin_top = 12
-	header_style.content_margin_bottom = 12
-
-	var header_panel := PanelContainer.new()
+	var right_content := _build_hp_badge()
+	var header_panel := PRE_RUN_CHROME.build_header(0, "PATH OF EMBERS", right_content)
 	header_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header_panel.add_theme_stylebox_override("panel", header_style)
-	header_panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	header.add_child(header_panel)
 
-	var inner_hbox := HBoxContainer.new()
-	inner_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	inner_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	inner_hbox.add_theme_constant_override("separation", 12)
-	inner_hbox.mouse_filter = Control.MOUSE_FILTER_PASS
-	header_panel.add_child(inner_hbox)
+	return header
 
-	# ── Left: step indicators ────────────────────────────────────────────────
-	var steps_hbox := HBoxContainer.new()
-	steps_hbox.custom_minimum_size.x = 420
-	steps_hbox.add_theme_constant_override("separation", 4)
-	steps_hbox.mouse_filter = Control.MOUSE_FILTER_PASS
-	inner_hbox.add_child(steps_hbox)
-
-	var steps := [
-		["1", "PARTY", true],
-		["2", "MODIFIERS", false],
-		["3", "LOADOUT", false],
-		["4", "QUESTS", false],
-	]
-	for i in range(steps.size()):
-		var step_data = steps[i]
-		var step_hbox := HBoxContainer.new()
-		step_hbox.add_theme_constant_override("separation", 5)
-		step_hbox.mouse_filter = Control.MOUSE_FILTER_PASS
-		steps_hbox.add_child(step_hbox)
-
-		var num_label := Label.new()
-		num_label.text = step_data[0]
-		num_label.mouse_filter = Control.MOUSE_FILTER_PASS
-		num_label.add_theme_font_size_override("font_size", 16)
-		if step_data[2]:
-			num_label.add_theme_color_override("font_color", EMBER_GLOW)
-		else:
-			num_label.add_theme_color_override("font_color", FOG)
-		var reg_font = _get_font("regular")
-		if reg_font:
-			num_label.add_theme_font_override("font", reg_font)
-		step_hbox.add_child(num_label)
-
-		var name_label := Label.new()
-		name_label.text = step_data[1]
-		name_label.mouse_filter = Control.MOUSE_FILTER_PASS
-		name_label.add_theme_font_size_override("font_size", 14)
-		if step_data[2]:
-			name_label.add_theme_color_override("font_color", EMBER_BRIGHT)
-			var bold_font = _get_font("bold")
-			if bold_font:
-				name_label.add_theme_font_override("font", bold_font)
-		else:
-			name_label.add_theme_color_override("font_color", FOG)
-			if reg_font:
-				name_label.add_theme_font_override("font", reg_font)
-		step_hbox.add_child(name_label)
-
-		if i < steps.size() - 1:
-			var sep_label := Label.new()
-			sep_label.text = "  —  "
-			sep_label.mouse_filter = Control.MOUSE_FILTER_PASS
-			sep_label.add_theme_font_size_override("font_size", 13)
-			sep_label.add_theme_color_override("font_color", Color(FOG, 0.35))
-			if reg_font:
-				sep_label.add_theme_font_override("font", reg_font)
-			steps_hbox.add_child(sep_label)
-
-	# ── Center: title ────────────────────────────────────────────────────────
-	var title_label := Label.new()
-	title_label.text = "PATH OF EMBERS"
-	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_color_override("font_color", Color(FOG, 0.7))
-	title_label.add_theme_font_size_override("font_size", 20)
-	title_label.mouse_filter = Control.MOUSE_FILTER_PASS
-	var reg_font = _get_font("regular")
-	if reg_font:
-		title_label.add_theme_font_override("font", reg_font)
-	inner_hbox.add_child(title_label)
-
-	# ── Right: HP badge ──────────────────────────────────────────────────────
+func _build_hp_badge() -> PanelContainer:
+	## Right-side HP badge shown in the shared header on this screen only.
 	_hp_badge_style = StyleBoxFlat.new()
 	_hp_badge_style.bg_color = Color(0, 0, 0, 0.4)
 	_hp_badge_style.set_border_width_all(2)
@@ -262,7 +180,6 @@ func _build_header() -> HBoxContainer:
 	_hp_badge_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_hp_badge_panel.add_theme_stylebox_override("panel", _hp_badge_style)
 	_hp_badge_panel.mouse_filter = Control.MOUSE_FILTER_PASS
-	inner_hbox.add_child(_hp_badge_panel)
 
 	var badge_hbox := HBoxContainer.new()
 	badge_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -284,6 +201,7 @@ func _build_header() -> HBoxContainer:
 	hp_lbl_label.add_theme_color_override("font_color", FOG)
 	hp_lbl_label.add_theme_font_size_override("font_size", 13)
 	hp_lbl_label.mouse_filter = Control.MOUSE_FILTER_PASS
+	var reg_font = _get_font("regular")
 	if reg_font:
 		hp_lbl_label.add_theme_font_override("font", reg_font)
 	badge_hbox.add_child(hp_lbl_label)
@@ -298,7 +216,7 @@ func _build_header() -> HBoxContainer:
 		_hp_value_label.add_theme_font_override("font", bold_font)
 	badge_hbox.add_child(_hp_value_label)
 
-	return header
+	return _hp_badge_panel
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Body
@@ -391,42 +309,34 @@ func _build_body() -> Control:
 # ─────────────────────────────────────────────────────────────────────────────
 
 func _build_footer() -> PanelContainer:
-	var footer_style := StyleBoxFlat.new()
-	footer_style.bg_color = INK
-	footer_style.set_border_width_all(0)
-	footer_style.border_width_top = 1
-	footer_style.border_color = Color(BORDER_GLOW, 0.5)
+	## Shared pre-run footer (PreRunChrome): Back is bottom-left, Confirm is
+	## bottom-right, always -- slot displays + count sit in the center.
+	var nav := PRE_RUN_CHROME.build_footer(
+		"← Back", func(): ScreenManager.go_to_main_menu(),
+		"Confirm Party →", _on_confirm_pressed
+	)
+	var footer_panel: PanelContainer = nav["panel"]
+	_confirm_button = nav["next_btn"]
+	_confirm_button.disabled = true
 
-	var footer_panel := PanelContainer.new()
-	footer_panel.custom_minimum_size.y = 96
-	footer_panel.add_theme_stylebox_override("panel", footer_style)
-	footer_panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	var center: Control = nav["center"]
+	var center_hbox := HBoxContainer.new()
+	center_hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center_hbox.add_theme_constant_override("separation", 22)
+	center_hbox.mouse_filter = Control.MOUSE_FILTER_PASS
+	center.add_child(center_hbox)
 
-	var footer_margin := MarginContainer.new()
-	footer_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	footer_margin.add_theme_constant_override("margin_left", 32)
-	footer_margin.add_theme_constant_override("margin_right", 32)
-	footer_margin.add_theme_constant_override("margin_top", 16)
-	footer_margin.add_theme_constant_override("margin_bottom", 16)
-	footer_margin.mouse_filter = Control.MOUSE_FILTER_PASS
-	footer_panel.add_child(footer_margin)
-
-	var footer_hbox := HBoxContainer.new()
-	footer_hbox.add_theme_constant_override("separation", 22)
-	footer_hbox.mouse_filter = Control.MOUSE_FILTER_PASS
-	footer_margin.add_child(footer_hbox)
-
-	# ── Left: slot displays ──────────────────────────────────────────────────
+	# ── Left of center: slot displays ────────────────────────────────────────
 	var slots_hbox := HBoxContainer.new()
 	slots_hbox.add_theme_constant_override("separation", 14)
 	slots_hbox.mouse_filter = Control.MOUSE_FILTER_PASS
-	footer_hbox.add_child(slots_hbox)
+	center_hbox.add_child(slots_hbox)
 
 	_footer_slot_displays = []
 	for i in range(3):
 		_build_slot_display(i, slots_hbox)
 
-	# ── Center: count label ──────────────────────────────────────────────────
+	# ── Rest of center: count label ──────────────────────────────────────────
 	_count_label = Label.new()
 	_count_label.text = "0 / 3 selected"
 	_count_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -437,79 +347,7 @@ func _build_footer() -> PanelContainer:
 	var reg_font = _get_font("regular")
 	if reg_font:
 		_count_label.add_theme_font_override("font", reg_font)
-	footer_hbox.add_child(_count_label)
-
-	# ── Right: action buttons ────────────────────────────────────────────────
-	var actions_hbox := HBoxContainer.new()
-	actions_hbox.size_flags_horizontal = Control.SIZE_SHRINK_END
-	actions_hbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	actions_hbox.custom_minimum_size = Vector2(360, 0)
-	actions_hbox.add_theme_constant_override("separation", 14)
-	actions_hbox.mouse_filter = Control.MOUSE_FILTER_PASS
-	footer_hbox.add_child(actions_hbox)
-
-	# Back button (ghost)
-	var back_btn := Button.new()
-	back_btn.text = "← Back"
-	back_btn.add_theme_font_size_override("font_size", 15)
-	back_btn.add_theme_color_override("font_color", FOG)
-	back_btn.add_theme_color_override("font_hover_color", PALE)
-	back_btn.mouse_filter = Control.MOUSE_FILTER_STOP
-	var bold_font = _get_font("bold")
-	if bold_font:
-		back_btn.add_theme_font_override("font", bold_font)
-	var back_normal := StyleBoxFlat.new()
-	back_normal.bg_color = Color(0, 0, 0, 0.4)
-	back_normal.set_border_width_all(2)
-	back_normal.border_color = Color(FOG, 0.55)
-	back_normal.set_corner_radius_all(5)
-	back_normal.content_margin_left = 22
-	back_normal.content_margin_right = 22
-	back_normal.content_margin_top = 12
-	back_normal.content_margin_bottom = 12
-	var back_hover := back_normal.duplicate()
-	back_hover.border_color = EMBER_MID
-	back_btn.add_theme_stylebox_override("normal", back_normal)
-	back_btn.add_theme_stylebox_override("hover", back_hover)
-	back_btn.add_theme_stylebox_override("pressed", back_hover)
-	back_btn.add_theme_stylebox_override("focus", back_normal)
-	back_btn.pressed.connect(func(): ScreenManager.go_to_main_menu())
-	actions_hbox.add_child(back_btn)
-
-	# Confirm button (primary)
-	_confirm_button = Button.new()
-	_confirm_button.text = "Confirm Party →"
-	_confirm_button.disabled = true
-	_confirm_button.add_theme_font_size_override("font_size", 15)
-	_confirm_button.add_theme_color_override("font_color", PALE)
-	_confirm_button.add_theme_color_override("font_hover_color", PALE)
-	_confirm_button.add_theme_color_override("font_disabled_color", Color(FOG, 0.5))
-	_confirm_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	if bold_font:
-		_confirm_button.add_theme_font_override("font", bold_font)
-
-	var confirm_normal := StyleBoxFlat.new()
-	confirm_normal.bg_color = Color("#2A1A0ECC")
-	confirm_normal.set_border_width_all(2)
-	confirm_normal.border_color = EMBER_GLOW
-	confirm_normal.set_corner_radius_all(5)
-	confirm_normal.content_margin_left = 28
-	confirm_normal.content_margin_right = 28
-	confirm_normal.content_margin_top = 12
-	confirm_normal.content_margin_bottom = 12
-	var confirm_hover := confirm_normal.duplicate()
-	confirm_hover.bg_color = Color("#4A3020CC")
-	confirm_hover.border_color = EMBER_BRIGHT
-	var confirm_disabled := confirm_normal.duplicate()
-	confirm_disabled.bg_color = Color("#1A1A1A55")
-	confirm_disabled.border_color = Color(BORDER_DIM, 0.4)
-	_confirm_button.add_theme_stylebox_override("normal", confirm_normal)
-	_confirm_button.add_theme_stylebox_override("hover", confirm_hover)
-	_confirm_button.add_theme_stylebox_override("pressed", confirm_hover)
-	_confirm_button.add_theme_stylebox_override("disabled", confirm_disabled)
-	_confirm_button.add_theme_stylebox_override("focus", confirm_normal)
-	_confirm_button.pressed.connect(_on_confirm_pressed)
-	actions_hbox.add_child(_confirm_button)
+	center_hbox.add_child(_count_label)
 
 	return footer_panel
 

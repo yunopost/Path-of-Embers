@@ -8,15 +8,27 @@ extends Control
 ## equipment injected_cards are included in the starting deck.
 
 const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
+const PRE_RUN_CHROME = preload("res://Path-of-Embers/scenes/ui/PreRunChrome.gd")
+const EQUIP_DND = preload("res://Path-of-Embers/scenes/ui/equipment/EquipDragDrop.gd")
 
 # ── UI refs (built in _build_ui) ──────────────────────────────────────────────
 var scroll_root: ScrollContainer = null       # unused; kept for API compatibility
 var character_panels: Dictionary = {}          # char_id -> slot_name -> Button
-var stash_container: VBoxContainer = null      # inner vbox holding stash item panels
+var stash_container: GridContainer = null      # inner grid holding stash item panels (Addendum B §2 grid view)
 var start_btn: Button = null
 var stash_label: Label = null                  # stash header label
 var _modifier_score_label: Label = null
 var _modifier_check_buttons: Dictionary = {}   # modifier_id -> CheckButton
+
+# ── Stash sort/filter/search (Addendum B §2 -- "the EA bar", not PoE-grade) ───
+var _search_text: String = ""
+var _filter_slot: String = "ALL"     # "ALL" or a SlotType name
+var _filter_rarity: int = -1         # -1 = ALL, else EquipmentData.Rarity
+const SORT_SLOT := 0
+const SORT_RARITY := 1
+const SORT_RECENCY := 2
+const SORT_NAME := 3
+var _sort_mode: int = SORT_RECENCY
 
 # ── State ─────────────────────────────────────────────────────────────────────
 var _selected_stash_id: String = ""
@@ -89,48 +101,27 @@ func _build_ui():
 
 	var root_vbox := VBoxContainer.new()
 	root_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root_vbox.offset_left = 60.0
-	root_vbox.offset_top = 30.0
-	root_vbox.offset_right = -60.0
-	root_vbox.offset_bottom = -30.0
-	root_vbox.add_theme_constant_override("separation", 10)
+	root_vbox.add_theme_constant_override("separation", 0)
 	add_child(root_vbox)
 
-	# ── Header ──────────────────────────────────────────────────────────────
-	var header_hbox := HBoxContainer.new()
-	header_hbox.add_theme_constant_override("separation", 12)
-	root_vbox.add_child(header_hbox)
+	# ── Header (shared pre-run chrome, step 2 = Loadout) — flush, same as
+	# CharacterSelect/QuestSelectScreen so nothing shifts between screens.
+	root_vbox.add_child(PRE_RUN_CHROME.build_header(1, "CONFIGURE YOUR LOADOUT"))
 
-	var back_btn := Button.new()
-	back_btn.text = "← BACK"
-	back_btn.custom_minimum_size = Vector2(130, 0)
-	_style_back_button(back_btn)
-	back_btn.pressed.connect(func(): ScreenManager.go_to_character_select())
-	header_hbox.add_child(back_btn)
+	# ── Body: stash | character panels (inset, scrolls within the flush chrome) ──
+	var body_margin := MarginContainer.new()
+	body_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body_margin.add_theme_constant_override("margin_left", 60)
+	body_margin.add_theme_constant_override("margin_right", 60)
+	body_margin.add_theme_constant_override("margin_top", 20)
+	body_margin.add_theme_constant_override("margin_bottom", 20)
+	root_vbox.add_child(body_margin)
 
-	var title := Label.new()
-	title.text = "CONFIGURE YOUR LOADOUT"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var eb_font := _get_font("extrabold")
-	if eb_font:
-		title.add_theme_font_override("font", eb_font)
-	title.add_theme_font_size_override("font_size", 28)
-	title.add_theme_color_override("font_color", Color("#E8A020"))
-	title.add_theme_constant_override("outline_size", 2)
-	title.add_theme_color_override("font_outline_color", Color("#12161E"))
-	header_hbox.add_child(title)
-
-	# Spacer mirrors back_btn width so title stays truly centred
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(130, 0)
-	header_hbox.add_child(spacer)
-
-	# ── Body: stash | character panels ──────────────────────────────────────
 	var body_hbox := HBoxContainer.new()
 	body_hbox.add_theme_constant_override("separation", 16)
 	body_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root_vbox.add_child(body_hbox)
+	body_margin.add_child(body_hbox)
 
 	body_hbox.add_child(_build_stash_panel())
 
@@ -144,11 +135,12 @@ func _build_ui():
 		for char_id in PartyManager.get_party_ids():
 			chars_hbox.add_child(_build_character_panel(char_id))
 
-	# ── Bottom bar: difficulty + start ──────────────────────────────────────
+	# ── Bottom bar: difficulty + start (shared footer, Back bottom-left / Next bottom-right) ──
 	root_vbox.add_child(_build_bottom_bar())
 
 func _build_stash_panel() -> Control:
-	## Left sidebar: scrollable list of stash items with rarity colours.
+	## Left sidebar: STASH grid view with sort/filter/search (Addendum B §2).
+	## Uncapped -- shows the whole persistent stash, not just 9 items.
 	var panel_style := StyleBoxFlat.new()
 	panel_style.bg_color = Color("#1A1F2BCC")
 	panel_style.set_border_width_all(2)
@@ -160,7 +152,7 @@ func _build_stash_panel() -> Control:
 	panel_style.content_margin_bottom = 10
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(280, 0)
+	panel.custom_minimum_size = Vector2(360, 0)
 	panel.add_theme_stylebox_override("panel", panel_style)
 
 	var vbox := VBoxContainer.new()
@@ -169,7 +161,7 @@ func _build_stash_panel() -> Control:
 
 	# Header label (updated by _refresh_stash)
 	stash_label = Label.new()
-	stash_label.text = "STASH (0/%d)" % (RunState.MAX_STASH_SIZE if RunState else 9)
+	stash_label.text = "STASH (0)"
 	stash_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var stash_eb := _get_font("extrabold")
 	if stash_eb:
@@ -179,12 +171,14 @@ func _build_stash_panel() -> Control:
 	vbox.add_child(stash_label)
 
 	var instruction := Label.new()
-	instruction.text = "Select item, then click a slot"
+	instruction.text = "Click or drag an item onto a slot"
 	instruction.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	instruction.add_theme_font_size_override("font_size", 11)
 	instruction.add_theme_color_override("font_color", Color("#807060"))
 	instruction.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(instruction)
+
+	vbox.add_child(_build_stash_toolbar())
 
 	var sep := HSeparator.new()
 	sep.add_theme_color_override("color", Color("#4A5060"))
@@ -195,12 +189,118 @@ func _build_stash_panel() -> Control:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	vbox.add_child(scroll)
 
-	stash_container = VBoxContainer.new()
-	stash_container.add_theme_constant_override("separation", 6)
+	# A drop target too: dragging an equipped item here unequips it.
+	EQUIP_DND.attach_target(scroll,
+		func(_pos, data): return data.get("source", "") == "slot",
+		func(_pos, data): _handle_drop_on_stash(data)
+	)
+
+	stash_container = GridContainer.new()
+	stash_container.columns = 2
+	stash_container.add_theme_constant_override("h_separation", 6)
+	stash_container.add_theme_constant_override("v_separation", 6)
 	stash_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(stash_container)
 
 	return panel
+
+func _build_stash_toolbar() -> Control:
+	## Search box + sort/filter dropdowns for the stash grid (Addendum B §2:
+	## "sort (slot, rarity, recency, name) and filter (by slot, by rarity,
+	## plus a text search on the item name)" -- the EA bar, not PoE-grade.
+	var toolbar := VBoxContainer.new()
+	toolbar.add_theme_constant_override("separation", 4)
+
+	var search := LineEdit.new()
+	search.placeholder_text = "Search by name…"
+	search.clear_button_enabled = true
+	search.text_changed.connect(func(t: String): _search_text = t; _refresh_stash())
+	toolbar.add_child(search)
+
+	var dropdown_row := HBoxContainer.new()
+	dropdown_row.add_theme_constant_override("separation", 6)
+	toolbar.add_child(dropdown_row)
+
+	var sort_option := OptionButton.new()
+	sort_option.add_item("Sort: Recency", SORT_RECENCY)
+	sort_option.add_item("Sort: Slot", SORT_SLOT)
+	sort_option.add_item("Sort: Rarity", SORT_RARITY)
+	sort_option.add_item("Sort: Name", SORT_NAME)
+	sort_option.selected = 0
+	sort_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sort_option.item_selected.connect(func(idx: int): _sort_mode = sort_option.get_item_id(idx); _refresh_stash())
+	dropdown_row.add_child(sort_option)
+
+	var slot_filter := OptionButton.new()
+	slot_filter.add_item("All Slots")
+	slot_filter.set_item_metadata(0, "ALL")
+	for slot_name in EquipmentData.all_slot_names():
+		slot_filter.add_item(slot_name)
+		slot_filter.set_item_metadata(slot_filter.item_count - 1, slot_name)
+	slot_filter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slot_filter.item_selected.connect(func(idx: int): _filter_slot = slot_filter.get_item_metadata(idx); _refresh_stash())
+	dropdown_row.add_child(slot_filter)
+
+	var rarity_filter := OptionButton.new()
+	rarity_filter.add_item("All Rarities")
+	rarity_filter.set_item_metadata(0, -1)
+	for key in EquipmentData.Rarity.keys():
+		rarity_filter.add_item(key.capitalize())
+		rarity_filter.set_item_metadata(rarity_filter.item_count - 1, EquipmentData.Rarity[key])
+	rarity_filter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rarity_filter.item_selected.connect(func(idx: int): _filter_rarity = rarity_filter.get_item_metadata(idx); _refresh_stash())
+	dropdown_row.add_child(rarity_filter)
+
+	return toolbar
+
+func _handle_drop_on_stash(data: Dictionary) -> void:
+	## A slot's item was dragged onto the stash panel -- unequip it.
+	var char_id: String = data.get("char_id", "")
+	var slot_name: String = data.get("slot_name", "")
+	if char_id.is_empty() or slot_name.is_empty():
+		return
+	RunState.unequip_item(char_id, slot_name)
+	refresh_from_state()
+
+func _get_sorted_filtered_stash() -> Array[String]:
+	## Apply the current search/filter/sort to RunState.run_stash (Addendum B §2).
+	var items: Array[String] = []
+	for equip_id in RunState.run_stash:
+		var equip_data: EquipmentData = DataRegistry.get_equipment(equip_id) if DataRegistry else null
+		if not equip_data:
+			continue
+		if not _search_text.is_empty() and not equip_data.name.to_lower().contains(_search_text.to_lower()):
+			continue
+		if _filter_slot != "ALL" and EquipmentData.slot_name(equip_data.slot_type) != _filter_slot:
+			continue
+		if _filter_rarity >= 0 and int(equip_data.rarity) != _filter_rarity:
+			continue
+		items.append(equip_id)
+
+	match _sort_mode:
+		SORT_SLOT:
+			items.sort_custom(func(a, b):
+				var da = DataRegistry.get_equipment(a)
+				var db = DataRegistry.get_equipment(b)
+				return int(da.slot_type) < int(db.slot_type)
+			)
+		SORT_RARITY:
+			items.sort_custom(func(a, b):
+				var da = DataRegistry.get_equipment(a)
+				var db = DataRegistry.get_equipment(b)
+				return int(da.rarity) > int(db.rarity)  # highest rarity first
+			)
+		SORT_NAME:
+			items.sort_custom(func(a, b):
+				var da = DataRegistry.get_equipment(a)
+				var db = DataRegistry.get_equipment(b)
+				return da.name.naturalnocasecmp_to(db.name) < 0
+			)
+		SORT_RECENCY:
+			# run_stash is append-ordered; most-recently-added first.
+			items.reverse()
+
+	return items
 
 func _build_character_panel(char_id: String) -> Control:
 	## Build one character's card: nameplate + portrait + 6 styled slot buttons.
@@ -314,6 +414,14 @@ func _build_character_panel(char_id: String) -> Control:
 		slot_btn.pressed.connect(_on_slot_clicked.bind(char_id, slot_name))
 		hbox.add_child(slot_btn)
 
+		# Drag-and-drop target (Addendum B §5): drag-source wiring for the
+		# currently-equipped item (if any) is (re)attached in _refresh_slot_buttons,
+		# since it depends on what's equipped. This initial wiring is drop-only.
+		EQUIP_DND.attach_target(slot_btn,
+			func(_pos, _data): return true,
+			_make_slot_drop_handler(char_id, slot_name)
+		)
+
 		slot_buttons[slot_name] = slot_btn
 
 	character_panels[char_id] = slot_buttons
@@ -340,6 +448,11 @@ func _build_bottom_bar() -> Control:
 	var inner_hbox := HBoxContainer.new()
 	inner_hbox.add_theme_constant_override("separation", 20)
 	bar.add_child(inner_hbox)
+
+	# ── Back button (bottom-left, fixed across every pre-run screen) ────────
+	var back_btn := PRE_RUN_CHROME.build_ghost_button("← BACK")
+	back_btn.pressed.connect(func(): ScreenManager.go_to_character_select())
+	inner_hbox.add_child(back_btn)
 
 	# ── Modifier section (expand fill) ──────────────────────────────────────
 	var mod_vbox := VBoxContainer.new()
@@ -557,18 +670,71 @@ func _refresh_slot_buttons():
 				if styles.has("filled"):
 					btn.add_theme_stylebox_override("normal", styles["filled"])
 
+			# Drag source (Addendum B §5): re-attached every refresh since it
+			# depends on what's currently equipped. Empty slots keep drop-only
+			# behaviour (still set by _build_character_panel / _make_slot_drop_handler).
+			if not equip_id.is_empty():
+				var equip_data2 = DataRegistry.get_equipment(equip_id) if DataRegistry else null
+				EQUIP_DND.attach_source_and_target(btn,
+					{"type": "equipment", "equipment_id": equip_id, "source": "slot", "char_id": char_id, "slot_name": slot_name},
+					equip_data2.name if equip_data2 else equip_id,
+					func(_pos, _data): return true,
+					_make_slot_drop_handler(char_id, slot_name)
+				)
+			else:
+				EQUIP_DND.attach_target(btn,
+					func(_pos, _data): return true,
+					_make_slot_drop_handler(char_id, slot_name)
+				)
+
+func _make_slot_drop_handler(char_id: String, slot_name: String) -> Callable:
+	## Handles a drag-and-drop onto a character's equip slot (Addendum B §5).
+	## Accepts drops from the stash (equip) or from another slot (re-equip /
+	## swap). Illegal drops show why instead of silently snapping back.
+	return func(_pos: Vector2, data: Dictionary) -> void:
+		var equipment_id: String = data.get("equipment_id", "")
+		var source: String = data.get("source", "")
+		if equipment_id.is_empty():
+			return
+
+		var equip_data = DataRegistry.get_equipment(equipment_id) if DataRegistry else null
+		if not equip_data:
+			return
+		if equip_data.slot_type != EquipmentData.slot_from_string(slot_name):
+			_show_message("%s is a %s item and cannot go in the %s slot." % [
+				equip_data.name, EquipmentData.slot_name(equip_data.slot_type), slot_name
+			])
+			return
+		var char_data = DataRegistry.get_character(char_id) if DataRegistry else null
+		if not equip_data.can_be_equipped_by(char_data):
+			_show_message("That item cannot be equipped by %s." % (char_data.display_name if char_data else char_id))
+			return
+
+		if source == "slot":
+			var from_char: String = data.get("char_id", "")
+			var from_slot: String = data.get("slot_name", "")
+			if from_char == char_id and from_slot == slot_name:
+				return  # dropped on itself
+			# Swap: pull the dragged item out of its old slot first (returns it
+			# to the stash), then equip it here.
+			RunState.unequip_item(from_char, from_slot)
+			RunState.equip_item(char_id, slot_name, equipment_id)
+		else:
+			# From the stash.
+			RunState.equip_item(char_id, slot_name, equipment_id)
+
+		refresh_from_state()
+
 func _refresh_stash():
-	## Rebuild stash item panels from run_stash.
+	## Rebuild stash item panels from the sorted/filtered view of run_stash.
 	_stash_panels.clear()
 	for child in stash_container.get_children():
 		stash_container.remove_child(child)
 		child.queue_free()
 
-	var stash_size: int = RunState.run_stash.size() if RunState else 0
-	var max_size: int = RunState.MAX_STASH_SIZE if RunState else 9
-
+	var total_size: int = RunState.run_stash.size() if RunState else 0
 	if stash_label:
-		stash_label.text = "STASH (%d/%d)" % [stash_size, max_size]
+		stash_label.text = "STASH (%d)" % total_size
 
 	if not RunState or RunState.run_stash.is_empty():
 		var empty_lbl := Label.new()
@@ -579,7 +745,17 @@ func _refresh_stash():
 		stash_container.add_child(empty_lbl)
 		return
 
-	for equip_id in RunState.run_stash:
+	var visible_items: Array[String] = _get_sorted_filtered_stash()
+	if visible_items.is_empty():
+		var none_lbl := Label.new()
+		none_lbl.text = "No items match\nthe current filter"
+		none_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		none_lbl.add_theme_font_size_override("font_size", 12)
+		none_lbl.add_theme_color_override("font_color", Color("#505060"))
+		stash_container.add_child(none_lbl)
+		return
+
+	for equip_id in visible_items:
 		var equip_data = DataRegistry.get_equipment(equip_id) if DataRegistry else null
 		var is_selected: bool = equip_id == _selected_stash_id
 
@@ -595,6 +771,7 @@ func _refresh_stash():
 
 		var item_panel := PanelContainer.new()
 		item_panel.custom_minimum_size = Vector2(0, 36)
+		item_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		item_panel.add_theme_stylebox_override("panel", item_style)
 		item_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 
@@ -602,6 +779,12 @@ func _refresh_stash():
 		item_panel.gui_input.connect(func(event: InputEvent) -> void:
 			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 				_on_stash_item_clicked(eid)
+		)
+
+		# Drag source (Addendum B §5): drag onto a slot to equip.
+		EQUIP_DND.attach_source(item_panel,
+			{"type": "equipment", "equipment_id": eid, "source": "stash"},
+			equip_data.name if equip_data else eid
 		)
 
 		var row := HBoxContainer.new()

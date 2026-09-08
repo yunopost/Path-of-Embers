@@ -1,20 +1,27 @@
 extends Control
 
-## Quest Select — step 4 of the pre-run wizard (Party → Modifiers → Loadout → Quests).
+## Quest Select -- step 3 of the pre-run wizard (Party -> Loadout -> Quests).
 ## Shows each party member's quest pool; the player picks exactly one quest per
 ## character. Selections default to whatever QuestManager already assigned
 ## (random pick from CharacterSelect), so "Begin Run" is always enabled.
+##
+## Card-Clock Spec Addendum B §1: uses the same shared step bar, background,
+## panel styling, header and footer as CharacterSelect / LoadoutScreen so this
+## no longer reads as a different game.
 
 const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
+const PRE_RUN_CHROME = preload("res://Path-of-Embers/scenes/ui/PreRunChrome.gd")
 
 const ROLE_COLORS := {
-	"warrior": Color("#C0392B"),
-	"healer": Color("#27AE60"),
-	"defender": Color("#2980B9"),
+	"warrior": Color("#C43030"),
+	"healer": Color("#4A9A60"),
+	"defender": Color("#3A70C4"),
 }
-const EMBER := Color(0.85, 0.50, 0.15)
-const PALE := Color(0.92, 0.89, 0.84)
-const FOG := Color(0.62, 0.64, 0.68)
+const EMBER := Color("#E8A020")
+const PALE := Color("#F0E6C8")
+const FOG := Color("#A09070")
+const CARD_BG := Color("#1A1F2BEE")
+const BORDER_DIM := Color("#4A5060")
 
 # char_id -> quest_id
 var _selected: Dictionary = {}
@@ -33,41 +40,43 @@ func _build_ui() -> void:
 
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 
-	# Background
-	var bg := ColorRect.new()
-	bg.color = Color(0.07, 0.06, 0.06)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+	# Shared background + vignette (same art as CharacterSelect / LoadoutScreen)
+	PRE_RUN_CHROME.ensure_background(self)
 
-	var root := VBoxContainer.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.offset_left = 80
-	root.offset_right = -80
-	root.offset_top = 40
-	root.offset_bottom = -40
-	root.add_theme_constant_override("separation", 24)
-	add_child(root)
+	var root_vbox := VBoxContainer.new()
+	root_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root_vbox.add_theme_constant_override("separation", 0)
+	add_child(root_vbox)
 
-	# Header
-	var title := Label.new()
-	title.text = "CHOOSE YOUR QUESTS"
-	title.add_theme_font_size_override("font_size", 28)
-	title.add_theme_color_override("font_color", PALE)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	root.add_child(title)
+	# ── Header (shared pre-run chrome, step 3 = Quests) ──────────────────────
+	root_vbox.add_child(PRE_RUN_CHROME.build_header(2, "CHOOSE YOUR QUESTS"))
+
+	# ── Body (inset, matches LoadoutScreen's body margins) ───────────────────
+	var body_margin := MarginContainer.new()
+	body_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body_margin.add_theme_constant_override("margin_left", 60)
+	body_margin.add_theme_constant_override("margin_right", 60)
+	body_margin.add_theme_constant_override("margin_top", 20)
+	body_margin.add_theme_constant_override("margin_bottom", 20)
+	root_vbox.add_child(body_margin)
+
+	var body_vbox := VBoxContainer.new()
+	body_vbox.add_theme_constant_override("separation", 16)
+	body_margin.add_child(body_vbox)
 
 	var subtitle := Label.new()
 	subtitle.text = "Each companion carries one quest into the run. Complete all three to unlock the final boss."
 	subtitle.add_theme_font_size_override("font_size", 14)
 	subtitle.add_theme_color_override("font_color", FOG)
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	root.add_child(subtitle)
+	body_vbox.add_child(subtitle)
 
 	# Character columns
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 24)
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(columns)
+	body_vbox.add_child(columns)
 
 	var party_ids: Array = PartyManager.get_party_ids() if PartyManager else []
 	for char_id in party_ids:
@@ -76,23 +85,13 @@ func _build_ui() -> void:
 			continue
 		columns.add_child(_build_character_column(char_data))
 
-	# Footer: back + begin
-	var footer := HBoxContainer.new()
-	footer.add_theme_constant_override("separation", 20)
-	footer.alignment = BoxContainer.ALIGNMENT_CENTER
-	root.add_child(footer)
-
-	var back_btn := Button.new()
-	back_btn.text = "← Loadout"
-	back_btn.custom_minimum_size = Vector2(160, 52)
-	back_btn.pressed.connect(func(): ScreenManager.go_to_loadout())
-	footer.add_child(back_btn)
-
-	_begin_btn = Button.new()
-	_begin_btn.text = "BEGIN RUN"
-	_begin_btn.custom_minimum_size = Vector2(220, 52)
-	_begin_btn.pressed.connect(_on_begin_pressed)
-	footer.add_child(_begin_btn)
+	# ── Footer (shared pre-run chrome): Back bottom-left, Begin bottom-right ─
+	var nav := PRE_RUN_CHROME.build_footer(
+		"← Loadout", func(): ScreenManager.go_to_loadout(),
+		"BEGIN RUN", _on_begin_pressed
+	)
+	_begin_btn = nav["next_btn"]
+	root_vbox.add_child(nav["panel"])
 
 	_update_begin_button()
 
@@ -102,10 +101,10 @@ func _build_character_column(char_data: CharacterData) -> PanelContainer:
 
 	var col_panel := PanelContainer.new()
 	var col_style := StyleBoxFlat.new()
-	col_style.bg_color = Color(0.10, 0.09, 0.09)
-	col_style.set_border_width_all(1)
-	col_style.border_color = Color(role_color, 0.35)
-	col_style.set_corner_radius_all(4)
+	col_style.bg_color = CARD_BG
+	col_style.set_border_width_all(2)
+	col_style.border_color = Color(role_color, 0.5)
+	col_style.set_corner_radius_all(6)
 	col_style.set_content_margin_all(18)
 	col_panel.add_theme_stylebox_override("panel", col_style)
 	col_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -128,7 +127,9 @@ func _build_character_column(char_data: CharacterData) -> PanelContainer:
 	role_label.add_theme_color_override("font_color", role_color)
 	vbox.add_child(role_label)
 
-	vbox.add_child(HSeparator.new())
+	var sep := HSeparator.new()
+	sep.add_theme_color_override("color", BORDER_DIM)
+	vbox.add_child(sep)
 
 	# Quest options
 	_quest_panels[char_data.id] = {}
@@ -198,16 +199,16 @@ func _refresh_column_visuals(char_id: String) -> void:
 	for quest_id in panels:
 		var panel: PanelContainer = panels[quest_id]
 		var style := StyleBoxFlat.new()
-		style.set_corner_radius_all(3)
+		style.set_corner_radius_all(4)
 		style.set_content_margin_all(12)
 		if _selected.get(char_id, "") == quest_id:
-			style.bg_color = Color(0.18, 0.13, 0.08)
+			style.bg_color = Color("#2A2010CC")
 			style.set_border_width_all(2)
 			style.border_color = EMBER
 		else:
-			style.bg_color = Color(0.13, 0.12, 0.12)
+			style.bg_color = Color("#12161ECC")
 			style.set_border_width_all(1)
-			style.border_color = Color(0.35, 0.33, 0.30, 0.5)
+			style.border_color = Color(BORDER_DIM, 0.6)
 		panel.add_theme_stylebox_override("panel", style)
 
 func _update_begin_button() -> void:
