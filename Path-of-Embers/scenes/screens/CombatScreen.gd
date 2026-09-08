@@ -863,6 +863,11 @@ func _on_player_defeated():
 		combat_controller.combat_active = false
 		combat_controller.end_combat(false)
 	_unbind_party_hud_abilities()
+	# Addendum B §2: run loss -- only the backpack's safe-slot item survives
+	# to the persistent stash. Must happen before GameOverScreen's "New Run" /
+	# "Main Menu" buttons call RunState.reset_run() and wipe the backpack.
+	if RunState:
+		RunState.settle_backpack_on_loss()
 	ScreenManager.go_to_game_over()
 
 func _on_combat_started():

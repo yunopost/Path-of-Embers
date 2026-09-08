@@ -14,6 +14,7 @@ var gold_claimed: bool = false
 var card_claimed: bool = false
 var upgrade_claimed: bool = false
 var heal_applied: bool = false
+var equipment_claimed: bool = false
 
 func _ready():
 	# Initialize screen (architecture rule 2.1)
@@ -44,6 +45,7 @@ func initialize(reward_data: RewardBundle = null):
 	card_claimed = (reward_bundle.card_choices.size() == 0)
 	upgrade_claimed = (reward_bundle.upgrade_count <= 0)
 	heal_applied = false  # Heal is auto-applied on display, so reset this
+	equipment_claimed = reward_bundle.equipment_drop_id.is_empty() or reward_bundle.equipment_claimed
 
 	# Auto-grant upgrade points from this bundle (Phase 4)
 	if reward_bundle.upgrade_points > 0 and ResourceManager:
@@ -100,6 +102,10 @@ func _display_rewards():
 	# Heal section
 	if reward_bundle.heal_amount > 0:
 		_create_heal_section(reward_bundle.heal_amount)
+
+	# Equipment drop section (Addendum B §2)
+	if not reward_bundle.equipment_drop_id.is_empty() and not reward_bundle.equipment_claimed:
+		_create_equipment_section(reward_bundle.equipment_drop_id)
 
 func _make_section() -> PanelContainer:
 	## Section container that sizes itself to its content (Panel does not).
@@ -210,6 +216,91 @@ func _create_heal_section(amount: int):
 		_apply_heal(amount)
 	
 	rewards_container.add_child(section)
+
+func _create_equipment_section(equipment_id: String):
+	## Equipment drop reward (Addendum B §2). Claiming adds it to the run
+	## backpack; if the backpack is full, prompts the player to make room or
+	## discard the new item instead of losing either silently.
+	var section = _make_section()
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 10)
+	section.add_child(hbox)
+
+	var equip_data: EquipmentData = DataRegistry.get_equipment(equipment_id) if DataRegistry else null
+	var label = Label.new()
+	label.text = "Equipment found: %s" % (equip_data.name if equip_data else equipment_id)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(label)
+
+	var claim_btn = Button.new()
+	claim_btn.text = "Claim"
+	claim_btn.pressed.connect(_on_claim_equipment.bind(equipment_id))
+	claim_btn.disabled = equipment_claimed
+	hbox.add_child(claim_btn)
+
+	rewards_container.add_child(section)
+
+func _on_claim_equipment(equipment_id: String):
+	if equipment_claimed:
+		return
+	if RunState.backpack_add(equipment_id):
+		_finish_equipment_claim()
+	else:
+		_show_backpack_full_prompt(equipment_id)
+
+func _finish_equipment_claim():
+	reward_bundle.equipment_claimed = true
+	equipment_claimed = true
+	_update_continue_button()
+	_refresh_reward_sections()
+
+func _show_backpack_full_prompt(equipment_id: String):
+	## Backpack is full (spec §2): the player must choose to discard something
+	## already in the backpack to make room, or discard the incoming item.
+	## Neither choice happens silently.
+	var equip_data: EquipmentData = DataRegistry.get_equipment(equipment_id) if DataRegistry else null
+	var dialog := ConfirmationDialog.new()
+	dialog.title = "Backpack Full"
+	dialog.ok_button_text = "Discard New Item"
+	dialog.cancel_button_text = "Cancel"
+	add_child(dialog)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	dialog.add_child(vbox)
+
+	var msg := Label.new()
+	msg.text = "Your backpack is full. Make room by discarding one of these, or discard %s." % (equip_data.name if equip_data else equipment_id)
+	msg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	msg.custom_minimum_size = Vector2(360, 0)
+	vbox.add_child(msg)
+
+	for i in range(RunState.backpack.size()):
+		var existing_id: String = RunState.backpack[i]
+		var existing_data: EquipmentData = DataRegistry.get_equipment(existing_id) if DataRegistry else null
+		var name_text: String = existing_data.name if existing_data else existing_id
+		if i == RunState.BACKPACK_SAFE_SLOT_INDEX:
+			name_text += " (safe slot)"
+		var discard_btn := Button.new()
+		discard_btn.text = "Make room: discard %s" % name_text
+		discard_btn.pressed.connect(func():
+			RunState.pending_backpack_drop = equipment_id
+			RunState.resolve_backpack_prompt_make_room(i)
+			dialog.queue_free()
+			_finish_equipment_claim()
+		)
+		vbox.add_child(discard_btn)
+
+	dialog.confirmed.connect(func():
+		RunState.pending_backpack_drop = equipment_id
+		RunState.resolve_backpack_prompt_discard_incoming()
+		dialog.queue_free()
+		# Resolved (discarded, not claimed) -- still lets Continue proceed;
+		# otherwise a player who always discards could never leave this screen.
+		_finish_equipment_claim()
+	)
+	dialog.canceled.connect(func(): dialog.queue_free())
+	dialog.popup_centered()
 
 func _on_claim_gold(amount: int):
 	## Claim gold reward
@@ -372,6 +463,9 @@ func _update_continue_button():
 
 	if reward_bundle.upgrade_count > 0:
 		all_resolved = false
+
+	if not reward_bundle.equipment_drop_id.is_empty() and not equipment_claimed:
+		all_resolved = false
 	
 	continue_button.disabled = not all_resolved
 
@@ -397,6 +491,10 @@ func _finish_rewards():
 	if completed_node:
 		if completed_node.node_type == MapNodeData.NodeType.FINAL_BOSS:
 			# Run is over — emit event, go to victory screen
+			# Addendum B §2: run win -- the entire backpack survives to the
+			# persistent stash. Must happen before RunState.reset_run().
+			if RunState:
+				RunState.settle_backpack_on_win()
 			MapManager.run_completed.emit()
 			QuestManager.emit_game_event("FINAL_BOSS_DEFEATED", {})
 			ScreenManager.go_to_victory()

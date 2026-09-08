@@ -14,6 +14,12 @@ var is_transcendence_upgrade: bool = false  # If true, upgrade options are trans
 # PLACEHOLDER FOR FUTURE WORK: Transcendence upgrade flow is not implemented.
 # This flag is set for boss nodes but the upgrade flow does not check it.
 
+## Equipment dropped by this encounter (Addendum B §2), or "" for none.
+## Rolled by RewardResolver from the equipment drop-chance table. Goes to the
+## run backpack when claimed (RunState.backpack_add), not the deck/gold flow.
+var equipment_drop_id: String = ""
+var equipment_claimed: bool = false
+
 func _init(p_gold: int = 0, p_card_choices: Array[String] = [], p_upgrade_count: int = 0, p_heal_amount: int = 0, p_skip_allowed: bool = true, p_is_transcendence: bool = false, p_upgrade_points: int = 0):
 	gold = p_gold
 	if p_card_choices:
@@ -28,7 +34,7 @@ func _init(p_gold: int = 0, p_card_choices: Array[String] = [], p_upgrade_count:
 
 func has_any_rewards() -> bool:
 	## Returns true if bundle contains any rewards
-	return gold > 0 or card_choices.size() > 0 or upgrade_count > 0 or heal_amount > 0 or upgrade_points > 0
+	return gold > 0 or card_choices.size() > 0 or upgrade_count > 0 or heal_amount > 0 or upgrade_points > 0 or not equipment_drop_id.is_empty()
 
 func to_dict() -> Dictionary:
 	## Serialize to dictionary for save/load
@@ -39,7 +45,9 @@ func to_dict() -> Dictionary:
 		"upgrade_points": upgrade_points,
 		"heal_amount": heal_amount,
 		"skip_allowed": skip_allowed,
-		"is_transcendence_upgrade": is_transcendence_upgrade
+		"is_transcendence_upgrade": is_transcendence_upgrade,
+		"equipment_drop_id": equipment_drop_id,
+		"equipment_claimed": equipment_claimed
 	}
 
 static func from_dict(data: Dictionary) -> RewardBundle:
@@ -56,7 +64,7 @@ static func from_dict(data: Dictionary) -> RewardBundle:
 
 	var p_upgrade_points := int(data.get("upgrade_points", 0))
 
-	return RewardBundle.new(
+	var bundle := RewardBundle.new(
 		p_gold,
 		card_choices_array,
 		p_upgrade_count,
@@ -65,3 +73,6 @@ static func from_dict(data: Dictionary) -> RewardBundle:
 		data.get("is_transcendence_upgrade", false),
 		p_upgrade_points
 	)
+	bundle.equipment_drop_id = str(data.get("equipment_drop_id", ""))
+	bundle.equipment_claimed = bool(data.get("equipment_claimed", false))
+	return bundle

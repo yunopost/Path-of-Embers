@@ -130,7 +130,7 @@ func _serialize_run_state() -> Dictionary:
 		pending_rewards_serialized = RunState.pending_rewards.to_dict()
 	
 	return {
-		"version": 10,  # v10: Phase 6 equipment system. equipment_slots + run_stash added to run save.
+		"version": 11,  # v11: Addendum B backpack (run_stash unchanged; backpack + pending_backpack_drop added).
 		"party_ids": PartyManager.party_ids.duplicate() if PartyManager else [],
 		"deck": deck_dict,  # Dictionary keyed by instance_id
 		"deck_order": deck_order_data,  # Stable ordering array
@@ -155,6 +155,8 @@ func _serialize_run_state() -> Dictionary:
 		"pending_rewards": pending_rewards_serialized,
 		"equipment_slots": RunState.equipment_slots,
 		"run_stash": RunState.run_stash.duplicate(),
+		"backpack": RunState.backpack.duplicate(),
+		"pending_backpack_drop": RunState.pending_backpack_drop,
 		"active_modifiers": Array(ModifierManager._run_active) if ModifierManager else []
 	}
 
@@ -369,7 +371,14 @@ func _deserialize_run_state(save_data: Dictionary):
 		for item in save_data["run_stash"]:
 			RunState.run_stash.append(str(item))
 
+	RunState.backpack.clear()
+	if save_data.has("backpack") and save_data["backpack"] is Array:
+		for item in save_data["backpack"]:
+			RunState.backpack.append(str(item))
+	RunState.pending_backpack_drop = str(save_data.get("pending_backpack_drop", ""))
+
 	RunState.equipment_changed.emit()
+	RunState.backpack_changed.emit()
 
 	# Restore active difficulty modifiers
 	if ModifierManager and save_data.has("active_modifiers") and save_data["active_modifiers"] is Array:

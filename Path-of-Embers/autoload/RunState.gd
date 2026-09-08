@@ -9,6 +9,7 @@ signal hand_changed
 signal draw_pile_changed
 signal discard_pile_changed
 signal equipment_changed
+signal backpack_changed
 
 # Deck
 var deck: Dictionary = {}  # instance_id -> DeckCardData (authoritative registry)
@@ -40,9 +41,28 @@ var tap_to_play: bool = false
 # Equipment state (Phase 6)
 ## Per-character equipped items: { "char_id": { "SLOT_NAME": "equipment_id" } }
 var equipment_slots: Dictionary = {}
-## Items in the current run stash (max 9 equipment_ids)
+## Items pulled into the pre-run Loadout screen from the persistent stash
+## (SaveManager.load_persistent_stash). NOT the run-scoped backpack below --
+## see Card-Clock Spec Addendum B §2: the persistent/meta stash has no cap,
+## so this pool is effectively uncapped too (Loadout must be able to show
+## everything the player owns).
 var run_stash: Array[String] = []
-const MAX_STASH_SIZE: int = 9
+const MAX_STASH_SIZE: int = 999999  ## Effectively uncapped (Addendum B §2). Was 9.
+
+# ── Backpack (Addendum B §2) ───────────────────────────────────────────────────
+## The run-scoped equipment inventory. Distinct from run_stash (pre-run Loadout
+## pool, above) and from the persistent stash (meta.json, uncapped). Equipment
+## found DURING a run (combat drops; see RewardResolver) goes here, not to the
+## stash. Nine slots; index 0 is the "safe slot" (spec: the only item that
+## survives a run loss -- see settle_backpack_on_loss/on_win).
+const BACKPACK_SIZE: int = 9
+const BACKPACK_SAFE_SLOT_INDEX: int = 0
+var backpack: Array[String] = []
+## Set when an incoming drop can't fit in a full backpack. The UI showing at
+## the time must render the "make room or discard the new item" prompt (spec
+## §2) rather than the drop silently disappearing -- see backpack_add(),
+## resolve_backpack_prompt_make_room() and resolve_backpack_prompt_discard_incoming().
+var pending_backpack_drop: String = ""
 
 # Boss Rush state (Phase 8)
 var is_boss_rush: bool = false          ## True while in a Boss Rush challenge
@@ -62,6 +82,8 @@ func _ready():
 	buffs = []
 	equipment_slots = {}
 	run_stash = []
+	backpack = []
+	pending_backpack_drop = ""
 	
 	# Initialize systems
 	deck_model = DeckModel.new()
@@ -599,7 +621,10 @@ func reset_run() -> void:
 	# Reset equipment state
 	equipment_slots.clear()
 	run_stash.clear()
+	backpack.clear()
+	pending_backpack_drop = ""
 	equipment_changed.emit()
+	backpack_changed.emit()
 
 	# Reset boss rush state
 	is_boss_rush = false
@@ -642,7 +667,10 @@ func load_from_build_data(build: BuildData) -> void:
 		for slot_name in build.equipment_slots[char_id]:
 			equipment_slots[str(char_id)][str(slot_name)] = str(build.equipment_slots[char_id][slot_name])
 	run_stash = build.run_stash.duplicate()
+	backpack.clear()
+	pending_backpack_drop = ""
 	equipment_changed.emit()
+	backpack_changed.emit()
 
 # ── Equipment helpers (Phase 6) ───────────────────────────────────────────────
 
@@ -700,3 +728,143 @@ func remove_from_run_stash(equipment_id: String) -> void:
 	## Remove an equipment_id from the run stash (e.g. after equipping it).
 	run_stash.erase(equipment_id)
 	equipment_changed.emit()
+
+# ── Backpack helpers (Addendum B §2) ──────────────────────────────────────────
+
+func backpack_is_full() -> bool:
+	return backpack.size() >= BACKPACK_SIZE
+
+func backpack_add(equipment_id: String) -> bool:
+	## Add a drop to the backpack. Returns true if it fit. If the backpack is
+	## already full, returns false and records the item as a pending prompt --
+	## the calling UI (RewardsScreen, etc.) must resolve it via
+	## resolve_backpack_prompt_make_room() or resolve_backpack_prompt_discard_incoming()
+	## rather than losing either item silently (spec §2).
+	if equipment_id.is_empty():
+		return false
+	if backpack_is_full():
+		pending_backpack_drop = equipment_id
+		backpack_changed.emit()
+		return false
+	backpack.append(equipment_id)
+	backpack_changed.emit()
+	return true
+
+func has_pending_backpack_prompt() -> bool:
+	return not pending_backpack_drop.is_empty()
+
+func resolve_backpack_prompt_discard_incoming() -> void:
+	## Player chose to discard the new item instead of making room for it.
+	pending_backpack_drop = ""
+	backpack_changed.emit()
+
+func resolve_backpack_prompt_make_room(discard_index: int) -> bool:
+	## Player chose to discard an existing backpack item (at discard_index) to
+	## make room for the pending drop. Returns false if there is no pending
+	## prompt or the index is out of range.
+	if pending_backpack_drop.is_empty():
+		return false
+	if discard_index < 0 or discard_index >= backpack.size():
+		return false
+	backpack.remove_at(discard_index)
+	backpack.append(pending_backpack_drop)
+	pending_backpack_drop = ""
+	backpack_changed.emit()
+	return true
+
+func backpack_remove_at(index: int) -> String:
+	## Remove and return the item at `index` (e.g. dragged out to equip it).
+	if index < 0 or index >= backpack.size():
+		return ""
+	var equipment_id: String = backpack[index]
+	backpack.remove_at(index)
+	backpack_changed.emit()
+	return equipment_id
+
+func backpack_add_at(equipment_id: String, index: int = -1) -> void:
+	## Insert an item back into the backpack at a specific index (used when a
+	## swap displaces an equipped item back into the backpack). Does not
+	## enforce the size cap -- callers that swap 1-for-1 never exceed it.
+	if equipment_id.is_empty():
+		return
+	if index < 0 or index > backpack.size():
+		backpack.append(equipment_id)
+	else:
+		backpack.insert(index, equipment_id)
+	backpack_changed.emit()
+
+func can_swap_backpack_item(char_id: String, slot_name: String, equipment_id: String) -> String:
+	## Returns "" if `equipment_id` may legally go into char_id's slot_name,
+	## otherwise a human-readable reason why not (Addendum B §2: an illegal
+	## drop must say why, not just silently fail).
+	var equip_data = DataRegistry.get_equipment(equipment_id) if DataRegistry else null
+	if not equip_data:
+		return "That item no longer exists."
+	if equip_data.slot_type != EquipmentData.slot_from_string(slot_name):
+		return "%s is a %s item and cannot go in the %s slot." % [
+			equip_data.name, EquipmentData.slot_name(equip_data.slot_type), slot_name
+		]
+	var char_data = DataRegistry.get_character(char_id) if DataRegistry else null
+	if not equip_data.can_be_equipped_by(char_data):
+		return "That item cannot be equipped by %s." % (char_data.display_name if char_data else char_id)
+	return ""
+
+func swap_backpack_with_equipped(char_id: String, slot_name: String, backpack_index: int) -> bool:
+	## Equip the backpack item at backpack_index into char_id's slot_name,
+	## returning whatever was equipped there (if anything) to the backpack.
+	## Enforces the same slot-type / lock restrictions as equip_item().
+	if backpack_index < 0 or backpack_index >= backpack.size():
+		return false
+	var equipment_id: String = backpack[backpack_index]
+	if not can_swap_backpack_item(char_id, slot_name, equipment_id).is_empty():
+		return false
+	if not equipment_slots.has(char_id):
+		equipment_slots[char_id] = {}
+	var old_id: String = equipment_slots[char_id].get(slot_name, "")
+	backpack.remove_at(backpack_index)
+	equipment_slots[char_id][slot_name] = equipment_id
+	if not old_id.is_empty():
+		backpack.append(old_id)  # 1-for-1 swap, always fits
+	equipment_changed.emit()
+	backpack_changed.emit()
+	return true
+
+func unequip_to_backpack(char_id: String, slot_name: String) -> bool:
+	## Move whatever is equipped in char_id's slot_name back to the backpack
+	## (map-screen swap panel: dragging gear out of a slot with nothing queued
+	## to replace it). Returns false if the backpack is full or the slot is
+	## already empty -- the caller should surface the full-backpack prompt.
+	if not equipment_slots.has(char_id):
+		return false
+	var equipment_id: String = equipment_slots[char_id].get(slot_name, "")
+	if equipment_id.is_empty():
+		return false
+	if backpack_is_full():
+		pending_backpack_drop = equipment_id
+		# Also actually unequip -- the item's fate is decided by the pending
+		# prompt, matching backpack_add()'s contract (never silently dropped).
+		equipment_slots[char_id].erase(slot_name)
+		equipment_changed.emit()
+		backpack_changed.emit()
+		return false
+	equipment_slots[char_id].erase(slot_name)
+	backpack.append(equipment_id)
+	equipment_changed.emit()
+	backpack_changed.emit()
+	return true
+
+func settle_backpack_on_loss() -> void:
+	## Run loss (spec §2): only the safe-slot item (index 0) survives to the
+	## persistent stash. Everything else in the backpack is lost. Must be
+	## called BEFORE reset_run() (which clears the backpack unconditionally).
+	if backpack.size() > BACKPACK_SAFE_SLOT_INDEX:
+		var safe_item: String = backpack[BACKPACK_SAFE_SLOT_INDEX]
+		if not safe_item.is_empty() and SaveManager:
+			SaveManager.add_to_persistent_stash(safe_item)
+
+func settle_backpack_on_win() -> void:
+	## Run win (spec §2): the entire backpack survives to the persistent stash.
+	## Must be called BEFORE reset_run().
+	if SaveManager:
+		for equipment_id in backpack:
+			SaveManager.add_to_persistent_stash(equipment_id)

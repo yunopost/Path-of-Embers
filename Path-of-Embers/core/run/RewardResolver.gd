@@ -3,6 +3,35 @@ class_name RewardResolver
 
 ## Resolves reward bundles based on node reward flags
 
+# ── Equipment drop chances (Card-Clock Spec Addendum B §2) ───────────────────
+# Equipment previously only came from the shop + a 3-item starter stash; this
+# is the only place those odds live -- tune them here, nowhere else.
+# Key = MapNodeData.NodeType, value = chance [0..1] that a completed encounter
+# of that type drops one equipment item into the run backpack.
+# Boss/Final Boss are meaningfully better than a standard Fight; Elite sits
+# between the two, per spec ("elites and bosses meaningfully higher").
+const EQUIPMENT_DROP_CHANCE: Dictionary = {
+	MapNodeData.NodeType.FIGHT:       0.15,  # standard fight -- modest chance
+	MapNodeData.NodeType.ELITE:       0.45,  # elite -- meaningfully higher
+	MapNodeData.NodeType.BOSS:        0.75,  # act boss -- meaningfully higher still
+	MapNodeData.NodeType.FINAL_BOSS:  1.00,  # final boss -- always drops something
+}
+
+static func roll_equipment_drop(node_type: MapNodeData.NodeType) -> String:
+	## Roll for an equipment drop for a completed encounter of `node_type`.
+	## Returns an equipment_id, or "" if nothing dropped. Picks a random
+	## EXISTING equipment .tres via DataRegistry -- rarity rolling is a later
+	## task (spec §3 EquipmentInstance); this only decides IF something drops.
+	var chance: float = EQUIPMENT_DROP_CHANCE.get(node_type, 0.0)
+	if chance <= 0.0 or randf() >= chance:
+		return ""
+	if not DataRegistry:
+		return ""
+	var all_equipment: Array[EquipmentData] = DataRegistry.get_all_equipment()
+	if all_equipment.is_empty():
+		return ""
+	return all_equipment[randi() % all_equipment.size()].id
+
 static func build_rewards_for_node(node: MapNodeData) -> RewardBundle:
 	## Build a RewardBundle based on the node's reward_flags
 	## Reads reward_flags from the node to determine what rewards to give
@@ -12,6 +41,7 @@ static func build_rewards_for_node(node: MapNodeData) -> RewardBundle:
 	
 	var bundle = RewardBundle.new()
 	bundle.skip_allowed = true
+	bundle.equipment_drop_id = roll_equipment_drop(node.node_type)
 	
 	# Check for special pools first (Boss, Elite)
 	var has_boss_relic = node.reward_flags.has(MapNodeData.RewardType.BOSS_RELIC)
