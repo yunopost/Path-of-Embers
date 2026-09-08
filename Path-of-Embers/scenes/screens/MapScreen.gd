@@ -3,8 +3,11 @@ extends Control
 ## Map screen - displays STS-style node map with branching paths
 
 const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
+const BACKPACK_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/backpack/BackpackPanel.gd")
 
 var map_generator: MapGenerator = null
+var _backpack_button: Button = null
+var _backpack_panel: Control = null
 var node_widgets: Dictionary = {}  # Key: node_id, Value: MapNodeWidget
 var connection_data: Array[Dictionary] = []  # Store connection data for _draw() rendering
 
@@ -16,6 +19,7 @@ var connection_data: Array[Dictionary] = []  # Store connection data for _draw()
 
 func _ready():
 	_setup_background()
+	_setup_backpack_button()
 
 	# Initialize map generator
 	map_generator = MapGenerator.new()
@@ -54,6 +58,35 @@ func _setup_background() -> void:
 	bg_rect.z_index = -100
 	add_child(bg_rect)
 	move_child(bg_rect, 0)
+
+func _setup_backpack_button() -> void:
+	## Fixed top-right button opening the backpack / re-gear panel (Addendum
+	## B §2/§3): swap backpack equipment with the party's equipped gear
+	## without leaving the map.
+	_backpack_button = Button.new()
+	_backpack_button.name = "BackpackButton"
+	_backpack_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_backpack_button.offset_left = -160
+	_backpack_button.offset_right = -20
+	_backpack_button.offset_top = 20
+	_backpack_button.offset_bottom = 60
+	_backpack_button.pressed.connect(_on_backpack_button_pressed)
+	add_child(_backpack_button)
+	_update_backpack_button_label()
+	if RunState and not RunState.backpack_changed.is_connected(_update_backpack_button_label):
+		RunState.backpack_changed.connect(_update_backpack_button_label)
+
+func _update_backpack_button_label() -> void:
+	if not _backpack_button:
+		return
+	var count: int = RunState.backpack.size() if RunState else 0
+	_backpack_button.text = "🎒 Backpack (%d/%d)" % [count, RunState.BACKPACK_SIZE if RunState else 9]
+
+func _on_backpack_button_pressed() -> void:
+	if not _backpack_panel or not is_instance_valid(_backpack_panel):
+		_backpack_panel = BACKPACK_PANEL_SCRIPT.new()
+		add_child(_backpack_panel)
+	_backpack_panel.visible = true
 
 func initialize():
 	## Initialize the screen with current state
