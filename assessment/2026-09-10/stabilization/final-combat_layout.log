@@ -1,0 +1,12 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 3 milestones, 5 encounters, 6 abilities
+ScreenManager: Loading scene: combat from path: res://scenes/screens/CombatScreen.tscn
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+LAYOUT {"bottom":"[P: (800.0, 820.0), S: (780.0, 60.0)]","calibrate":{"owner":"[P: (1382.0, 782.0), S: (173.0, 13.0)]","rect":"[P: (1377.0, 520.0), S: (183.0, 280.0)]"},"dark_pact":{"owner":"[P: (236.0, 782.0), S: (173.0, 13.0)]","rect":"[P: (231.0, 520.0), S: (183.0, 280.0)]"},"deadfall":{"owner":"[P: (618.0, 782.0), S: (173.0, 13.0)]","rect":"[P: (613.0, 520.0), S: (183.0, 280.0)]"},"enemies":"[P: (840.0, 187.0), S: (720.0, 252.0)]","hand":"[P: (40.0, 520.0), S: (1520.0, 280.0)]","hex":{"owner":"[P: (45.0, 782.0), S: (173.0, 13.0)]","rect":"[P: (40.0, 520.0), S: (183.0, 280.0)]"},"iron_tide":{"owner":"[P: (809.0, 782.0), S: (173.0, 13.0)]","rect":"[P: (804.0, 520.0), S: (183.0, 280.0)]"},"overclocked":{"owner":"[P: (427.0, 782.0), S: (173.0, 13.0)]","rect":"[P: (422.0, 520.0), S: (183.0, 280.0)]"},"pursuit":{"owner":"[P: (1000.0, 782.0), S: (173.0, 13.0)]","rect":"[P: (995.0, 520.0), S: (183.0, 280.0)]"},"resonant_guard":{"owner":"[P: (1191.0, 782.0), S: (173.0, 13.0)]","rect":"[P: (1186.0, 520.0), S: (183.0, 280.0)]"}}
+--- combat_layout: 0 layout failures ---
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2514)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:795)

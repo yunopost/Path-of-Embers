@@ -1,0 +1,32 @@
+[
+  {
+    "act": 2,
+    "actions": 274,
+    "deck": 28,
+    "hp": 0,
+    "outcome": "death",
+    "row": 0,
+    "transitions": 49,
+    "trial": 0
+  },
+  {
+    "act": 2,
+    "actions": 350,
+    "deck": 31,
+    "hp": 0,
+    "outcome": "death",
+    "row": 1,
+    "transitions": 52,
+    "trial": 1
+  },
+  {
+    "act": 2,
+    "actions": 226,
+    "deck": 29,
+    "hp": 0,
+    "outcome": "death",
+    "row": 2,
+    "transitions": 50,
+    "trial": 2
+  }
+]

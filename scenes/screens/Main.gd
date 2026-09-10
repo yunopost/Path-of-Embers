@@ -334,12 +334,22 @@ func _on_continue_pressed():
 		return
 
 	# Route based on game state
-	if RunState and RunState.pending_rewards != null:
+	if ResourceManager.current_hp <= 0:
+		ScreenManager.go_to_game_over()
+	elif RunState and RunState.pending_rewards != null:
 		# Resume at rewards screen
 		ScreenManager.go_to_rewards(RunState.pending_rewards)
 	elif MapManager and MapManager.current_map != null:
-		# Resume at map
-		ScreenManager.go_to_map()
+		var node = MapManager.current_map.get_node(MapManager.current_node_id)
+		if node and not node.is_completed and node.node_type in [MapNodeData.NodeType.FIGHT, MapNodeData.NodeType.ELITE, MapNodeData.NodeType.BOSS, MapNodeData.NodeType.FINAL_BOSS]:
+			ScreenManager.go_to_combat()
+		elif node and node.is_completed and node.node_type == MapNodeData.NodeType.FINAL_BOSS:
+			ScreenManager.go_to_victory()
+		elif node and node.is_completed and node.node_type == MapNodeData.NodeType.BOSS and MapManager.act < 3:
+			MapManager.transition_to_next_act()
+			ScreenManager.go_to_map()
+		else:
+			ScreenManager.go_to_map()
 	else:
 		# Fallback to character select (shouldn't happen, but safe)
 		ScreenManager.go_to_character_select()

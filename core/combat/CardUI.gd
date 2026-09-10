@@ -8,6 +8,7 @@ signal card_played(card_ui: CardUI, target: Node)
 
 var deck_card_data: DeckCardData = null
 var card_data: CardData = null
+var card_width: float = 210.0
 var is_dragging: bool = false
 var drag_start_pos: Vector2
 var original_position: Vector2
@@ -34,7 +35,7 @@ func _ready():
 	# Ensure we can receive input
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	# Set minimum size to ensure card has area for input (matches CardWidget size)
-	custom_minimum_size = Vector2(210, 280)
+	custom_minimum_size = Vector2(card_width, 280)
 	
 	# Connect hover signals for scale effect
 	mouse_entered.connect(_on_mouse_entered)
@@ -49,13 +50,14 @@ func _setup_ui():
 	
 	# Create unified CardWidget for visual display
 	card_widget = CardWidget.new()
+	card_widget.card_width = card_width
 	card_widget.set_anchors_preset(Control.PRESET_FULL_RECT)
 	card_widget.mouse_filter = Control.MOUSE_FILTER_IGNORE  # CardWidget is visual-only
 	card_panel.add_child(card_widget)
 	
 	# Make card draggable and interactive
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	custom_minimum_size = Vector2(210, 280)
+	custom_minimum_size = Vector2(card_width, 280)
 	
 	# Ensure card can receive input
 	set_process_input(true)

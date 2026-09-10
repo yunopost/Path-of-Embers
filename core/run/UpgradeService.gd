@@ -38,7 +38,7 @@ static func roll_upgrade_options_for_card(card_instance: DeckCardData, count: in
 		return []
 	
 	# Filter out already applied upgrades
-	var available = []
+	var available: Array[String] = []
 	for upgrade_id in pool:
 		if not card_instance.applied_upgrades.has(upgrade_id):
 			available.append(upgrade_id)

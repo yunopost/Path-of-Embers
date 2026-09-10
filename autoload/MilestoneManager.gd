@@ -113,17 +113,26 @@ func emit_game_event(event_type: String, payload: Dictionary = {}) -> void:
 	if event_type == "GOLD_GAINED":
 		_run_gold_accumulated += int(payload.get("amount", 0))
 
+	var previous_progress := _progress_counters.duplicate()
 	var milestones: Array[MilestoneData] = DataRegistry.get_all_milestones()
 	for milestone in milestones:
 		if completed_milestone_ids.has(milestone.id):
 			continue  # Already done — never re-evaluate
 		if _check_and_advance(milestone, event_type, payload):
 			_complete_milestone(milestone)
+	if _progress_counters != previous_progress:
+		_save_to_meta()  # Partial unlock progress must survive quitting too.
 
 func _check_and_advance(milestone: MilestoneData, event_type: String, payload: Dictionary) -> bool:
 	## Returns true if the milestone's condition is now fully met.
 	## For counting conditions, increments the counter when the event matches.
 	match milestone.condition_type:
+
+		"win_combats":
+			if event_type == "COMBAT_VICTORY":
+				_progress_counters[milestone.id] = _progress_counters.get(milestone.id, 0) + 1
+				return _progress_counters[milestone.id] >= milestone.condition_count
+			return false
 
 		"complete_run":
 			return event_type == "FINAL_BOSS_DEFEATED"
@@ -144,6 +153,8 @@ func _check_and_advance(milestone: MilestoneData, event_type: String, payload: D
 
 		"win_boss":
 			if event_type == "COMBAT_VICTORY":
+				if milestone.condition_params.has("act") and int(payload.get("act", -1)) != int(milestone.condition_params["act"]):
+					return false
 				var node_type = payload.get("node_type", -1)
 				if node_type == MapNodeData.NodeType.BOSS or node_type == MapNodeData.NodeType.FINAL_BOSS:
 					_progress_counters[milestone.id] = _progress_counters.get(milestone.id, 0) + 1

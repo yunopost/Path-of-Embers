@@ -1,0 +1,58 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 3 milestones, 5 encounters, 6 abilities
+=== signature_cards test ===
+PASS: Pursuit: playing Pursuit itself is Haste (0 ticks)
+PASS: Pursuit: next card (cost 0) is Haste too
+PASS: Pursuit: next card costing < 2 does not trigger the conditional draw
+PASS: Pursuit: next card costing >= 2 draws 2 cards
+PASS: Pursuit: next card costing >= 2 is also Haste (0 ticks)
+PASS: Deadly Strike: deals 10 damage
+PASS: Deadly Strike: applies Vulnerable 4 (3 left after its own 1-tick play)
+PASS: Cheap Shot: deals only base damage (5) with no preceding debuff
+PASS: Cheap Shot setup: enemy now carries Vulnerable
+PASS: Cheap Shot: deals base+bonus (10, x1.5 Vulnerable = 15) when the last card applied a debuff
+PASS: Shadow Step: gains 6 Block
+PASS: Shadow Step: sets a 1-cost discount on the next card
+PASS: Shadow Step: does NOT grant Haste to the next card
+PASS: Shadow Step: discounted next card is playable for 1 energy
+PASS: Shadow Step: discounted next card is not Haste (advances the clock normally)
+PASS: Bulwark setup: discard pile starts empty
+PASS: Bulwark: gains 0 Block with an empty discard pile
+PASS: Bulwark setup: discard pile has 10 filler cards
+PASS: Bulwark: gains Block equal to the discard pile size, uncapped
+PASS: Construct Punch: deals 0 damage with an empty draw pile
+PASS: Construct Punch: deals damage equal to the draw pile size, uncapped
+PASS: Hex: adds a Curse to hand
+PASS: Hex: exactly 1 Curse in hand after the first Hex
+PASS: Hex: deals 6 damage per Curse in hand, counted after adding (6 * 1 = 6)
+PASS: Hex: second Hex deals 6 * 2 = 12 damage (2 Curses now in hand)
+PASS: Dark Pact: with 0 Curses in hand, energy is unchanged
+PASS: Dark Pact: with 0 Curses in hand, hand size is unchanged (no draw)
+PASS: Dark Pact setup: 2 Curses in hand
+PASS: Dark Pact: gains 1 Energy per Curse exhausted (2)
+PASS: Dark Pact: exhausted Curses are no longer in hand
+PASS: Dark Pact: exhausted Curses are in the exhaust pile (not discard)
+PASS: Dark Pact: draws 1 card per Curse exhausted (2)
+PASS: Deadfall: deals 6 damage
+PASS: Deadfall: mills the top 2 cards of the draw pile into discard
+PASS: Deadfall: leaves the rest of the draw pile untouched
+PASS: Mill: milling 2 with only 1 card total mills just that 1 card (no crash, no duplicate)
+PASS: Mill: draw pile is empty afterward
+PASS: Mill: discard pile has exactly the 1 milled card
+PASS: Mill: milling with both piles empty mills nothing and doesn't crash
+PASS: Compost Heap: costs 1 energy to play
+PASS: Compost Heap: gains floor(discard/2) Energy (2)
+PASS: Compost Heap: exhausts itself instead of going to the discard pile
+PASS: Compost Heap: discard pile is unchanged by its own Exhaust (still 5)
+PASS: Compost Heap: Energy gain is capped at 4 even with a much larger discard pile
+PASS: Iron Shell: gains 5 Block (Agility not yet active for its own Block)
+PASS: Iron Shell: applies 2 Agility (1 left after its own 1-tick play)
+PASS: Agility: a later Block gain of 6 is increased to ceil(6*1.25)=8
+PASS: Iron Tide: deals ceil(7/2)=4 damage
+PASS: Iron Tide: does not spend Block
+--- signature_cards summary: 49 passed, 0 failed ---
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2514)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:795)

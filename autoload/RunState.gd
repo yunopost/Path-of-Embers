@@ -101,6 +101,9 @@ func _ready():
 	deck_model.draw_pile_changed.connect(func(): draw_pile_changed.emit())
 	deck_model.hand_changed.connect(func(): hand_changed.emit())
 	deck_model.discard_pile_changed.connect(func(): discard_pile_changed.emit())
+	deck_model.card_discarded.connect(func(instance_id: String):
+		QuestManager.emit_game_event("CARD_DISCARDED", {"instance_id": instance_id})
+	)
 
 func add_card_to_deck(card_id: String, owner_character_id: String = "", upgrades: Array[String] = [], transcended: bool = false, transcendent_card_id: String = ""):
 	## Add a card to the deck with optional upgrades and owner
@@ -595,6 +598,7 @@ func reset_run() -> void:
 	## Reset all run state to initial values (for New Game)
 	## Clears deck, relics, buffs, and delegates to managers for their state
 	
+	SaveManager.clear_combat_checkpoint()
 	# Clear party (delegates to PartyManager)
 	if PartyManager:
 		PartyManager.clear_party()

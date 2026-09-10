@@ -7,6 +7,19 @@ extends Node
 const SAVE_PATH = "user://save_run.json"
 const META_SAVE_PATH = "user://meta.json"
 
+## Resume contract: unfinished combat restarts from its pre-fight run state.
+## The live save may change during combat; this checkpoint remains immutable.
+var combat_checkpoint: Dictionary = {}
+
+func begin_combat_checkpoint(encounter: Dictionary) -> void:
+	if RunState.is_boss_rush or not combat_checkpoint.is_empty():
+		return
+	combat_checkpoint = {"run": _serialize_run_state().duplicate(true), "encounter": encounter.duplicate(true)}
+	AutoSaveManager.force_save("combat_checkpoint")
+
+func clear_combat_checkpoint() -> void:
+	combat_checkpoint.clear()
+
 signal save_completed
 signal load_completed
 signal save_failed(error_message: String)
@@ -14,6 +27,8 @@ signal load_failed(error_message: String)
 
 func save_game() -> bool:
 	var save_data = _serialize_run_state()
+	if not combat_checkpoint.is_empty():
+		save_data["combat_checkpoint"] = combat_checkpoint.duplicate(true)
 	
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
@@ -53,6 +68,12 @@ func load_game() -> bool:
 		return false
 	
 	var save_data = json.data
+	if not save_data is Dictionary:
+		load_failed.emit("Save must contain an object")
+		return false
+	combat_checkpoint = save_data.get("combat_checkpoint", {}).duplicate(true)
+	if not combat_checkpoint.is_empty():
+		save_data = combat_checkpoint["run"]
 	_deserialize_run_state(save_data)
 	
 	load_completed.emit()
@@ -130,13 +151,14 @@ func _serialize_run_state() -> Dictionary:
 		pending_rewards_serialized = RunState.pending_rewards.to_dict()
 	
 	return {
-		"version": 11,  # v11: Addendum B backpack (run_stash unchanged; backpack + pending_backpack_drop added).
+		"version": 12,  # v12: pre-combat checkpoint and applied equipment HP bonus.
 		"party_ids": PartyManager.party_ids.duplicate() if PartyManager else [],
 		"deck": deck_dict,  # Dictionary keyed by instance_id
 		"deck_order": deck_order_data,  # Stable ordering array
 		"gold": ResourceManager.gold if ResourceManager else 0,
 		"current_hp": ResourceManager.current_hp if ResourceManager else 50,
 		"max_hp": ResourceManager.max_hp if ResourceManager else 50,
+		"equipment_hp_bonus": ResourceManager.equipment_hp_bonus,
 		"block": ResourceManager.block if ResourceManager else 0,
 		"energy": ResourceManager.energy if ResourceManager else 3,  # No max_energy: energy has no ceiling (Design ruling, 10 Sep 2026).
 		"upgrade_points": ResourceManager.upgrade_points if ResourceManager else 0,
@@ -282,11 +304,6 @@ func _deserialize_run_state(save_data: Dictionary):
 			MapManager.set_map_data(map_data)
 		if save_data.has("current_node_id"):
 			MapManager.set_current_node(save_data["current_node_id"])
-		if save_data.has("available_next_node_ids"):
-			var next_nodes_array = save_data["available_next_node_ids"]
-			MapManager.available_next_node_ids.clear()
-			for item in next_nodes_array:
-				MapManager.available_next_node_ids.append(str(item))
 	
 	# Restore quests (convert dictionaries to QuestState objects)
 	if save_data.has("quests") and QuestManager:
@@ -385,6 +402,21 @@ func _deserialize_run_state(save_data: Dictionary):
 		ModifierManager._run_active.clear()
 		for m in save_data["active_modifiers"]:
 			ModifierManager._run_active.append(str(m))
+
+	if save_data.has("equipment_hp_bonus"):
+		ResourceManager.equipment_hp_bonus = int(save_data["equipment_hp_bonus"])
+	else:
+		# v11 had no permanent max-HP rewards. Treat excess above party base
+		# as the old equipment contribution, including accidental accumulation.
+		var base_hp := 0
+		for character_id in PartyManager.party_ids:
+			var character = DataRegistry.get_character(character_id)
+			if character:
+				base_hp += character.hp_base
+		base_hp = int(float(base_hp) * ModifierManager.get_player_hp_multiplier())
+		ResourceManager.equipment_hp_bonus = maxi(0, ResourceManager.max_hp - base_hp) if base_hp > 0 else 0
+	# Recompute only after quests are restored; never trust stale serialized edges.
+	MapManager._update_available_nodes()
 
 # ── Meta save (user://meta.json) ──────────────────────────────────────────────
 # Stores persistent cross-run data: equipment stash, milestones, and unlocks.

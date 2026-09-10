@@ -153,10 +153,10 @@ func _build_stats_text() -> String:
 	var lines: Array = []
 	if RunState:
 		var party_names: Array = []
-		for char_id in RunState.party:
+		for char_id in PartyManager.party_ids:
 			party_names.append(DataRegistry.get_character_display_name(char_id) if DataRegistry else char_id)
 		lines.append("Party: %s" % ", ".join(party_names))
-		lines.append("Deck size: %d" % RunState.deck_model.get_deck_size() if RunState.deck_model else "")
+		lines.append("Deck size: %d" % RunState.deck.size())
 	if ResourceManager:
 		lines.append("Gold remaining: %d" % ResourceManager.gold)
 	if MapManager and MapManager.current_map:

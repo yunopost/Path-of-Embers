@@ -5,6 +5,7 @@ class_name CardWidget
 ## Handles visual display only - no interaction logic
 
 var deck_card_data: DeckCardData = null
+var card_width: float = 210.0
 
 ## Optional live-preview context (Job: real-time card numbers). When set, the
 ## Damage/Block/Heal/Energy lines are computed by CardRules.get_live_preview
@@ -183,7 +184,7 @@ func _make_flat_style(bg: Color, border: Color = Color.TRANSPARENT,
 	return s
 
 func _setup_ui():
-	custom_minimum_size = Vector2(210, 280)
+	custom_minimum_size = Vector2(card_width, 280)
 
 	# Outer panel — carries the type-colored border and background
 	card_panel = Panel.new()

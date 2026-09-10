@@ -11,6 +11,7 @@ class_name MilestoneData
 ## ── Supported condition_type values ──────────────────────────────────────
 ##   "complete_run"           — finish a full run (FINAL_BOSS_DEFEATED event)
 ##   "complete_nodes"         — complete condition_count nodes total
+##   "win_combats"            — win condition_count combats total
 ##   "win_elites"             — defeat condition_count elite nodes
 ##   "win_boss"               — defeat any boss node (condition_count times)
 

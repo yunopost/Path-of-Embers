@@ -18,6 +18,7 @@ var current_node_id: String = ""  # ID of currently selected node
 var available_next_node_ids: Array[String] = []  # IDs of nodes that can be selected next
 
 func _ready():
+	QuestManager.quests_changed.connect(_update_available_nodes)
 	act = 1
 	map = "Act1"
 	node_position = 0
@@ -79,7 +80,7 @@ func mark_current_node_completed() -> void:
 		return
 	
 	var node = current_map.get_node(current_node_id)
-	if node:
+	if node and not node.is_completed:
 		node.is_completed = true
 		_update_available_nodes()
 		# Emit map_changed to refresh map display
@@ -114,7 +115,11 @@ func _update_available_nodes():
 		# Get nodes connected from current node
 		var current_node = current_map.get_node(current_node_id)
 		if current_node:
-			available_next_node_ids = current_node.connected_to.duplicate()
+			if current_node.is_completed:
+				available_next_node_ids = current_node.connected_to.duplicate()
+			else:
+				# Re-enter an unfinished encounter; never skip it on Continue.
+				available_next_node_ids.append(current_node_id)
 	
 	# Filter out completed nodes (can't go back)
 	available_next_node_ids = available_next_node_ids.filter(func(id): return not current_map.get_node(id).is_completed)

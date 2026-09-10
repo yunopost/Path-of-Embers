@@ -1049,7 +1049,9 @@ func get_card_display_name(card_id: String) -> String:
 
 func get_transcendent_card_ids() -> Array[String]:
 	## Get all available transcendent placeholder card IDs
-	return transcendent_card_cache.keys()
+	var ids: Array[String] = []
+	ids.assign(transcendent_card_cache.keys())
+	return ids
 
 func get_transcendent_card(card_id: String) -> CardData:
 	## Get a transcendent card by ID

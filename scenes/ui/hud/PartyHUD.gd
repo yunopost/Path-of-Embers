@@ -57,6 +57,7 @@ func refresh():
 			var char_id = PartyManager.party_ids[i]
 			var block = _create_character_hud_block(char_id)
 			party_row.add_child(block)
+			block.initialize(char_id)
 			_character_hud_blocks.append(block)
 
 		# If a combat is already in progress (e.g. refresh() triggered mid-fight),
@@ -115,9 +116,6 @@ func _create_character_hud_block(character_id: String) -> Control:
 	if not block:
 		push_error("PartyHUD: Failed to instantiate CharacterHUDBlock scene")
 		return null
-	
-	# Initialize block with character data
-	block.initialize(character_id)
 	
 	return block
 

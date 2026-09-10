@@ -46,11 +46,16 @@ func initialize(reward_data: RewardBundle = null):
 	upgrade_claimed = (reward_bundle.upgrade_count <= 0)
 	heal_applied = false  # Heal is auto-applied on display, so reset this
 	equipment_claimed = reward_bundle.equipment_drop_id.is_empty() or reward_bundle.equipment_claimed
+	# Also repair saved boss bundles from before the temporary reward ruling.
+	if reward_bundle.is_transcendence_upgrade and DataRegistry.get_transcendent_card_ids().is_empty():
+		reward_bundle.is_transcendence_upgrade = false
+		_persist_claim()
 
 	# Auto-grant upgrade points from this bundle (Phase 4)
 	if reward_bundle.upgrade_points > 0 and ResourceManager:
 		ResourceManager.add_upgrade_points(reward_bundle.upgrade_points)
 		reward_bundle.upgrade_points = 0  # Consume so reloads don't double-grant
+		_persist_claim()
 
 	# Setup UI
 	_setup_ui()
@@ -251,6 +256,7 @@ func _on_claim_equipment(equipment_id: String):
 func _finish_equipment_claim():
 	reward_bundle.equipment_claimed = true
 	equipment_claimed = true
+	_persist_claim()
 	_update_continue_button()
 	_refresh_reward_sections()
 
@@ -307,10 +313,11 @@ func _on_claim_gold(amount: int):
 	if gold_claimed:
 		return
 	
-	RunState.set_gold(RunState.gold + amount)
+	ResourceManager.set_gold(ResourceManager.gold + reward_bundle.gold)
 	# Remove gold from bundle to prevent re-claiming on reload
 	reward_bundle.gold = 0
 	gold_claimed = true
+	_persist_claim()
 	_update_continue_button()
 	_refresh_reward_sections()
 
@@ -324,6 +331,7 @@ func _on_choose_card(card_id: String):
 	# Clear card choices from bundle to prevent re-claiming on reload
 	reward_bundle.card_choices.clear()
 	card_claimed = true
+	_persist_claim()
 	_update_continue_button()
 	_refresh_reward_sections()
 
@@ -335,6 +343,7 @@ func _on_skip_cards():
 	# Clear card choices from bundle to prevent re-claiming on reload
 	reward_bundle.card_choices.clear()
 	card_claimed = true
+	_persist_claim()
 	_update_continue_button()
 	_refresh_reward_sections()
 
@@ -378,6 +387,9 @@ func _on_upgrade_flow_close():
 	## Close the upgrade flow panel
 	if upgrade_flow_panel:
 		upgrade_flow_panel.visible = false
+	upgrade_claimed = reward_bundle.upgrade_count <= 0
+	_persist_claim()
+	refresh_from_state()
 
 # Upgrade flow is now handled by UpgradeFlowPanel scene
 # These methods are called via signals from the panel
@@ -420,6 +432,7 @@ func _on_upgrade_option_selected(upgrade_id: String):
 
 	# Decrement upgrade count
 	reward_bundle.upgrade_count -= 1
+	_persist_claim()
 	
 	# Check if more upgrades needed
 	if reward_bundle.upgrade_count <= 0:
@@ -440,8 +453,14 @@ func _apply_heal(amount: int):
 		return
 	
 	ResourceManager.heal(amount)
+	reward_bundle.heal_amount = 0
 	heal_applied = true
+	_persist_claim()
 	_update_continue_button()
+
+func _persist_claim() -> void:
+	## Persist both the transaction and its consumed bundle together.
+	AutoSaveManager.force_save("reward_claimed")
 
 func _refresh_reward_sections():
 	## Refresh reward sections to update button states
@@ -475,21 +494,15 @@ func _on_continue_pressed():
 
 func _finish_rewards():
 	## Complete reward flow: clear pending rewards, then either transition act or return to map.
-	# Force save before clearing pending rewards (rewards finalized)
-	if AutoSaveManager:
-		AutoSaveManager.force_save("rewards_finalized")
-
 	# Determine what node type was just completed before clearing state
 	var completed_node: MapNodeData = null
 	if MapManager and MapManager.current_map and not MapManager.current_node_id.is_empty():
 		completed_node = MapManager.current_map.get_node(MapManager.current_node_id)
 
-	# Clear pending rewards
-	RunState.clear_pending_rewards()
-
 	# Act transition: completing a BOSS in acts 1-2 advances to the next act
 	if completed_node:
 		if completed_node.node_type == MapNodeData.NodeType.FINAL_BOSS:
+			RunState.clear_pending_rewards()
 			# Run is over — emit event, go to victory screen
 			# Addendum B §2: run win -- the entire backpack survives to the
 			# persistent stash. Must happen before RunState.reset_run().
@@ -504,6 +517,8 @@ func _finish_rewards():
 			return
 
 	# Default: return to map
+	RunState.clear_pending_rewards()
+	AutoSaveManager.force_save("rewards_finalized")
 	ScreenManager.go_to_map()
 
 const ACT_FLAVOUR: Dictionary = {
@@ -542,6 +557,7 @@ func _show_act_transition() -> void:
 	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn.pressed.connect(func():
 		overlay.queue_free()
+		RunState.clear_pending_rewards()
 		if MapManager:
 			MapManager.transition_to_next_act()
 		ScreenManager.go_to_map()

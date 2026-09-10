@@ -182,6 +182,7 @@ func start_combat(enemy_data: Array):
 		RunState.boss_rush_stats["enemy_total_hp"] = total_hp
 
 	# Sync player HP with ResourceManager (via RunState for backward compatibility)
+	ResourceManager.sync_equipment_hp()
 	player_stats.current_hp = ResourceManager.current_hp if ResourceManager else RunState.current_hp
 	player_stats.max_hp = ResourceManager.max_hp if ResourceManager else RunState.max_hp
 
@@ -219,18 +220,12 @@ func start_combat(enemy_data: Array):
 			var str_bonus: int = int(mods.get("str", 0))
 			var def_bonus: int = int(mods.get("def", 0))
 			var spirit_bonus: int = int(mods.get("spirit", 0))
-			var hp_bonus: int = int(mods.get("hp", 0))
 			if str_bonus > 0:
 				character_stats[char_id].apply_status(StatusEffectType.STRENGTH, str_bonus)
 			if def_bonus > 0:
 				character_stats[char_id].apply_status(StatusEffectType.DEXTERITY, def_bonus)
 			if spirit_bonus > 0:
 				character_stats[char_id].apply_status(StatusEffectType.FAITH, spirit_bonus)
-			if hp_bonus > 0:
-				player_stats.max_hp += hp_bonus
-				player_stats.current_hp = min(player_stats.current_hp + hp_bonus, player_stats.max_hp)
-				if ResourceManager:
-					ResourceManager.set_hp(player_stats.current_hp, player_stats.max_hp)
 
 	# Player starts with 3 energy and a 5-card hand. No other turn setup (spec §10.3) —
 	# no block reset (there is no block yet), no status ticking, no pet cycle hooks.
@@ -478,11 +473,6 @@ func _pay_discard_cost(discard_amount: int, exclude_instance_id: String = "") ->
 	## Pay discard cost by discarding cards from hand
 	## exclude_instance_id: Instance ID to exclude from discarding (the card being played)
 	## Returns number of cards actually discarded
-	var hand_size = RunState.deck_model.hand.size()
-	if hand_size <= discard_amount:
-		# Not enough cards (shouldn't happen if can_play_card worked)
-		return 0
-	
 	# Get cards to discard (exclude the card being played)
 	var cards_available_to_discard: Array[String] = []
 	for card_id in RunState.deck_model.hand:
@@ -500,18 +490,8 @@ func _pay_discard_cost(discard_amount: int, exclude_instance_id: String = "") ->
 			var card_to_discard_id = cards_available_to_discard[cards_available_to_discard.size() - 1]
 			cards_available_to_discard.pop_back()
 			
-			var hand_index = RunState.deck_model.hand.find(card_to_discard_id)
-			if hand_index >= 0:
-				RunState.deck_model.hand.remove_at(hand_index)
-				# Add to discard pile
-				var discard_index = RunState.deck_model.discard_pile.find(card_to_discard_id)
-				if discard_index < 0:
-					RunState.deck_model.discard_pile.append(card_to_discard_id)
+			if RunState.deck_model.discard_card(card_to_discard_id):
 				discarded += 1
-	
-	if discarded > 0:
-		RunState.deck_model.hand_changed.emit()
-		RunState.deck_model.discard_pile_changed.emit()
 	
 	return discarded
 

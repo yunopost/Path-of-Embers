@@ -12,6 +12,7 @@ signal upgrade_points_changed
 var gold: int = 0
 var current_hp: int = 50
 var max_hp: int = 50
+var equipment_hp_bonus: int = 0  # Portion of max_hp already supplied by equipment.
 var block: int = 0
 var energy: int = 3  # Energy has no ceiling (Design ruling, 10 Sep 2026) — see set_energy().
 var upgrade_points: int = 0  # Run-wide upgrade currency (Phase 4)
@@ -31,11 +32,24 @@ func set_gold(value: int):
 		gold_changed.emit()
 
 func set_hp(current: int, maximum: int = -1):
-	if current_hp != current:
+	if current_hp != current or (maximum > 0 and max_hp != maximum):
 		current_hp = current
 		if maximum > 0:
 			max_hp = maximum
 		hp_changed.emit()
+
+func sync_equipment_hp() -> void:
+	## Replace the previously applied bonus; never add it again each fight.
+	var bonus := 0
+	for character_id in PartyManager.party_ids:
+		for equipment_id in RunState.equipment_slots.get(character_id, {}).values():
+			var equipment = DataRegistry.get_equipment(equipment_id)
+			if equipment:
+				bonus += int(equipment.stat_modifiers.get("hp", 0))
+	var delta := bonus - equipment_hp_bonus
+	equipment_hp_bonus = bonus
+	if delta != 0:
+		set_hp(maxi(1, current_hp + delta), maxi(1, max_hp + delta))
 
 func set_block(value: int):
 	if block != value:
@@ -72,6 +86,7 @@ func spend_upgrade_points(amount: int) -> bool:
 
 func reset_resources():
 	## Reset all resources to default values (used by reset_run when no party data available)
+	equipment_hp_bonus = 0
 	set_gold(0)
 	set_hp(50, 50)
 	set_block(0)
@@ -86,6 +101,7 @@ func heal(amount: int) -> void:
 func reset_resources_for_party(party_max_hp: int) -> void:
 	## Reset all resources, seeding max_hp from the party's combined hp_base.
 	## Called by RunState.generate_starter_deck() after the party is known.
+	equipment_hp_bonus = 0
 	set_gold(0)
 	if ModifierManager:
 		party_max_hp = int(float(party_max_hp) * ModifierManager.get_player_hp_multiplier())
@@ -93,4 +109,3 @@ func reset_resources_for_party(party_max_hp: int) -> void:
 	set_block(0)
 	set_energy(3)
 	set_upgrade_points(0)
-

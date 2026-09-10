@@ -60,6 +60,7 @@ func _ready():
 		play_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	_apply_combat_ui_style()
+	resized.connect(_update_hand)
 
 	# Initialize screen (architecture rule 2.1)
 	initialize()
@@ -69,7 +70,7 @@ func _apply_combat_ui_style() -> void:
 
 	# Hand tray: reduce overlap, add subtle background panel
 	if hand_container:
-		hand_container.add_theme_constant_override("separation", -30)
+		hand_container.add_theme_constant_override("separation", 8)
 		var hand_area = hand_container.get_parent()
 		if hand_area:
 			var tray = Panel.new()
@@ -174,6 +175,9 @@ func refresh_from_state():
 
 func _start_combat():
 	## Build an encounter from the current map node (act + node type).
+	if not SaveManager.combat_checkpoint.is_empty():
+		_start_combat_with_data(SaveManager.combat_checkpoint["encounter"])
+		return
 	var act: int = MapManager.act if MapManager else 1
 	var node_type: int = MapNodeData.NodeType.FIGHT
 	if MapManager and MapManager.has_method("get_current_node_type"):
@@ -190,6 +194,9 @@ func _start_combat_with_data(encounter_data: Dictionary):
 			{"enemy_id": "ash_man", "count": 1}
 		]
 	
+	if MapManager.current_map and not RunState.is_boss_rush:
+		ResourceManager.sync_equipment_hp()
+		SaveManager.begin_combat_checkpoint({"enemies": enemy_data})
 	combat_controller.start_combat(enemy_data)
 	_setup_enemies()
 	_setup_character_portrait()
@@ -321,7 +328,7 @@ func _setup_player_block_label() -> void:
 	player_block_label = Label.new()
 	player_block_label.name = "PlayerBlockLabel"
 	player_block_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	player_block_label.tooltip_text = "Block absorbs damage. It lasts until an enemy acts, then it shatters -- put it up just in time."
+	player_block_label.tooltip_text = "Block absorbs damage and remains until damage consumes it."
 	player_block_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	_update_player_block_label(combat_controller.player_stats.block)
 
@@ -679,7 +686,7 @@ func _populate_intent_row(intent_row: HBoxContainer, intent: IntentData) -> void
 		intent_row.add_child(item)
 
 func _create_enemy_display(enemy: Enemy) -> Control:
-	var enemy_panel = Panel.new()
+	var enemy_panel = PanelContainer.new()
 	enemy_panel.custom_minimum_size = Vector2(150, 200)
 	enemy_panel.name = "Enemy_" + enemy.enemy_id
 	enemy_panel.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -688,11 +695,6 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 	enemy_panel.set_meta("enemy", enemy)
 	
 	var vbox = VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 5
-	vbox.offset_top = 5
-	vbox.offset_right = -5
-	vbox.offset_bottom = -5
 	enemy_panel.add_child(vbox)
 	
 	# Sprite (above name/timer/intent), sized to fit the panel
@@ -704,7 +706,7 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 			sprite_rect.texture = sprite_tex
 			sprite_rect.custom_minimum_size = Vector2(0, 110)
 			sprite_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			sprite_rect.expand_mode = TextureRect.EXPAND_FIT_HEIGHT_PROPORTIONAL
+			sprite_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			sprite_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			sprite_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			vbox.add_child(sprite_rect)
@@ -810,6 +812,8 @@ func _update_hand():
 	# Create card UIs for each card in hand
 	# Use deck_model.get_hand_cards() which handles instance_id lookup
 	var hand_cards: Array[DeckCardData] = RunState.deck_model.get_hand_cards()
+	var available_width := maxf(size.x, get_viewport_rect().size.x)
+	var width_per_card := clampf((available_width - 80.0 - max(0, hand_cards.size() - 1) * 8.0) / max(1, hand_cards.size()), 120.0, 210.0)
 	
 	for deck_card in hand_cards:
 		# Double-check type before calling setup_card
@@ -817,6 +821,7 @@ func _update_hand():
 			push_error("CombatScreen: Expected DeckCardData but got %s" % typeof(deck_card))
 			continue
 		var card_ui = CardUI.new()
+		card_ui.card_width = width_per_card
 		hand_container.add_child(card_ui)
 		card_ui.setup_card(deck_card)
 		card_ui.set_combat_controller(combat_controller)
@@ -912,6 +917,7 @@ func _on_player_defeated():
 	# "Main Menu" buttons call RunState.reset_run() and wipe the backpack.
 	if RunState:
 		RunState.settle_backpack_on_loss()
+	SaveManager.clear_combat_checkpoint()
 	ScreenManager.go_to_game_over()
 
 func _on_combat_started():
@@ -992,13 +998,10 @@ func _end_combat_and_transition():
 	# Emit COMBAT_VICTORY event for quest system (before marking node completed)
 	if QuestManager:
 		QuestManager.emit_game_event("COMBAT_VICTORY", {
+			"act": MapManager.act,
 			"node_id": MapManager.current_node_id if MapManager else "",
 			"node_type": MapManager.get_current_node_type() if MapManager else MapNodeData.NodeType.FIGHT
 		})
-
-	# Mark node as completed (this also emits NODE_COMPLETED event)
-	if MapManager:
-		MapManager.mark_current_node_completed()
 
 	# Compute rewards based on node's reward flags
 	var current_node = null
@@ -1016,6 +1019,11 @@ func _end_combat_and_transition():
 
 	# Set pending rewards
 	RunState.set_pending_rewards(bundle)
+	# Completion and rewards are saved together; no completed-boss save may
+	# exist without its rewards or with an obsolete pre-fight checkpoint.
+	SaveManager.clear_combat_checkpoint()
+	if MapManager:
+		MapManager.mark_current_node_completed()
 
 	# Transition to rewards screen
 	ScreenManager.go_to_rewards(bundle)

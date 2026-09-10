@@ -1,0 +1,32 @@
+[
+  {
+    "act": 3,
+    "actions": 0,
+    "deck": 54,
+    "hp": 81,
+    "outcome": "victory",
+    "row": 15,
+    "transitions": 137,
+    "trial": 0
+  },
+  {
+    "act": 3,
+    "actions": 0,
+    "deck": 53,
+    "hp": 81,
+    "outcome": "victory",
+    "row": 15,
+    "transitions": 138,
+    "trial": 1
+  },
+  {
+    "act": 3,
+    "actions": 0,
+    "deck": 45,
+    "hp": 81,
+    "outcome": "victory",
+    "row": 15,
+    "transitions": 134,
+    "trial": 2
+  }
+]

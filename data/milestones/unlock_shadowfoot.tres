@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MilestoneData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/MilestoneData.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "unlock_shadowfoot"
+title = "First Footsteps"
+description = "Win three combats across your runs."
+unlock_hint = "Win 3 combats to unlock."
+condition_type = "win_combats"
+condition_count = 3
+unlock_type = "character"
+unlock_target = "warrior_2"

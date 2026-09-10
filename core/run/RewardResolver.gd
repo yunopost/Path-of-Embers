@@ -53,7 +53,9 @@ static func build_rewards_for_node(node: MapNodeData) -> RewardBundle:
 		bundle.gold = 50
 		bundle.upgrade_count = 1
 		bundle.upgrade_points = 12
-		bundle.is_transcendence_upgrade = true  # Special flag for transcendence upgrades
+		# Temporary demo ruling (Aaron, 10 Sep 2026): use a normal upgrade
+		# until transcendent card content exists; retain the 12 points and loot.
+		bundle.is_transcendence_upgrade = not DataRegistry.get_transcendent_card_ids().is_empty()
 		return bundle
 
 	if is_elite_node:
@@ -194,4 +196,3 @@ static func _generate_card_choices(count: int, node_type: MapNodeData.NodeType) 
 	RunState.update_rare_pity_from_rewards(choices)
 	
 	return choices
-

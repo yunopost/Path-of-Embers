@@ -1,0 +1,209 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 3 milestones, 5 encounters, 6 abilities
+PASS: unchanged equipment caps HP at 81, fight 0
+PASS: unchanged equipment preserves attrition, fight 0
+PASS: unchanged equipment caps HP at 81, fight 1
+PASS: unchanged equipment preserves attrition, fight 1
+PASS: unchanged equipment caps HP at 81, fight 2
+PASS: unchanged equipment preserves attrition, fight 2
+PASS: HP save succeeds
+PASS: HP load succeeds
+PASS: reload does not add equipment HP again
+PASS: maximum-only HP changes work
+PASS: legacy accumulation repaired, missing HP preserved
+PASS: overflow and mill do not count as explicit discards
+PASS: ability may pay exactly the remaining hand
+PASS: each discarded card advances quest once
+PASS: failed discard does not advance quest
+QuestManager: Quest 'witch_quest_1' completed for character 'witch'
+QuestManager: Quest reward — +30 gold
+PASS: Curse Weaver completes through gameplay discard path
+AutoSave: saved (force:node_completed)
+PASS: completed discard quest opens final boss gate
+PASS: typed pool returns 3 remaining upgrades
+PASS: typed pool returns 2 remaining upgrades
+PASS: typed pool returns 1 remaining upgrades
+PASS: typed pool returns 0 remaining upgrades
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:reward_claimed)
+AutoSave: saved (force:reward_claimed)
+PASS: automatic heal and points applied
+AutoSave: saved (force:reward_claimed)
+PASS: gold claimed once and Continue awaits other rewards
+PASS: partial reward reload succeeds
+PASS: reload does not repeat gold/heal/points
+AutoSave: saved (force:reward_claimed)
+PASS: card reward survives reload without duplication
+AutoSave: saved (force:reward_claimed)
+PASS: equipment claim survives reload
+AutoSave: saved (force:card_upgraded)
+AutoSave: saved (force:reward_claimed)
+PASS: upgrade and consumed count survive reload
+PASS: upgrade currency survives reload
+PASS: Continue enables after all reward categories resolved
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:reward_claimed)
+PASS: skipped card choice persists
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:reward_claimed)
+PASS: saved unavailable transcendence becomes normal upgrade
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:card_transcended)
+AutoSave: saved (force:reward_claimed)
+PASS: boss transcendence offers usable buttons
+PASS: boss upgrade refreshes Continue
+PASS: transcendence and consumed reward persist
+ERROR: INVALID CARD INSTANCE (context=CardWidget._update_display): CardData not found for card_id='test_transcend'. instance_id=8eaac0ce-8c40-3940-1cac-a5ca7fd09892
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] validate_card_instance (res://core/deck/CardValidation.gd:29)
+       [1] _update_display (res://core/ui/CardWidget.gd:409)
+       [2] setup_card (res://core/ui/CardWidget.gd:384)
+       [3] _update_display (res://scenes/ui/cards/DeckCardWidget.gd:67)
+ERROR: INVALID CARD INSTANCE (context=CardWidget._update_display): CardData not found for card_id='test_transcend'. instance_id=8eaac0ce-8c40-3940-1cac-a5ca7fd09892
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] validate_card_instance (res://core/deck/CardValidation.gd:29)
+       [1] _update_display (res://core/ui/CardWidget.gd:409)
+       [2] setup_card (res://core/ui/CardWidget.gd:384)
+       [3] _update_display (res://scenes/ui/cards/DeckCardWidget.gd:67)
+ERROR: INVALID CARD INSTANCE (context=CardWidget._update_display): CardData not found for card_id='test_transcend'. instance_id=8eaac0ce-8c40-3940-1cac-a5ca7fd09892
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] validate_card_instance (res://core/deck/CardValidation.gd:29)
+       [1] _update_display (res://core/ui/CardWidget.gd:409)
+       [2] setup_card (res://core/ui/CardWidget.gd:384)
+       [3] _update_display (res://scenes/ui/cards/DeckCardWidget.gd:67)
+PASS: fresh profile retains starting three
+PASS: three unlock milestones registered
+PASS: partial milestone progress persisted
+PASS: Shadowfoot locked before third combat
+MilestoneManager: 'unlock_grove' completed — unlocking character 'grove'
+MilestoneManager: 'unlock_shadowfoot' completed — unlocking character 'warrior_2'
+PASS: third combat unlocks Shadowfoot
+PASS: elite victory unlocks Grove
+PASS: later boss does not satisfy Act I requirement
+MilestoneManager: 'unlock_golemancer' completed — unlocking character 'golemancer'
+PASS: all six characters unlocked persistently
+PASS: parent creates three HUD slots
+PASS: parent initializes real name and portrait
+PASS: parent initializes real name and portrait
+PASS: parent initializes real name and portrait
+ScreenManager: Loading scene: combat from path: res://scenes/screens/CombatScreen.tscn
+AutoSave: saved (force:combat_checkpoint)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+PASS: checkpoint captured before fight 0
+ScreenManager: Loading scene: main_menu from path: res://scenes/screens/Main.tscn
+Main.gd: Main menu _ready() called
+AutoSave: saved (force:scene_changed:main_menu)
+ScreenManager: Successfully loaded scene: main_menu
+Main.gd: Nodes found - new_game: true, continue: true
+Main.gd: Main menu initialization complete - should be visible now
+ScreenManager: Loading scene: combat from path: res://scenes/screens/CombatScreen.tscn
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+PASS: Continue re-enters unfinished fight 0
+PASS: Continue restores pre-fight HP 0
+PASS: checkpoint is a deep snapshot 0
+PASS: unfinished node cannot expose successors 0
+ScreenManager: Loading scene: main_menu from path: res://scenes/screens/Main.tscn
+Main.gd: Main menu _ready() called
+AutoSave: saved (force:scene_changed:main_menu)
+ScreenManager: Successfully loaded scene: main_menu
+Main.gd: Nodes found - new_game: true, continue: true
+Main.gd: Main menu initialization complete - should be visible now
+ScreenManager: Loading scene: combat from path: res://scenes/screens/CombatScreen.tscn
+AutoSave: saved (force:combat_checkpoint)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+PASS: checkpoint captured before fight 4
+ScreenManager: Loading scene: main_menu from path: res://scenes/screens/Main.tscn
+Main.gd: Main menu _ready() called
+AutoSave: saved (force:scene_changed:main_menu)
+ScreenManager: Successfully loaded scene: main_menu
+Main.gd: Nodes found - new_game: true, continue: true
+Main.gd: Main menu initialization complete - should be visible now
+ScreenManager: Loading scene: combat from path: res://scenes/screens/CombatScreen.tscn
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+PASS: Continue re-enters unfinished fight 4
+PASS: Continue restores pre-fight HP 4
+PASS: checkpoint is a deep snapshot 4
+PASS: unfinished node cannot expose successors 4
+ScreenManager: Loading scene: main_menu from path: res://scenes/screens/Main.tscn
+Main.gd: Main menu _ready() called
+AutoSave: saved (force:scene_changed:main_menu)
+ScreenManager: Successfully loaded scene: main_menu
+Main.gd: Nodes found - new_game: true, continue: true
+Main.gd: Main menu initialization complete - should be visible now
+ScreenManager: Loading scene: combat from path: res://scenes/screens/CombatScreen.tscn
+AutoSave: saved (force:combat_checkpoint)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+PASS: checkpoint captured before fight 4
+ScreenManager: Loading scene: main_menu from path: res://scenes/screens/Main.tscn
+Main.gd: Main menu _ready() called
+AutoSave: saved (force:scene_changed:main_menu)
+ScreenManager: Successfully loaded scene: main_menu
+Main.gd: Nodes found - new_game: true, continue: true
+Main.gd: Main menu initialization complete - should be visible now
+ScreenManager: Loading scene: combat from path: res://scenes/screens/CombatScreen.tscn
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+PASS: Continue re-enters unfinished fight 4
+PASS: Continue restores pre-fight HP 4
+PASS: checkpoint is a deep snapshot 4
+PASS: unfinished node cannot expose successors 4
+ScreenManager: Loading scene: main_menu from path: res://scenes/screens/Main.tscn
+Main.gd: Main menu _ready() called
+AutoSave: saved (force:scene_changed:main_menu)
+ScreenManager: Successfully loaded scene: main_menu
+Main.gd: Nodes found - new_game: true, continue: true
+Main.gd: Main menu initialization complete - should be visible now
+ScreenManager: Loading scene: combat from path: res://scenes/screens/CombatScreen.tscn
+AutoSave: saved (force:combat_checkpoint)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+PASS: checkpoint captured before fight 5
+ScreenManager: Loading scene: main_menu from path: res://scenes/screens/Main.tscn
+Main.gd: Main menu _ready() called
+AutoSave: saved (force:scene_changed:main_menu)
+ScreenManager: Successfully loaded scene: main_menu
+Main.gd: Nodes found - new_game: true, continue: true
+Main.gd: Main menu initialization complete - should be visible now
+ScreenManager: Loading scene: combat from path: res://scenes/screens/CombatScreen.tscn
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+PASS: Continue re-enters unfinished fight 5
+PASS: Continue restores pre-fight HP 5
+PASS: checkpoint is a deep snapshot 5
+PASS: unfinished node cannot expose successors 5
+ScreenManager: Loading scene: main_menu from path: res://scenes/screens/Main.tscn
+Main.gd: Main menu _ready() called
+AutoSave: saved (force:scene_changed:main_menu)
+ScreenManager: Successfully loaded scene: main_menu
+Main.gd: Nodes found - new_game: true, continue: true
+Main.gd: Main menu initialization complete - should be visible now
+ScreenManager: Loading scene: encounter from path: res://scenes/screens/EncounterScreen.tscn
+AutoSave: saved (force:scene_changed:encounter)
+ScreenManager: Successfully loaded scene: encounter
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:node_completed)
+ScreenManager: Loading scene: rewards from path: res://scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+PASS: encounter choice completes the node
+PASS: encounter choice routes to rewards
+PASS: encounter cannot be repeated for rewards
+ScreenManager: Loading scene: game_over from path: res://scenes/screens/GameOverScreen.tscn
+AutoSave: saved (force:scene_changed:game_over)
+ScreenManager: Successfully loaded scene: game_over
+PASS: defeat screen shows current party and deck
+--- release_blockers summary: 71 passed, 0 failed ---
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2514)
+ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:795)

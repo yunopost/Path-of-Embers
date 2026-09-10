@@ -19,6 +19,7 @@ signal draw_pile_changed()
 signal hand_changed()
 signal discard_pile_changed()
 signal exhaust_pile_changed()
+signal card_discarded(instance_id: String)
 signal hand_overflow(burned_instance_ids: Array[String])  ## Cards drawn while hand was full, sent to discard instead
 
 func initialize(p_instance_ids: Array[String]):
@@ -125,10 +126,20 @@ func mill(count: int) -> Array[String]:
 
 func discard_hand():
 	## Move all cards from hand to discard pile
-	discard_pile.append_array(hand)
-	hand.clear()
+	for instance_id in hand.duplicate():
+		discard_card(instance_id)
+
+func discard_card(instance_id: String) -> bool:
+	## Explicit hand discard (cost/effect). Playing, milling, overflow and
+	## exhausting cards are different operations and do not count as discards.
+	if not hand.has(instance_id):
+		return false
+	hand.erase(instance_id)
+	discard_pile.append(instance_id)
 	hand_changed.emit()
 	discard_pile_changed.emit()
+	card_discarded.emit(instance_id)
+	return true
 
 func get_draw_pile_count() -> int:
 	return draw_pile.size()

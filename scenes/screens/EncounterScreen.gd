@@ -88,6 +88,7 @@ func _on_choice_pressed(choice: Dictionary):
 
 	if RunState:
 		RunState.set_pending_rewards(bundle)
+	MapManager.mark_current_node_completed()
 	ScreenManager.go_to_rewards(bundle)
 
 func _on_fallback_continue():

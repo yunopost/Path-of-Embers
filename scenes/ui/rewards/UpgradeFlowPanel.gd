@@ -37,7 +37,7 @@ func _show_card_selection():
 		# Auto-mark upgrade as claimed and close
 		if reward_bundle:
 			reward_bundle.upgrade_count = 0
-		call_deferred("flow_closed")
+		flow_closed.emit.call_deferred()
 		return
 	
 	# Check if there are any upgradeable cards
@@ -49,7 +49,7 @@ func _show_card_selection():
 		# Auto-mark upgrade as claimed and close
 		if reward_bundle:
 			reward_bundle.upgrade_count = 0
-		call_deferred("flow_closed")
+		flow_closed.emit.call_deferred()
 		return
 	
 	# Hide upgrade content, show card grid
@@ -238,7 +238,7 @@ func _on_card_widget_clicked(instance_id: String):
 		var pool = DataRegistry.get_upgrade_pool_for_card(card_instance.card_id)
 		if not pool.is_empty():
 			# Filter out already applied upgrades
-			var available = []
+			var available: Array[String] = []
 			for upgrade_id in pool:
 				if not card_instance.applied_upgrades.has(upgrade_id):
 					available.append(upgrade_id)
