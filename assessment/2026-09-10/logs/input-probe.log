@@ -1,0 +1,25 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2548)
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 0 milestones, 5 encounters, 6 abilities
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] test_input (res://assessment/2026-09-10/input_probe.gd:37)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+INPUT PROBE initial hand=5 energy=3
+INPUT PROBE hovered=@Control@550:<Control#156044889335> card=@Control@550:<Control#156044889335> rect=[P: (490.7111, 694.2815), S: (218.5777, 291.437)] mouse=(-471.4539, -667.0355)
+INPUT PROBE after press dragging=false
+INPUT PROBE after drag hand=5 energy=3 ticks=0
+INPUT PROBE HUD warrior_1 name=Character Name portrait=false
+INPUT PROBE HUD witch name=Character Name portrait=false
+INPUT PROBE HUD living_armor name=Character Name portrait=false
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2514)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:795)

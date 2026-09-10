@@ -1,0 +1,106 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2548)
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 0 milestones, 5 encounters, 6 abilities
+=== card_clock test ===
+PASS: RunState.HAND_MAX == 8
+PASS: hand fills to HAND_MAX (8) with no burns
+PASS: drawing past HAND_MAX burns the overflow instead of growing hand
+PASS: burned cards land in the discard pile
+PASS: start_combat: current_energy == 3
+PASS: start_combat: hand size == 5
+PASS: breathe: energy +1 exactly (3 -> 4)
+PASS: breathe: does not draw
+PASS: breathe: advances the clock by exactly 1 tick
+PASS: breathe: energy keeps rising past the old cap of 4 (4 -> 5)
+PASS: breathe: still advances the clock
+PASS: breathe: energy accumulates without a ceiling (4 -> 14 after 10 Breathes)
+PASS: focus: drew exactly 2 cards
+PASS: focus: advances the clock by exactly 1 tick
+PASS: focus: does not change energy
+PASS: Haste card played successfully
+PASS: Haste card advances the clock by 0 ticks
+PASS: Slow card played successfully
+PASS: Slow card advances the clock by 2 ticks
+PASS: Slow 3 card played successfully
+PASS: Slow 3 card advances the clock by 3 ticks
+PASS: Block persists across a card play with no enemy action
+PASS: Block persists across a second card play with no enemy action
+PASS: enemy timer reset after acting
+PASS: Block persists after an enemy action, reduced only by damage absorbed (10 -> 4)
+PASS: 4-tick Vulnerable still present after tick 1
+PASS: 4-tick Vulnerable still present after tick 2
+PASS: 4-tick Vulnerable still present after tick 3
+PASS: 4-tick Vulnerable expired after the 4th tick
+PASS: The Wait: use_ability succeeds
+PASS: The Wait: delays the enemy timer by 2 (6 -> 8)
+PASS: The Wait: charges exactly 1 energy
+PASS: The Wait: sets a 5-tick cooldown
+PASS: The Wait: costs 0 ticks (cooldown itself doesn't tick down)
+PASS: The Wait: refuses reuse while on cooldown
+PASS: The Wait: cooldown ticks down (5 -> 2)
+PASS: The Wait: cooldown reaches 0 after 5 total ticks
+PASS: can_use_ability: false when energy cost unpayable (cooldown clear)
+PASS: The Wait: use_ability succeeds again once off cooldown
+PASS: The Wait: delay clamps at time_max instead of overshooting
+PASS: The Wait: charges 1 energy on reuse
+PASS: One Night Sooner: use_ability succeeds (SELF-targeted)
+PASS: One Night Sooner: charges exactly 1 energy
+PASS: One Night Sooner: cooldown 0 (no cooldown)
+PASS: One Night Sooner: usable again immediately (cooldown 0)
+PASS: One Night Sooner: next card's cost is NOT discounted (Addendum §2 drops the discount)
+PASS: One Night Sooner: card is playable
+PASS: One Night Sooner: the card spends its full (non-discounted) cost
+PASS: One Night Sooner: the card ticks the clock by 0 (Haste)
+PASS: One Night Sooner: the haste is consumed -- does not carry to a second card
+PASS: Hold the Door: use_ability succeeds
+PASS: Hold the Door: grants at least 5 Block
+PASS: Hold the Door: charges exactly 2 energy
+PASS: Hold the Door: costs 1 tick
+PASS: Hold the Door: sets a 3-tick cooldown
+PASS: Hold the Door: refuses reuse while on cooldown
+PASS: Hold the Door: cooldown reaches 0 after 3 ticks
+PASS: Hold the Door: usable again once off cooldown and affordable
+PASS: can_use_ability: false when energy cost unpayable (Hold the Door, cooldown clear)
+PASS: The Small Ending: use_ability succeeds
+PASS: The Small Ending: adds a Curse to hand
+PASS: The Small Ending: gains 2 Energy
+PASS: The Small Ending: hand grows by 2 (1 Curse + 1 draw)
+PASS: The Small Ending: sets a 5-tick cooldown
+PASS: can_use_ability: false when consumes_block cost unpayable (no Block)
+PASS: What Was Left: use_ability succeeds
+PASS: What Was Left: deals damage equal to current Block (>= 9)
+PASS: What Was Left: zeroes Block after dealing its damage
+PASS: What Was Left: sets a 3-tick cooldown
+PASS: Leaf-fall: use_ability succeeds
+PASS: Leaf-fall: gains floor(discard/4) Energy (10 cards -> 2)
+PASS: Leaf-fall: costs 1 tick
+PASS: Leaf-fall: sets a 6-tick cooldown
+PASS: Leaf-fall: use_ability succeeds again once off cooldown
+PASS: Leaf-fall: caps the Energy gain at 3 even with a larger discard pile
+CombatController: Removed 1 temporary card(s) from deck
+PASS: can_use_ability: true when every cost is payable
+PASS: can_use_ability: false when energy_cost unpayable
+PASS: can_use_ability: false when discard_cost unpayable
+PASS: can_use_ability: false when hp_cost unpayable
+PASS: can_use_ability: false when consumes_block cost unpayable
+PASS: cost gating: use_ability succeeds when all costs payable
+PASS: cost gating: charged exactly the energy cost
+PASS: cost gating: discarded exactly the discard cost
+PASS: cost gating: charged exactly the HP cost
+PASS: cost gating: consumed all Block
+PASS: cost gating: cooldown 0 -- reports ready immediately (cooldown alone)
+PASS: cooldown 0: usable again immediately once costs are payable again
+PASS: Breathe x20 from 0: energy == 20, no ceiling at the old cap of 4
+PASS: ResourceManager.energy mirrors the uncapped value
+PASS: GAIN_ENERGY at 50 energy is not clamped (50 -> 53)
+PASS: can_play_card refuses a cost above 0 energy (floor gate)
+PASS: playing a 0-cost card at 2 energy leaves energy unchanged (still >= 0)
+PASS: loading a save with a legacy max_energy key keeps the full energy value (20)
+PASS: no cap is reintroduced after loading that save: energy can still exceed the old max_energy
+--- card_clock summary: 94 passed, 0 failed ---
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2514)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:795)

@@ -44,6 +44,7 @@ func _ready() -> void:
 	_test_party_abilities_timer_trio()
 	_test_party_abilities_mass_trio()
 	_test_ability_cost_gating()
+	_test_energy_has_no_ceiling()
 
 	print("--- card_clock summary: %d passed, %d failed ---" % [pass_count, fail_count])
 	get_tree().quit(1 if fail_count > 0 else 0)
@@ -93,12 +94,12 @@ func _test_combat_flow() -> void:
 	enemy.time_max = 1000
 	enemy.time_current = 1000
 
-	# ---- start_combat: energy 3, cap 4, hand 5 (spec §10.3) ----
-	_check("start_combat: max_energy == 4", cc.max_energy == 4)
+	# ---- start_combat: energy 3, hand 5 (spec §10.3). Energy has no maximum
+	# (Design ruling, 10 Sep 2026) -- there is no max_energy field any more. ----
 	_check("start_combat: current_energy == 3", cc.current_energy == 3)
 	_check("start_combat: hand size == 5", RunState.deck_model.hand.size() == 5)
 
-	# ---- Breathe: +1 energy (capped), advance 1 tick, no draw (Addendum §1) ----
+	# ---- Breathe: +1 energy (uncapped), advance 1 tick, no draw (Addendum §1) ----
 	cc.current_energy = 3
 	var hand_before_breathe := RunState.deck_model.hand.size()
 	var timer_before_breathe := enemy.time_current
@@ -109,8 +110,16 @@ func _test_combat_flow() -> void:
 
 	var timer_before_breathe_cap := enemy.time_current
 	cc.breathe()
-	_check("breathe: energy stays capped at max_energy when already at cap", cc.current_energy == 4)
-	_check("breathe: still advances the clock even at energy cap", enemy.time_current == timer_before_breathe_cap - 1)
+	_check("breathe: energy keeps rising past the old cap of 4 (4 -> 5)", cc.current_energy == 5)
+	_check("breathe: still advances the clock", enemy.time_current == timer_before_breathe_cap - 1)
+
+	# ---- Energy accumulates with no ceiling: repeated Breathe past the old cap ----
+	enemy.time_current = 1000
+	cc.current_energy = 4
+	for i in range(10):
+		cc.breathe()
+		enemy.time_current = 1000  # keep the enemy from acting mid-loop
+	_check("breathe: energy accumulates without a ceiling (4 -> 14 after 10 Breathes)", cc.current_energy == 14)
 
 	# ---- Focus: draw 2, advance 1 tick, no energy (Addendum §1) ----
 	cc.current_energy = 1
@@ -141,7 +150,8 @@ func _test_combat_flow() -> void:
 	_check("Slow 3 card played successfully", ok_slow3)
 	_check("Slow 3 card advances the clock by 3 ticks", enemy.time_current == t_slow3 - 3)
 
-	# ---- Block survives multiple card plays; wiped after an enemy acts (spec §4) ----
+	# ---- Block persists (shipped rule, Addendum C §2): survives card plays AND
+	# enemy actions, only ever reduced by the damage it absorbs ----
 	cc.player_stats.block = 0
 	cc.player_stats.add_block(10)
 	_play_test_card(cc, "tc_plain")
@@ -149,10 +159,10 @@ func _test_combat_flow() -> void:
 	_play_test_card(cc, "tc_plain")
 	_check("Block persists across a second card play with no enemy action", cc.player_stats.block == 10)
 
-	enemy.time_current = 1  # force the enemy to act on the next tick
+	enemy.time_current = 1  # force the enemy to act on the next tick (dummy attacks for 6)
 	_play_test_card(cc, "tc_plain")
 	_check("enemy timer reset after acting", enemy.time_current == enemy.time_max)
-	_check("Block wiped to 0 after an enemy action resolves", cc.player_stats.block == 0)
+	_check("Block persists after an enemy action, reduced only by damage absorbed (10 -> 4)", cc.player_stats.block == 4)
 
 	# ---- 4-tick Vulnerable expires after exactly 4 ticks, not before ----
 	enemy.time_current = 1000  # keep the enemy from acting during this sequence
@@ -270,7 +280,8 @@ func _test_party_abilities_timer_trio() -> void:
 	card_data2.cost = 2
 	_check("One Night Sooner: the haste is consumed -- does not carry to a second card", CardRules.get_effective_cost(card_data2, dc2) == 2)
 
-	# ---- Hold the Door: 5 Block + Dexterity, 1 energy + 1 tick, cooldown 0 (Addendum §2) ----
+	# ---- Hold the Door: 5 Block + Dexterity, 2 energy + 1 tick, cooldown 3
+	# (anti-turtle re-cost, 9 Sep 2026 -- was cooldown 0 under Addendum §2) ----
 	cc.player_stats.block = 0
 	cc.current_energy = 4
 	var block_before_hold := cc.player_stats.block
@@ -279,10 +290,21 @@ func _test_party_abilities_timer_trio() -> void:
 	var ok_hold := cc.use_ability("golemancer", null)
 	_check("Hold the Door: use_ability succeeds", ok_hold)
 	_check("Hold the Door: grants at least 5 Block", cc.player_stats.block >= block_before_hold + 5)
-	_check("Hold the Door: charges exactly 1 energy", cc.current_energy == energy_before_hold - 1)
+	## 2 energy, not 1 (balance sweep, 9 Sep 2026). Block persisting made a cheap,
+	## always-available Block button the engine of an unkillable turtle; the fix
+	## that held the difficulty bands was to make it cost him both resources
+	## heavily rather than to shrink the Block it grants.
+	_check("Hold the Door: charges exactly 2 energy", cc.current_energy == energy_before_hold - 2)
 	_check("Hold the Door: costs 1 tick", enemy2.time_current == t_before_hold - 1)
-	_check("Hold the Door: cooldown 0 (no cooldown)", cc.get_ability_cooldown("golemancer") == 0)
-	_check("Hold the Door: usable again immediately once affordable (cooldown 0)", cc.can_use_ability("golemancer"))
+	_check("Hold the Door: sets a 3-tick cooldown", cc.get_ability_cooldown("golemancer") == 3)
+	_check("Hold the Door: refuses reuse while on cooldown", not cc.can_use_ability("golemancer"))
+
+	# Advance 3 ticks (via the Slow-3 test card) to clear the cooldown, then reuse.
+	enemy2.time_current = 1000  # keep the enemy from acting during this sequence
+	_play_test_card(cc, "tc_slow3")  # 3 ticks
+	_check("Hold the Door: cooldown reaches 0 after 3 ticks", cc.get_ability_cooldown("golemancer") == 0)
+	cc.current_energy = 4
+	_check("Hold the Door: usable again once off cooldown and affordable", cc.can_use_ability("golemancer"))
 
 	# can_use_ability must gate on the energy cost specifically, not just cooldown
 	cc.current_energy = 0
@@ -317,7 +339,8 @@ func _test_party_abilities_mass_trio() -> void:
 	var ok_small_ending := cc.use_ability("witch", null)
 	_check("The Small Ending: use_ability succeeds", ok_small_ending)
 	_check("The Small Ending: adds a Curse to hand", _count_curses_in_hand() == curses_before + 1)
-	_check("The Small Ending: gains 2 Energy", cc.current_energy == mini(energy_before + 2, cc.max_energy))
+	# No energy ceiling (Design ruling, 10 Sep 2026): the full +2 always lands.
+	_check("The Small Ending: gains 2 Energy", cc.current_energy == energy_before + 2)
 	_check("The Small Ending: hand grows by 2 (1 Curse + 1 draw)", RunState.deck_model.hand.size() == hand_before + 2)
 	_check("The Small Ending: sets a 5-tick cooldown", cc.get_ability_cooldown("witch") == 5)
 
@@ -482,3 +505,56 @@ func _play_test_card_generic(cc: CombatController, owner_id: String) -> bool:
 	RunState.deck_order.append(dc.instance_id)
 	RunState.deck_model.hand.append(dc.instance_id)
 	return cc.play_card(dc, null)
+
+func _test_energy_has_no_ceiling() -> void:
+	## Design ruling, 10 Sep 2026: Energy has no maximum. It accumulates without a
+	## ceiling and cannot fall below 0. There is no max_energy field any more.
+	PartyManager.party_ids = ["warrior_1", "witch", "golemancer"]
+	var chars: Array[CharacterData] = []
+	for id in PartyManager.party_ids:
+		var c = DataRegistry.get_character(id)
+		if c:
+			chars.append(c)
+	if chars.size() != 3:
+		_check("no-ceiling setup: 3 party characters resolved", false)
+		return
+	RunState.generate_starter_deck(chars)
+
+	var cc := CombatController.new()
+	add_child(cc)
+	cc.start_combat([{"id": "dummy", "name": "Dummy", "max_hp": 9999, "time_max": 100000}])
+	var enemy: Enemy = cc.enemies[0]
+
+	# ---- Breathe repeatedly past the old cap of 4: energy keeps rising, unclamped ----
+	cc.current_energy = 0
+	for i in range(20):
+		enemy.time_current = 100000  # never let the enemy act mid-loop
+		cc.breathe()
+	_check("Breathe x20 from 0: energy == 20, no ceiling at the old cap of 4", cc.current_energy == 20)
+	_check("ResourceManager.energy mirrors the uncapped value", ResourceManager.energy == 20)
+
+	# ---- An energy-granting effect at energy already far above the old cap is not clamped ----
+	cc.current_energy = 50
+	var gain := EffectData.new()
+	gain.effect_type = EffectType.GAIN_ENERGY
+	gain.params = {"amount": 3}
+	EffectResolver.resolve_effect(gain, cc.player_stats, null, null, cc, null)
+	_check("GAIN_ENERGY at 50 energy is not clamped (50 -> 53)", cc.current_energy == 53)
+
+	# ---- Energy never falls below 0 when paying a card cost: can_play_card is the gate ----
+	cc.current_energy = 0
+	_check("can_play_card refuses a cost above 0 energy (floor gate)", not cc.can_play_card(1))
+	_register_test_card("tc_zero_cost", [])
+	cc.current_energy = 2
+	var ok_pay := _play_test_card(cc, "tc_zero_cost")  # cost 0 by default in _register_test_card's CardData
+	_check("playing a 0-cost card at 2 energy leaves energy unchanged (still >= 0)", ok_pay and cc.current_energy == 2)
+	cc.queue_free()
+
+	# ---- A save containing a legacy "max_energy" key loads without reintroducing a cap ----
+	ResourceManager.set_energy(20)
+	var save_dict := SaveManager._serialize_run_state()
+	save_dict["max_energy"] = 4  # simulate an old save written before the design ruling
+	SaveManager._deserialize_run_state(save_dict)
+	_check("loading a save with a legacy max_energy key keeps the full energy value (20)", ResourceManager.energy == 20)
+	ResourceManager.set_energy(999)
+	_check("no cap is reintroduced after loading that save: energy can still exceed the old max_energy", ResourceManager.energy == 999)

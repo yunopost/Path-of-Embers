@@ -1,0 +1,34 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2548)
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 0 milestones, 5 encounters, 6 abilities
+=== backpack test ===
+PASS: setup: at least 1 equipment .tres exists to test with
+PASS: backpack_add fills up to BACKPACK_SIZE (9) and no further
+PASS: backpack.size() never exceeds BACKPACK_SIZE
+PASS: backpack is full after filling to capacity
+PASS: backpack_add on a full backpack returns false (does not silently add)
+PASS: backpack size unchanged by the rejected add
+PASS: a pending prompt is now recorded instead of the item vanishing
+PASS: the pending prompt names the incoming item
+PASS: resolve_backpack_prompt_make_room succeeds with a valid index
+PASS: prompt is cleared after resolving
+PASS: the incoming item is now actually in the backpack
+PASS: backpack is still at capacity (1 out, 1 in)
+PASS: on loss, the safe-slot item (index 0) reaches the persistent stash
+PASS: on loss, the non-safe-slot item does NOT reach the persistent stash
+PASS: reset_run() (called after settle) clears the backpack -- everything else is lost
+PASS: on win, the safe-slot item reaches the persistent stash
+PASS: on win, the non-safe-slot item ALSO reaches the persistent stash
+PASS: reset_run() (called after settle) clears the backpack
+PASS: persistent stash holds all 12 distinct ids added past the old 9-item cap (no cap)
+PASS: RunState.MAX_STASH_SIZE no longer effectively caps at 9
+PASS: can_swap_backpack_item rejects a HELMET item for the WEAPON slot
+PASS: swap_backpack_with_equipped refuses the illegal slot-type swap
+PASS: the illegal item stays in the backpack (not silently equipped)
+--- backpack summary: 23 passed, 0 failed ---
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2514)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:795)

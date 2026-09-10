@@ -1,0 +1,350 @@
+{
+  "ability_uses_total": {
+    "max": 9,
+    "mean": 6.56666666666667,
+    "min": 4,
+    "p10": 5,
+    "p50": 6,
+    "p90": 8
+  },
+  "act": 1,
+  "block_gained": {
+    "max": 33,
+    "mean": 20.3333333333333,
+    "min": 13,
+    "p10": 13,
+    "p50": 20,
+    "p90": 28
+  },
+  "block_wasted": {
+    "max": 33,
+    "mean": 7.16666666666667,
+    "min": 0,
+    "p10": 0,
+    "p50": 6,
+    "p90": 21
+  },
+  "card_ticks": {
+    "max": 11,
+    "mean": 8.03333333333333,
+    "min": 5,
+    "p10": 6,
+    "p50": 8,
+    "p90": 10
+  },
+  "cards_played_total": {
+    "max": 13,
+    "mean": 9.0,
+    "min": 6,
+    "p10": 7,
+    "p50": 9,
+    "p90": 11
+  },
+  "catalogue": [
+    {
+      "card_id": "strike_1",
+      "copies": 4,
+      "cost": 1,
+      "effects": "damage{ \"amount\": 6 }",
+      "keywords": [],
+      "owner": "warrior_1",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    },
+    {
+      "card_id": "defend_1",
+      "copies": 4,
+      "cost": 1,
+      "effects": "block{ \"amount\": 5 }",
+      "keywords": [],
+      "owner": "warrior_1",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "deadly_strike",
+      "copies": 1,
+      "cost": 2,
+      "effects": "damage{ \"amount\": 10 }, vulnerable{ \"duration\": 4 }",
+      "keywords": [],
+      "owner": "warrior_1",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    },
+    {
+      "card_id": "pursuit",
+      "copies": 1,
+      "cost": 0,
+      "effects": "grant_haste_next_card{ \"conditional_draw_min_cost\": 2, \"conditional_draw_amount\": 2 }",
+      "keywords": [
+        "Haste"
+      ],
+      "owner": "warrior_1",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "heal_1",
+      "copies": 1,
+      "cost": 1,
+      "effects": "heal{ \"amount\": 5 }",
+      "keywords": [],
+      "owner": "witch",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "hex",
+      "copies": 1,
+      "cost": 1,
+      "effects": "add_curse_to_hand{ \"is_temporary\": true }, damage_per_curse_in_hand{ \"base_amount\": 0, \"per_curse\": 6 }",
+      "keywords": [],
+      "owner": "witch",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    },
+    {
+      "card_id": "dark_pact",
+      "copies": 1,
+      "cost": 0,
+      "effects": "exhaust_hand_curses{ \"energy_per_card\": 1, \"draw_per_card\": 1 }",
+      "keywords": [],
+      "owner": "witch",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "iron_tide",
+      "copies": 1,
+      "cost": 1,
+      "effects": "damage_equal_to_block{ \"divisor\": 2 }",
+      "keywords": [],
+      "owner": "living_armor",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    },
+    {
+      "card_id": "iron_shell",
+      "copies": 1,
+      "cost": 1,
+      "effects": "block{ \"amount\": 5 }, agility{ \"duration\": 2 }",
+      "keywords": [],
+      "owner": "living_armor",
+      "targeting": "SELF",
+      "type": "SKILL"
+    }
+  ],
+  "cycles": {
+    "max": 4,
+    "mean": 2.6,
+    "min": 1,
+    "p10": 1,
+    "p50": 3,
+    "p90": 4
+  },
+  "damage_taken": {
+    "max": 23,
+    "mean": 7.23333333333333,
+    "min": 0,
+    "p10": 0,
+    "p50": 0,
+    "p90": 23
+  },
+  "deaths": 0,
+  "elapsed_ms": 70,
+  "enemies": "char_sentinel:1",
+  "enemy_actions": {
+    "max": 2,
+    "mean": 0.933333333333333,
+    "min": 0,
+    "p10": 0,
+    "p50": 1,
+    "p90": 1
+  },
+  "enemy_data": [
+    {
+      "count": 1,
+      "dmg_mult": 1.0,
+      "enemy_id": "char_sentinel",
+      "hp_mult": 1.0
+    }
+  ],
+  "enemy_hp_left_on_loss": {
+    "max": 0,
+    "mean": 0.0,
+    "min": 0,
+    "p10": 0,
+    "p50": 0,
+    "p90": 0
+  },
+  "energy_unspent": {
+    "max": 0,
+    "mean": 0.0,
+    "min": 0,
+    "p10": 0,
+    "p50": 0,
+    "p90": 0
+  },
+  "energy_unspent_per_turn": {
+    "max": 0.0,
+    "mean": 0.0,
+    "min": 0.0,
+    "p10": 0.0,
+    "p50": 0.0,
+    "p90": 0.0
+  },
+  "findings": [],
+  "heal_wasted": {
+    "max": 1,
+    "mean": 0.366666666666667,
+    "min": 0,
+    "p10": 0,
+    "p50": 0,
+    "p90": 1
+  },
+  "hp_end": {
+    "max": 75,
+    "mean": 67.7666666666667,
+    "min": 52,
+    "p10": 52,
+    "p50": 75,
+    "p90": 75
+  },
+  "hp_lost_gross": {
+    "max": 23,
+    "mean": 7.93333333333333,
+    "min": 0,
+    "p10": 0,
+    "p50": 0,
+    "p90": 23
+  },
+  "hp_max": 75,
+  "label": "warrior_1,witch,living_armor vs char_sentinel:1 act1",
+  "max_turns": 60,
+  "n": 30,
+  "never_played": [],
+  "party": [
+    "warrior_1",
+    "witch",
+    "living_armor"
+  ],
+  "per_ability": [
+    {
+      "ability_name": "The Small Ending",
+      "character_id": "witch",
+      "uses_per_fight": 2.83333333333333
+    },
+    {
+      "ability_name": "What Was Left",
+      "character_id": "living_armor",
+      "uses_per_fight": 2.3
+    },
+    {
+      "ability_name": "The Wait",
+      "character_id": "warrior_1",
+      "uses_per_fight": 1.43333333333333
+    }
+  ],
+  "per_card": [
+    {
+      "affordable": 203,
+      "card_id": "strike_1",
+      "copies": 4,
+      "plays": 82,
+      "plays_per_fight": 2.73333333333333,
+      "seen": 212
+    },
+    {
+      "affordable": 319,
+      "card_id": "defend_1",
+      "copies": 4,
+      "plays": 74,
+      "plays_per_fight": 2.46666666666667,
+      "seen": 353
+    },
+    {
+      "affordable": 31,
+      "card_id": "deadly_strike",
+      "copies": 1,
+      "plays": 18,
+      "plays_per_fight": 0.6,
+      "seen": 36
+    },
+    {
+      "affordable": 127,
+      "card_id": "dark_pact",
+      "copies": 1,
+      "plays": 18,
+      "plays_per_fight": 0.6,
+      "seen": 127
+    },
+    {
+      "affordable": 136,
+      "card_id": "iron_tide",
+      "copies": 1,
+      "plays": 18,
+      "plays_per_fight": 0.6,
+      "seen": 154
+    },
+    {
+      "affordable": 69,
+      "card_id": "iron_shell",
+      "copies": 1,
+      "plays": 17,
+      "plays_per_fight": 0.566666666666667,
+      "seen": 80
+    },
+    {
+      "affordable": 107,
+      "card_id": "pursuit",
+      "copies": 1,
+      "plays": 15,
+      "plays_per_fight": 0.5,
+      "seen": 107
+    },
+    {
+      "affordable": 157,
+      "card_id": "heal_1",
+      "copies": 1,
+      "plays": 15,
+      "plays_per_fight": 0.5,
+      "seen": 183
+    },
+    {
+      "affordable": 137,
+      "card_id": "hex",
+      "copies": 1,
+      "plays": 13,
+      "plays_per_fight": 0.433333333333333,
+      "seen": 162
+    }
+  ],
+  "per_enemy": [
+    {
+      "actions_per_fight": 0.933333333333333,
+      "enemy_id": "char_sentinel",
+      "hp_damage_per_fight": 7.93333333333333
+    }
+  ],
+  "policy": "timed",
+  "seed": 12345,
+  "ticks": {
+    "max": 16,
+    "mean": 11.9333333333333,
+    "min": 7,
+    "p10": 9,
+    "p50": 12,
+    "p90": 15
+  },
+  "timeouts": 0,
+  "turns": {
+    "max": 4,
+    "mean": 2.6,
+    "min": 1,
+    "p10": 1,
+    "p50": 3,
+    "p90": 4
+  },
+  "win_rate": 1.0,
+  "wins": 30
+}

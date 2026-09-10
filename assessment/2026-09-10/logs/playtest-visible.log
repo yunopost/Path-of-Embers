@@ -1,0 +1,189 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+Vulkan 1.4.315 - Forward Mobile - Using Device #0: AMD - AMD Radeon RX 6700 XT
+
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 0 milestones, 5 encounters, 6 abilities
+Main.gd: Main menu _ready() called
+Main.gd: Nodes found - new_game: true, continue: true
+Main.gd: Main menu initialization complete - should be visible now
+ScreenManager: Loading scene: character_select from path: res://Path-of-Embers/scenes/screens/CharacterSelect.tscn
+ScreenManager: Found initial scene node: RunState
+ScreenManager: Found initial scene node: SceneRouter
+ScreenManager: Found initial scene node: SaveManager
+ScreenManager: Found initial scene node: DataRegistry
+ScreenManager: Found initial scene node: ScreenManager
+ScreenManager: Found initial scene node: MusicManager
+ScreenManager: Found initial scene node: AutoSaveManager
+ScreenManager: Found initial scene node: PartyManager
+ScreenManager: Found initial scene node: ResourceManager
+ScreenManager: Found initial scene node: QuestManager
+ScreenManager: Found initial scene node: MapManager
+ScreenManager: Found initial scene node: MilestoneManager
+ScreenManager: Found initial scene node: LeaderboardManager
+ScreenManager: Found initial scene node: ModifierManager
+ScreenManager: Found initial scene node: DebugMode
+ScreenManager: Found initial scene node: Main
+AutoSave: saved (force:scene_changed:character_select)
+ScreenManager: Successfully loaded scene: character_select
+ScreenManager: Loading scene: loadout from path: res://Path-of-Embers/scenes/screens/LoadoutScreen.tscn
+AutoSave: saved (force:scene_changed:loadout)
+ScreenManager: Successfully loaded scene: loadout
+AutoSave: saved (force:new_run_started)
+ScreenManager: Loading scene: quest_select from path: res://Path-of-Embers/scenes/screens/QuestSelectScreen.tscn
+AutoSave: saved (force:scene_changed:quest_select)
+ScreenManager: Successfully loaded scene: quest_select
+AutoSave: saved (force:quests_chosen)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _on_begin_pressed (res://Path-of-Embers/scenes/screens/QuestSelectScreen.gd:237)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [2, 3, 4]
+MapScreen: Row 0 cols order (after explicit sort): [2, 3, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [0, 2, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [0, 2, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [1, 2, 3, 4]
+MapScreen: Row 2 cols order (after explicit sort): [1, 2, 3, 4]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 3 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 1, 3]
+MapScreen: Row 4 cols order (after explicit sort): [0, 1, 3]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3, 4]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3, 4]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 7 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 2, 3, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 2, 3, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [1, 2, 3, 4]
+MapScreen: Row 9 cols order (after explicit sort): [1, 2, 3, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 10 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 11 cols order (after explicit sort): [2, 3]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [0, 3]
+MapScreen: Row 13 cols order (after explicit sort): [0, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 14 cols order (after explicit sort): [1, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1600.0, 908.0)
+MapScreen: map_root min size: (2000.0, 900.0) actual: (2000.0, 900.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 3
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_1_2, selectable=false
+MapNodeWidget.setup() called for node_1_3, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+MapNodeWidget.setup() called for node_2_2, selectable=false
+MapNodeWidget.setup() called for node_2_3, selectable=false
+MapNodeWidget.setup() called for node_3_0, selectable=false
+MapNodeWidget.setup() called for node_3_1, selectable=false
+MapNodeWidget.setup() called for node_3_2, selectable=false
+MapNodeWidget.setup() called for node_4_0, selectable=false
+MapNodeWidget.setup() called for node_4_1, selectable=false
+MapNodeWidget.setup() called for node_4_2, selectable=false
+MapNodeWidget.setup() called for node_5_0, selectable=false
+MapNodeWidget.setup() called for node_5_1, selectable=false
+MapNodeWidget.setup() called for node_5_2, selectable=false
+MapNodeWidget.setup() called for node_6_0, selectable=false
+MapNodeWidget.setup() called for node_6_1, selectable=false
+MapNodeWidget.setup() called for node_6_2, selectable=false
+MapNodeWidget.setup() called for node_6_3, selectable=false
+MapNodeWidget.setup() called for node_7_0, selectable=false
+MapNodeWidget.setup() called for node_7_1, selectable=false
+MapNodeWidget.setup() called for node_7_2, selectable=false
+MapNodeWidget.setup() called for node_7_3, selectable=false
+MapNodeWidget.setup() called for node_8_0, selectable=false
+MapNodeWidget.setup() called for node_8_1, selectable=false
+MapNodeWidget.setup() called for node_8_2, selectable=false
+MapNodeWidget.setup() called for node_8_3, selectable=false
+MapNodeWidget.setup() called for node_9_0, selectable=false
+MapNodeWidget.setup() called for node_9_1, selectable=false
+MapNodeWidget.setup() called for node_9_2, selectable=false
+MapNodeWidget.setup() called for node_9_3, selectable=false
+MapNodeWidget.setup() called for node_10_0, selectable=false
+MapNodeWidget.setup() called for node_10_1, selectable=false
+MapNodeWidget.setup() called for node_10_2, selectable=false
+MapNodeWidget.setup() called for node_11_0, selectable=false
+MapNodeWidget.setup() called for node_11_1, selectable=false
+MapNodeWidget.setup() called for node_12_0, selectable=false
+MapNodeWidget.setup() called for node_12_1, selectable=false
+MapNodeWidget.setup() called for node_13_0, selectable=false
+MapNodeWidget.setup() called for node_13_1, selectable=false
+MapNodeWidget.setup() called for node_14_0, selectable=false
+MapNodeWidget.setup() called for node_14_1, selectable=false
+MapNodeWidget.setup() called for boss_1, selectable=false
+MapScreen._build_connection_data: node_widgets.size()=48, map.nodes.size()=48
+MapScreen: Built 57 connections (widgets found: 48, missing: 0)
+MapConnectionsDraw.set_connection_data(): Received 57 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 57 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_0_0", "node_0_1", "node_0_2"]
+MapScreen: Setting node node_0_2 as selectable
+MapNodeWidget: set_selectable(true) for node_0_2
+MapScreen: Setting node node_0_0 as selectable
+MapNodeWidget: set_selectable(true) for node_0_0
+MapScreen: Setting node node_0_1 as selectable
+MapNodeWidget: set_selectable(true) for node_0_1
+MapConnectionsDraw.set_connection_data(): Received 57 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 57 connections, visible=true
+MapConnectionsDraw.set_connection_data(): Received 57 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 57 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_0_0", "node_0_1", "node_0_2"]
+MapScreen: Setting node node_0_2 as selectable
+MapScreen: Setting node node_0_0 as selectable
+MapScreen: Setting node node_0_1 as selectable
+MapConnectionsDraw.set_connection_data(): Received 57 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 57 connections, visible=true
+MapConnectionsDraw._draw(): Drawing 57 connections
+MapNodeWidget: Button pressed, node_id: node_0_2, is_selectable: true
+MapNodeWidget: Emitting node_clicked signal
+MapScreen: Node clicked: node_0_2
+MapScreen: Setting current node to: node_0_2
+MapScreen: _update_node_states called, available nodes: ["node_1_0", "node_1_1", "node_1_2"]
+MapNodeWidget: set_selectable(false) for node_0_2
+MapNodeWidget: set_selected(true) for node_0_2
+MapNodeWidget: set_selectable(false) for node_0_0
+MapNodeWidget: set_selectable(false) for node_0_1
+MapScreen: Setting node node_1_0 as selectable
+MapNodeWidget: set_selectable(true) for node_1_0
+MapScreen: Setting node node_1_1 as selectable
+MapNodeWidget: set_selectable(true) for node_1_1
+MapScreen: Setting node node_1_2 as selectable
+MapNodeWidget: set_selectable(true) for node_1_2
+MapConnectionsDraw.set_connection_data(): Received 57 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 57 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_1_0", "node_1_1", "node_1_2"]
+MapScreen: Setting node node_1_0 as selectable
+MapScreen: Setting node node_1_1 as selectable
+MapScreen: Setting node node_1_2 as selectable
+MapConnectionsDraw.set_connection_data(): Received 57 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 57 connections, visible=true
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+MapConnectionsDraw._draw(): Drawing 57 connections
+AutoSave: saved (debounced:energy_changed)
+AutoSave: saved (debounced:piles_changed)

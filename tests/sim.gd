@@ -249,7 +249,8 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 		# Trying them only as a last resort deadlocks every energy-costing ability:
 		# "no card is playable" is almost always "energy is 0", which is exactly the
 		# moment such an ability cannot be paid for, so it never fires at all.
-		# _should_use_ability() supplies the guard against 0-cooldown spam instead.
+		# _should_use_ability() supplies the guard against spamming them instead.
+		_playable_now = playable.size()
 		var ability_result := _try_use_ability(cc)
 		if not ability_result.is_empty():
 			ability_uses[ability_result.char_id] = ability_uses.get(ability_result.char_id, 0) + 1
@@ -289,16 +290,12 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 				blocked[dc.instance_id] = true
 				_note("play_card refused a card the policy considered playable: %s (turn %d)" % [dc.card_id, end_turns + 1])
 		else:
-			# Card-clock: energy carries over between cycles (no reset), so it is
-			# only "wasted" when Breathe's +1 would push past the cap (Focus never
-			# grants energy under the Addendum §1 split, so it never wastes any).
-			var pre_focus_energy := cc.current_energy
+			# Card-clock: energy carries over between cycles (no reset) and has no
+			# ceiling (Design ruling, 10 Sep 2026), so Breathe's +1 is never wasted.
 			end_turns += 1  # counts Breathe/Focus uses == cycles completed
 			blocked.clear()
 			var action := advance(cc)
 			ticks += 1
-			if action == "breathe":
-				energy_unspent += maxi(0, (pre_focus_energy + 1) - cc.max_energy)
 			if cc.player_stats.block == 0:
 				block_wasted += _block_prev
 		_flush_pending_damage()
@@ -361,20 +358,32 @@ func advance(cc: CombatController) -> String:
 	return "focus"
 
 var _zero_tick_ability_used_since_card: Dictionary = {}  # char_id -> bool, reset per fight and on every card play
+var _playable_now: int = 0  # playable cards at the current decision point; read by _should_use_ability
 
 func _should_use_ability(cc: CombatController, ability: PartyAbilityData) -> bool:
 	## Represents a competent player rather than a greedy one.
-	## Cooldown-gated abilities are worth using whenever they are ready.
-	## Cooldown-0 abilities would otherwise be pressed every decision point and
-	## eat all the energy that should be buying cards, so they need a reason:
-	## either a hit is landing within their tick cost (the Block rule -- defend
-	## just in time), or there is energy to spare beyond their cost.
-	if ability.cooldown > 0:
+	##
+	## Do NOT reinstate "if ability.cooldown > 0: return true". It reads as
+	## "a cooldown ability is worth pressing whenever it is ready", but every
+	## EA ability except Leaf-fall costs energy, and Breathe only makes 1 energy
+	## per tick -- so pressing on cooldown spends the entire energy budget on
+	## abilities and the party stops playing cards. Giving Hold the Door a
+	## 3-tick cooldown on 9 Sep flipped it onto that branch and dropped the
+	## measured Act 1 boss win rate from 0.78 to 0.00 with the boss taking zero
+	## damage. That was a policy artifact, not a balance finding.
+	##
+	## The rule instead: an ability is worth its energy when it is the reactive
+	## moment (an enemy lands inside its tick cost, which is what the defensive
+	## and clock abilities exist for), or when spending it does not compete with
+	## playing a card.
+	if str(cfg.policy) == "turtle":
 		return true
 	for e in _alive_enemies(cc):
-		if e.time_current <= maxi(1, ability.tick_cost):
-			return true
-	return cc.current_energy > ability.energy_cost
+		if e.time_current <= maxi(1, ability.tick_cost) + 1:
+			return cc.current_energy >= ability.energy_cost
+	if ability.energy_cost > 0 and _playable_now > 0:
+		return false
+	return cc.current_energy >= ability.energy_cost
 
 func _try_use_ability(cc: CombatController) -> Dictionary:
 	## Use the first ready party ability, in party order (spec §7/§10.6). Mirrors
@@ -425,6 +434,7 @@ func _policy_choose(cc: CombatController, playable: Array) -> Dictionary:
 		"greedy": return policy_greedy(cc, playable)
 		"random": return policy_random(cc, playable)
 		"timed": return policy_timed(cc, playable)
+		"turtle": return policy_turtle(cc, playable)
 		_:
 			push_error("sim: unknown policy '%s'" % cfg.policy)
 			return {}
@@ -487,6 +497,35 @@ func policy_timed(cc: CombatController, playable: Array) -> Dictionary:
 		best = playable[0]
 	return {"dc": best.dc, "enemy": _lowest_hp_enemy(cc) if best.cd.targeting_mode == CardData.TargetingMode.ENEMY else null}
 
+func policy_turtle(cc: CombatController, playable: Array) -> Dictionary:
+	## Adversarial policy: a player who hoards Block whenever possible. Exists to
+	## test whether a persistent-Block rule can be degenerately stacked, which the
+	## reactive "timed" policy never reveals because it only blocks just-in-time.
+	if playable.is_empty():
+		return {}
+	var best = null
+	var best_score := -99999.0
+	for p in playable:
+		var blk := 0
+		var dmg := 0
+		for eff in CardRules.get_resolved_effects(p.dc):
+			if not (eff is EffectData):
+				continue
+			match eff.effect_type:
+				EffectType.BLOCK:
+					blk += int(eff.params.get("amount", 0))
+				EffectType.DAMAGE:
+					dmg += int(eff.params.get("amount", 0)) * int(eff.params.get("hit_count", 1))
+				_:
+					pass
+		var score := float(blk) * 100.0 + float(dmg) - float(p.cost)
+		if score > best_score:
+			best_score = score
+			best = p
+	if best == null:
+		best = playable[0]
+	return {"dc": best.dc, "enemy": _lowest_hp_enemy(cc) if best.cd.targeting_mode == CardData.TargetingMode.ENEMY else null}
+
 func policy_random(cc: CombatController, playable: Array) -> Dictionary:
 	## Uniformly random playable card; random alive enemy as target.
 	if playable.is_empty():
@@ -513,8 +552,6 @@ func _playable_cards(cc: CombatController, blocked: Dictionary) -> Array:
 			continue
 		var cost := CardRules.get_effective_cost(cd, dc)
 		if not cc.can_play_card(cost, cd):
-			continue
-		if CardRules.get_card_keywords(dc).has("Opener") and cc.cards_played_this_cycle > 0:
 			continue
 		out.append({"dc": dc, "cd": cd, "cost": cost})
 	return out

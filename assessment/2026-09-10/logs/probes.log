@@ -1,0 +1,99 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2548)
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 0 milestones, 5 encounters, 6 abilities
+ASSESSMENT USER DIR: C:/Users/amkru/Documents/path-of-embers/assessment/2026-09-10/probe-profile/Godot/app_userdata/Path of Embers
+PROBE discard quest: actual discards=20 progress=0
+PROBE final gate after 20 discards: available=[]
+PROBE mid-combat save: selected=node_0_0 completed=false next=["node_1_0", "node_1_1"] enemy state saved=false
+Main.gd: Main menu _ready() called
+Main.gd: Nodes found - new_game: true, continue: true
+Main.gd: Main menu initialization complete - should be visible now
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _on_continue_pressed (res://Path-of-Embers/scenes/screens/Main.gd:342)
+       [3] run_probes (res://assessment/2026-09-10/probes.gd:54)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [1, 2, 4]
+MapScreen: Row 0 cols order (after explicit sort): [1, 2, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 2, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 2, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [0, 2, 3, 4]
+MapScreen: Row 2 cols order (after explicit sort): [0, 2, 3, 4]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 3 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2, 3, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2, 3, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 2, 3, 4]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 2, 3, 4]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 7 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [1, 2, 3, 4]
+MapScreen: Row 8 cols order (after explicit sort): [1, 2, 3, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 1, 3, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 1, 3, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 11 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [0, 3]
+MapScreen: Row 12 cols order (after explicit sort): [0, 3]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 13 cols order (after explicit sort): [0, 2]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 14 cols order (after explicit sort): [1, 3]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (64.0, 468.0)
+MapScreen: map_root min size: (2000.0, 460.0) actual: (2000.0, 460.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 3
+MapNodeWidget.setup() called for node_0_0, selectable=false
+PROBE Continue: screen=map selected completed=false selectable=["node_1_0", "node_1_1"] hp=31
+PROBE roster: milestones=0 unlocked=["warrior_1", "witch", "living_armor"]
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+WARNING: MapScreen: No map to render
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _render_map (res://Path-of-Embers/scenes/screens/MapScreen.gd:328)
+       [1] _on_map_changed (res://Path-of-Embers/scenes/screens/MapScreen.gd:672)
+       [2] reset_map_state (res://Path-of-Embers/autoload/MapManager.gd:173)
+       [3] reset_run (res://Path-of-Embers/autoload/RunState.gd:629)
+       [4] run_probes (res://assessment/2026-09-10/probes.gd:59)
+MapScreen: _update_node_states called, available nodes: []
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: _update_node_states called, available nodes: []
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+PROBE unchanged equipment max HP across three combat starts: [75, 81, 87, 93]
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+MapConnectionsDraw._draw(): connection_data is empty
+SCRIPT ERROR: Invalid access to property or key 'gold' on a base object of type 'Node (RunState.gd)'.
+   at: _on_claim_gold (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:310)
+   GDScript backtrace (most recent call first):
+       [0] _on_claim_gold (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:310)
+       [1] run_probes (res://assessment/2026-09-10/probes.gd:81)
+PROBE gold reward: gold=0 bundle gold=10 Continue disabled=true
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2514)
+ERROR: 3 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:795)

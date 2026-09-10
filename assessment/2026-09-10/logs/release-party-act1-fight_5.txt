@@ -1,0 +1,41 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2548)
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 0 milestones, 5 encounters, 6 abilities
+sim: warrior_1,witch,living_armor vs ash_man:1,cinder_imp:1 act1  n=30 policy=timed seed=12345
+CombatController: Removed 3 temporary card(s) from deck
+CombatController: Removed 3 temporary card(s) from deck
+CombatController: Removed 3 temporary card(s) from deck
+CombatController: Removed 2 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+CombatController: Removed 3 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+CombatController: Removed 3 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+CombatController: Removed 3 temporary card(s) from deck
+CombatController: Removed 3 temporary card(s) from deck
+CombatController: Removed 3 temporary card(s) from deck
+CombatController: Removed 3 temporary card(s) from deck
+CombatController: Removed 3 temporary card(s) from deck
+CombatController: Removed 3 temporary card(s) from deck
+CombatController: Removed 3 temporary card(s) from deck
+CombatController: Removed 3 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+CombatController: Removed 3 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+CombatController: Removed 4 temporary card(s) from deck
+sim: done 30 fights in 93 ms  win=1.00  turns=5.1  ticks=17.4  dmg=8.6
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2514)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:795)

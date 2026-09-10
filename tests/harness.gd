@@ -15,7 +15,7 @@ func _ready():
 		var cc = CombatController.new()
 		add_child(cc)
 		cc.start_combat([{"enemy_id":"ash_man","count":1}])
-		print("hand=", RunState.deck_model.hand.size(), " energy=", cc.current_energy, "/", cc.max_energy, " enemy hp=", cc.enemies[0].stats.current_hp, " timer=", cc.enemies[0].time_current)
+		print("hand=", RunState.deck_model.hand.size(), " energy=", cc.current_energy, " enemy hp=", cc.enemies[0].stats.current_hp, " timer=", cc.enemies[0].time_current)
 		# Play the cheapest playable card at the lowest-HP enemy; Focus when nothing is playable.
 		var cycles := 0
 		var ticks := 0
@@ -32,8 +32,6 @@ func _ready():
 					continue
 				var cost = CardRules.get_effective_cost(cd, dc)
 				if not cc.can_play_card(cost, cd):
-					continue
-				if CardRules.get_card_keywords(dc).has("Opener") and cc.cards_played_this_cycle > 0:
 					continue
 				if cost < best_cost:
 					best_cost = cost

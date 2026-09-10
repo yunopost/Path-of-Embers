@@ -1,0 +1,17 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2548)
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 0 milestones, 5 encounters, 6 abilities
+autoloads ok: RunState=true DataRegistry=true
+ char warrior_1 -> true
+ char witch -> true
+ char golemancer -> true
+deck size=15
+hand=5 energy=3 enemy hp=42 timer=4
+CombatController: Removed 1 temporary card(s) from deck
+cycles=48 ticks=51 player hp=0 enemy hp=27
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2514)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:795)

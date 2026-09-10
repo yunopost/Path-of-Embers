@@ -1,0 +1,1947 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2548)
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 0 milestones, 5 encounters, 6 abilities
+ScreenManager: Loading scene: loadout from path: res://Path-of-Embers/scenes/screens/LoadoutScreen.tscn
+AutoSave: saved (force:scene_changed:loadout)
+ScreenManager: Successfully loaded scene: loadout
+AutoSave: saved (force:new_run_started)
+ScreenManager: Loading scene: quest_select from path: res://Path-of-Embers/scenes/screens/QuestSelectScreen.tscn
+AutoSave: saved (force:scene_changed:quest_select)
+ScreenManager: Successfully loaded scene: quest_select
+AutoSave: saved (force:quests_chosen)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _on_begin_pressed (res://Path-of-Embers/scenes/screens/QuestSelectScreen.gd:237)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:44)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 2 cols order (after explicit sort): [2, 3]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 3 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 6 cols order (after explicit sort): [1, 3]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 11 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2, 3]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2, 3]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 13 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 14 cols order (after explicit sort): [0, 4]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_1_2, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+FLOW 0 screen=map act=1 row=0 hp=75 deck=16
+MapScreen: Node clicked: node_0_0
+MapScreen: Setting current node to: node_0_0
+MapScreen: _update_node_states called, available nodes: ["node_1_1"]
+MapNodeWidget: set_selected(true) for node_0_0
+MapScreen: Setting node node_1_1 as selectable
+MapNodeWidget: set_selectable(true) for node_1_1
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_1_1"]
+MapScreen: Setting node node_1_1 as selectable
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:70)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+MapConnectionsDraw._draw(): Drawing 5 connections
+FLOW 0 screen=combat act=1 row=0 hp=81 deck=16
+CombatScreen: Enemy cinder_imp died. Alive enemies: 1
+CombatScreen: Enemy cinder_imp died. Alive enemies: 0
+CombatScreen: All enemies dead, ending combat
+CombatController: Removed 3 temporary card(s) from deck
+AutoSave: saved (force:node_completed)
+Combat ended: all enemies dead. NodeType=FIGHT, Rewards: gold=0, cards=3, upgrades=0
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+QuestManager: Quest 'living_armor_quest_2' completed for character 'living_armor'
+QuestManager: Quest reward — +25 gold
+FLOW 0 screen=rewards act=1 row=0 hp=81 deck=16
+AutoSave: saved (force:rewards_finalized)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _finish_rewards (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:507)
+       [3] _on_continue_pressed (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:474)
+       [4] run_tests (res://assessment/2026-09-10/run_flow.gd:121)
+       [5] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 2 cols order (after explicit sort): [2, 3]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 3 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 6 cols order (after explicit sort): [1, 3]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 11 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2, 3]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2, 3]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 13 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 14 cols order (after explicit sort): [0, 4]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_1_2, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+FLOW 0 screen=map act=1 row=0 hp=81 deck=17
+MapScreen: Node clicked: node_1_1
+MapScreen: Setting current node to: node_1_1
+MapScreen: _update_node_states called, available nodes: ["node_2_1"]
+MapNodeWidget: set_selected(true) for node_1_1
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_2_1"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:70)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+MapConnectionsDraw._draw(): Drawing 5 connections
+FLOW 0 screen=combat act=1 row=1 hp=87 deck=17
+CombatScreen: Enemy ash_man died. Alive enemies: 0
+CombatScreen: All enemies dead, ending combat
+CombatController: Removed 2 temporary card(s) from deck
+AutoSave: saved (force:node_completed)
+Combat ended: all enemies dead. NodeType=FIGHT, Rewards: gold=0, cards=3, upgrades=0
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+FLOW 0 screen=rewards act=1 row=1 hp=81 deck=17
+AutoSave: saved (force:rewards_finalized)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _finish_rewards (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:507)
+       [3] _on_continue_pressed (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:474)
+       [4] run_tests (res://assessment/2026-09-10/run_flow.gd:121)
+       [5] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 2 cols order (after explicit sort): [2, 3]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 3 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 6 cols order (after explicit sort): [1, 3]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 11 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2, 3]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2, 3]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 13 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 14 cols order (after explicit sort): [0, 4]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_1_2, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+FLOW 0 screen=map act=1 row=1 hp=81 deck=18
+MapScreen: Node clicked: node_2_1
+MapScreen: Setting current node to: node_2_1
+MapScreen: _update_node_states called, available nodes: ["node_3_2"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_3_2"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:70)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+MapConnectionsDraw._draw(): Drawing 5 connections
+FLOW 0 screen=combat act=1 row=2 hp=87 deck=18
+CombatScreen: Enemy cinder_imp died. Alive enemies: 1
+CombatScreen: Enemy ash_man died. Alive enemies: 0
+CombatScreen: All enemies dead, ending combat
+CombatController: Removed 5 temporary card(s) from deck
+AutoSave: saved (force:node_completed)
+Combat ended: all enemies dead. NodeType=FIGHT, Rewards: gold=0, cards=3, upgrades=0
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+FLOW 0 screen=rewards act=1 row=2 hp=68 deck=18
+AutoSave: saved (force:rewards_finalized)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _finish_rewards (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:507)
+       [3] _on_continue_pressed (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:474)
+       [4] run_tests (res://assessment/2026-09-10/run_flow.gd:121)
+       [5] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 2 cols order (after explicit sort): [2, 3]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 3 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 6 cols order (after explicit sort): [1, 3]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 11 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2, 3]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2, 3]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 13 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 14 cols order (after explicit sort): [0, 4]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_1_2, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+FLOW 0 screen=map act=1 row=2 hp=68 deck=19
+MapScreen: Node clicked: node_3_2
+MapScreen: Setting current node to: node_3_2
+MapScreen: _update_node_states called, available nodes: ["node_4_1"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_4_1"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+ScreenManager: Loading scene: shop from path: res://Path-of-Embers/scenes/screens/ShopScreen.tscn
+ShopScreen: generated 11 stock items
+AutoSave: saved (force:scene_changed:shop)
+ScreenManager: Successfully loaded scene: shop
+MapConnectionsDraw._draw(): Drawing 5 connections
+FLOW 0 screen=shop act=1 row=3 hp=68 deck=19
+AutoSave: saved (force:node_completed)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _on_leave_pressed (res://Path-of-Embers/scenes/screens/ShopScreen.gd:300)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:135)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 2 cols order (after explicit sort): [2, 3]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 3 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 6 cols order (after explicit sort): [1, 3]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 11 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2, 3]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2, 3]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 13 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 14 cols order (after explicit sort): [0, 4]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+FLOW 0 screen=map act=1 row=3 hp=68 deck=19
+MapScreen: Node clicked: node_4_1
+MapScreen: Setting current node to: node_4_1
+MapScreen: _update_node_states called, available nodes: ["node_5_2"]
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_5_2"]
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 2 cols order (after explicit sort): [2, 3]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 3 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 6 cols order (after explicit sort): [1, 3]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 11 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2, 3]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2, 3]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 13 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 14 cols order (after explicit sort): [0, 4]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+AutoSave: saved (force:node_completed)
+AutoSave: saved (force:rest_node)
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 2 cols order (after explicit sort): [2, 3]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 3 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 6 cols order (after explicit sort): [1, 3]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 11 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2, 3]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2, 3]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 13 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 14 cols order (after explicit sort): [0, 4]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_1_2, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapScreen: Node clicked: node_5_2
+MapScreen: Setting current node to: node_5_2
+MapScreen: _update_node_states called, available nodes: ["node_6_1"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_6_1"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:70)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+MapConnectionsDraw._draw(): Drawing 5 connections
+FLOW 0 screen=combat act=1 row=5 hp=99 deck=19
+CombatScreen: Enemy ember_brute died. Alive enemies: 0
+CombatScreen: All enemies dead, ending combat
+CombatController: Removed 3 temporary card(s) from deck
+AutoSave: saved (force:node_completed)
+Combat ended: all enemies dead. NodeType=FIGHT, Rewards: gold=10, cards=0, upgrades=0
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+FLOW 0 screen=rewards act=1 row=5 hp=92 deck=19
+SCRIPT ERROR: Invalid access to property or key 'gold' on a base object of type 'Node (RunState.gd)'.
+   at: _on_claim_gold (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:310)
+   GDScript backtrace (most recent call first):
+       [0] _on_claim_gold (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:310)
+       [1] run_tests (res://assessment/2026-09-10/run_flow.gd:101)
+       [2] settle (res://assessment/2026-09-10/run_flow.gd:15)
+FLOW RESULT {"act":1,"actions":80,"deck":19,"hp":92,"outcome":"rewards_continue_disabled","row":5,"transitions":14,"trial":0}
+ScreenManager: Loading scene: loadout from path: res://Path-of-Embers/scenes/screens/LoadoutScreen.tscn
+AutoSave: saved (force:scene_changed:loadout)
+ScreenManager: Successfully loaded scene: loadout
+AutoSave: saved (force:new_run_started)
+ScreenManager: Loading scene: quest_select from path: res://Path-of-Embers/scenes/screens/QuestSelectScreen.tscn
+AutoSave: saved (force:scene_changed:quest_select)
+ScreenManager: Successfully loaded scene: quest_select
+AutoSave: saved (force:quests_chosen)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _on_begin_pressed (res://Path-of-Embers/scenes/screens/QuestSelectScreen.gd:237)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:44)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 2 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 3 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 2, 3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 2, 3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3, 4]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3, 4]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 3]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 3]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [1, 4]
+MapScreen: Row 8 cols order (after explicit sort): [1, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 11 cols order (after explicit sort): [1, 2]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 13 cols order (after explicit sort): [2, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 14 cols order (after explicit sort): [0, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_1_2, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+FLOW 1 screen=map act=1 row=0 hp=75 deck=16
+MapScreen: Node clicked: node_0_0
+MapScreen: Setting current node to: node_0_0
+MapScreen: _update_node_states called, available nodes: ["node_1_1"]
+MapNodeWidget: set_selected(true) for node_0_0
+MapScreen: Setting node node_1_1 as selectable
+MapNodeWidget: set_selectable(true) for node_1_1
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_1_1"]
+MapScreen: Setting node node_1_1 as selectable
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:70)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+MapConnectionsDraw._draw(): Drawing 5 connections
+FLOW 1 screen=combat act=1 row=0 hp=81 deck=16
+CombatScreen: Enemy cinder_imp died. Alive enemies: 1
+CombatScreen: Enemy cinder_imp died. Alive enemies: 0
+CombatScreen: All enemies dead, ending combat
+CombatController: Removed 3 temporary card(s) from deck
+AutoSave: saved (force:node_completed)
+Combat ended: all enemies dead. NodeType=FIGHT, Rewards: gold=0, cards=3, upgrades=0
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+FLOW 1 screen=rewards act=1 row=0 hp=81 deck=16
+AutoSave: saved (force:rewards_finalized)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _finish_rewards (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:507)
+       [3] _on_continue_pressed (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:474)
+       [4] run_tests (res://assessment/2026-09-10/run_flow.gd:121)
+       [5] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 2 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 3 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 2, 3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 2, 3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3, 4]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3, 4]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 3]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 3]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [1, 4]
+MapScreen: Row 8 cols order (after explicit sort): [1, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 11 cols order (after explicit sort): [1, 2]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 13 cols order (after explicit sort): [2, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 14 cols order (after explicit sort): [0, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_1_2, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+FLOW 1 screen=map act=1 row=0 hp=81 deck=17
+MapScreen: Node clicked: node_1_1
+MapScreen: Setting current node to: node_1_1
+MapScreen: _update_node_states called, available nodes: ["node_2_2"]
+MapNodeWidget: set_selected(true) for node_1_1
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_2_2"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:70)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+MapConnectionsDraw._draw(): Drawing 5 connections
+FLOW 1 screen=combat act=1 row=1 hp=87 deck=17
+CombatScreen: Enemy ash_man died. Alive enemies: 0
+CombatScreen: All enemies dead, ending combat
+CombatController: Removed 2 temporary card(s) from deck
+AutoSave: saved (force:node_completed)
+Combat ended: all enemies dead. NodeType=FIGHT, Rewards: gold=0, cards=3, upgrades=1
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+FLOW 1 screen=rewards act=1 row=1 hp=85 deck=17
+UpgradeFlowPanel._on_card_widget_clicked: Rolling upgrades for card strike_1
+UpgradeFlowPanel._on_card_widget_clicked: Rolled 3 upgrade options: ["strike_block", "strike_damage_plus", "strike_energy"]
+UpgradeFlowPanel._show_upgrade_selection: current_upgrade_options.size() = 3
+UpgradeFlowPanel._show_upgrade_selection: Creating buttons for 3 upgrades
+UpgradeFlowPanel._show_upgrade_selection: upgrade_content is valid: true, visible: true
+UpgradeFlowPanel._show_upgrade_selection: Added button for strike_block - button visible: true, size: (400.0, 80.0)
+UpgradeFlowPanel._show_upgrade_selection: Added button for strike_damage_plus - button visible: true, size: (400.0, 80.0)
+UpgradeFlowPanel._show_upgrade_selection: Added button for strike_energy - button visible: true, size: (400.0, 80.0)
+UpgradeFlowPanel._show_upgrade_selection: upgrade_content child count after adding buttons: 3
+UpgradeFlowPanel._show_upgrade_selection: upgrade_content.visible = true, size = (0.0, 0.0)
+AutoSave: saved (force:card_upgraded)
+AutoSave: saved (force:rewards_finalized)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _finish_rewards (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:507)
+       [3] _on_continue_pressed (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:474)
+       [4] run_tests (res://assessment/2026-09-10/run_flow.gd:121)
+       [5] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 2 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 3 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 2, 3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 2, 3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3, 4]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3, 4]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 3]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 3]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [1, 4]
+MapScreen: Row 8 cols order (after explicit sort): [1, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 11 cols order (after explicit sort): [1, 2]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 13 cols order (after explicit sort): [2, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 14 cols order (after explicit sort): [0, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_1_2, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+FLOW 1 screen=map act=1 row=1 hp=85 deck=18
+MapScreen: Node clicked: node_2_2
+MapScreen: Setting current node to: node_2_2
+MapScreen: _update_node_states called, available nodes: ["node_3_2", "node_3_3"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_3_2", "node_3_3"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:70)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+MapConnectionsDraw._draw(): Drawing 5 connections
+FLOW 1 screen=combat act=1 row=2 hp=91 deck=18
+QuestManager: Quest 'living_armor_quest_2' completed for character 'living_armor'
+QuestManager: Quest reward — +25 gold
+CombatScreen: Enemy ember_brute died. Alive enemies: 0
+CombatScreen: All enemies dead, ending combat
+CombatController: Removed 2 temporary card(s) from deck
+AutoSave: saved (force:node_completed)
+Combat ended: all enemies dead. NodeType=FIGHT, Rewards: gold=0, cards=3, upgrades=1
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+FLOW 1 screen=rewards act=1 row=2 hp=91 deck=18
+UpgradeFlowPanel._on_card_widget_clicked: Rolling upgrades for card strike_1
+SCRIPT ERROR: Trying to return an array of type "Array" where expected return type is "Array[String]".
+   at: roll_upgrade_options_for_card (res://Path-of-Embers/core/run/UpgradeService.gd:52)
+   GDScript backtrace (most recent call first):
+       [0] roll_upgrade_options_for_card (res://Path-of-Embers/core/run/UpgradeService.gd:52)
+       [1] _on_card_widget_clicked (res://Path-of-Embers/scenes/ui/rewards/UpgradeFlowPanel.gd:230)
+       [2] run_tests (res://assessment/2026-09-10/run_flow.gd:112)
+       [3] settle (res://assessment/2026-09-10/run_flow.gd:15)
+UpgradeFlowPanel._on_card_widget_clicked: Rolled 0 upgrade options: []
+WARNING: UpgradeFlowPanel: No upgrade options available for card strike_1
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _on_card_widget_clicked (res://Path-of-Embers/scenes/ui/rewards/UpgradeFlowPanel.gd:235)
+       [1] run_tests (res://assessment/2026-09-10/run_flow.gd:112)
+       [2] settle (res://assessment/2026-09-10/run_flow.gd:15)
+UpgradeFlowPanel._on_card_widget_clicked: UpgradeService returned empty, trying fallback
+SCRIPT ERROR: Trying to assign an array of type "Array" to a variable of type "Array[String]".
+   at: _on_card_widget_clicked (res://Path-of-Embers/scenes/ui/rewards/UpgradeFlowPanel.gd:252)
+   GDScript backtrace (most recent call first):
+       [0] _on_card_widget_clicked (res://Path-of-Embers/scenes/ui/rewards/UpgradeFlowPanel.gd:252)
+       [1] run_tests (res://assessment/2026-09-10/run_flow.gd:112)
+       [2] settle (res://assessment/2026-09-10/run_flow.gd:15)
+UpgradeFlowPanel._on_card_widget_clicked: Rolling upgrades for card defend_1
+UpgradeFlowPanel._on_card_widget_clicked: Rolled 3 upgrade options: ["defend_exhaust_heal", "defend_retain", "defend_draw"]
+UpgradeFlowPanel._show_upgrade_selection: current_upgrade_options.size() = 3
+UpgradeFlowPanel._show_upgrade_selection: Creating buttons for 3 upgrades
+UpgradeFlowPanel._show_upgrade_selection: upgrade_content is valid: true, visible: true
+UpgradeFlowPanel._show_upgrade_selection: Added button for defend_exhaust_heal - button visible: true, size: (400.0, 80.0)
+UpgradeFlowPanel._show_upgrade_selection: Added button for defend_retain - button visible: true, size: (400.0, 80.0)
+UpgradeFlowPanel._show_upgrade_selection: Added button for defend_draw - button visible: true, size: (400.0, 80.0)
+UpgradeFlowPanel._show_upgrade_selection: upgrade_content child count after adding buttons: 3
+UpgradeFlowPanel._show_upgrade_selection: upgrade_content.visible = true, size = (0.0, 0.0)
+QuestManager: Quest 'witch_quest_2' completed for character 'witch'
+QuestManager: Quest reward — +35 gold
+AutoSave: saved (force:card_upgraded)
+AutoSave: saved (force:rewards_finalized)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _finish_rewards (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:507)
+       [3] _on_continue_pressed (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:474)
+       [4] run_tests (res://assessment/2026-09-10/run_flow.gd:121)
+       [5] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 2 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 3 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 2, 3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 2, 3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3, 4]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3, 4]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 3]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 3]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [1, 4]
+MapScreen: Row 8 cols order (after explicit sort): [1, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 11 cols order (after explicit sort): [1, 2]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 13 cols order (after explicit sort): [2, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 14 cols order (after explicit sort): [0, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_1_2, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+FLOW 1 screen=map act=1 row=2 hp=91 deck=19
+MapScreen: Node clicked: node_3_2
+MapScreen: Setting current node to: node_3_2
+MapScreen: _update_node_states called, available nodes: ["node_4_2"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_4_2"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+ScreenManager: Loading scene: shop from path: res://Path-of-Embers/scenes/screens/ShopScreen.tscn
+ShopScreen: generated 11 stock items
+AutoSave: saved (force:scene_changed:shop)
+ScreenManager: Successfully loaded scene: shop
+MapConnectionsDraw._draw(): Drawing 5 connections
+FLOW 1 screen=shop act=1 row=3 hp=91 deck=19
+AutoSave: saved (force:node_completed)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _on_leave_pressed (res://Path-of-Embers/scenes/screens/ShopScreen.gd:300)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:135)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 2 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 3 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 2, 3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 2, 3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3, 4]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3, 4]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 3]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 3]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [1, 4]
+MapScreen: Row 8 cols order (after explicit sort): [1, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 11 cols order (after explicit sort): [1, 2]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 13 cols order (after explicit sort): [2, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 14 cols order (after explicit sort): [0, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+FLOW 1 screen=map act=1 row=3 hp=91 deck=19
+MapScreen: Node clicked: node_4_2
+MapScreen: Setting current node to: node_4_2
+MapScreen: _update_node_states called, available nodes: ["node_5_2"]
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_5_2"]
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 2 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 3 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 2, 3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 2, 3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3, 4]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3, 4]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 3]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 3]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [1, 4]
+MapScreen: Row 8 cols order (after explicit sort): [1, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 11 cols order (after explicit sort): [1, 2]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 13 cols order (after explicit sort): [2, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 14 cols order (after explicit sort): [0, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+AutoSave: saved (force:node_completed)
+AutoSave: saved (force:rest_node)
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 2 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 3 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 2, 3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 2, 3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3, 4]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3, 4]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 3]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 3]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [1, 4]
+MapScreen: Row 8 cols order (after explicit sort): [1, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 11 cols order (after explicit sort): [1, 2]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 13 cols order (after explicit sort): [2, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 14 cols order (after explicit sort): [0, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_1_2, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapScreen: Node clicked: node_5_2
+MapScreen: Setting current node to: node_5_2
+MapScreen: _update_node_states called, available nodes: ["node_6_2"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_6_2"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:70)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+MapConnectionsDraw._draw(): Drawing 5 connections
+FLOW 1 screen=combat act=1 row=5 hp=99 deck=19
+CombatScreen: Enemy smolder_shade died. Alive enemies: 1
+WARNING: SCRY: peeking at top 2 cards (UI reorder not yet implemented)
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] resolve_effect (res://Path-of-Embers/core/combat/EffectResolver.gd:394)
+       [1] resolve_effects (res://Path-of-Embers/core/combat/EffectResolver.gd:833)
+       [2] _resolve_card_effects_with_effects (res://Path-of-Embers/core/combat/CombatController.gd:550)
+       [3] play_card (res://Path-of-Embers/core/combat/CombatController.gd:415)
+       [4] run_tests (res://assessment/2026-09-10/run_flow.gd:92)
+       [5] settle (res://assessment/2026-09-10/run_flow.gd:15)
+CombatScreen: Enemy smolder_shade died. Alive enemies: 0
+CombatScreen: All enemies dead, ending combat
+CombatController: Removed 3 temporary card(s) from deck
+AutoSave: saved (force:node_completed)
+Combat ended: all enemies dead. NodeType=FIGHT, Rewards: gold=0, cards=3, upgrades=1
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+FLOW 1 screen=rewards act=1 row=5 hp=99 deck=19
+UpgradeFlowPanel._on_card_widget_clicked: Rolling upgrades for card strike_1
+SCRIPT ERROR: Trying to return an array of type "Array" where expected return type is "Array[String]".
+   at: roll_upgrade_options_for_card (res://Path-of-Embers/core/run/UpgradeService.gd:52)
+   GDScript backtrace (most recent call first):
+       [0] roll_upgrade_options_for_card (res://Path-of-Embers/core/run/UpgradeService.gd:52)
+       [1] _on_card_widget_clicked (res://Path-of-Embers/scenes/ui/rewards/UpgradeFlowPanel.gd:230)
+       [2] run_tests (res://assessment/2026-09-10/run_flow.gd:112)
+       [3] settle (res://assessment/2026-09-10/run_flow.gd:15)
+UpgradeFlowPanel._on_card_widget_clicked: Rolled 0 upgrade options: []
+WARNING: UpgradeFlowPanel: No upgrade options available for card strike_1
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _on_card_widget_clicked (res://Path-of-Embers/scenes/ui/rewards/UpgradeFlowPanel.gd:235)
+       [1] run_tests (res://assessment/2026-09-10/run_flow.gd:112)
+       [2] settle (res://assessment/2026-09-10/run_flow.gd:15)
+UpgradeFlowPanel._on_card_widget_clicked: UpgradeService returned empty, trying fallback
+SCRIPT ERROR: Trying to assign an array of type "Array" to a variable of type "Array[String]".
+   at: _on_card_widget_clicked (res://Path-of-Embers/scenes/ui/rewards/UpgradeFlowPanel.gd:252)
+   GDScript backtrace (most recent call first):
+       [0] _on_card_widget_clicked (res://Path-of-Embers/scenes/ui/rewards/UpgradeFlowPanel.gd:252)
+       [1] run_tests (res://assessment/2026-09-10/run_flow.gd:112)
+       [2] settle (res://assessment/2026-09-10/run_flow.gd:15)
+UpgradeFlowPanel._on_card_widget_clicked: Rolling upgrades for card defend_1
+SCRIPT ERROR: Trying to return an array of type "Array" where expected return type is "Array[String]".
+   at: roll_upgrade_options_for_card (res://Path-of-Embers/core/run/UpgradeService.gd:52)
+   GDScript backtrace (most recent call first):
+       [0] roll_upgrade_options_for_card (res://Path-of-Embers/core/run/UpgradeService.gd:52)
+       [1] _on_card_widget_clicked (res://Path-of-Embers/scenes/ui/rewards/UpgradeFlowPanel.gd:230)
+       [2] run_tests (res://assessment/2026-09-10/run_flow.gd:112)
+       [3] settle (res://assessment/2026-09-10/run_flow.gd:15)
+UpgradeFlowPanel._on_card_widget_clicked: Rolled 0 upgrade options: []
+WARNING: UpgradeFlowPanel: No upgrade options available for card defend_1
+   at: push_warning (core/variant/variant_utility.cpp:1034)
+   GDScript backtrace (most recent call first):
+       [0] _on_card_widget_clicked (res://Path-of-Embers/scenes/ui/rewards/UpgradeFlowPanel.gd:235)
+       [1] run_tests (res://assessment/2026-09-10/run_flow.gd:112)
+       [2] settle (res://assessment/2026-09-10/run_flow.gd:15)
+UpgradeFlowPanel._on_card_widget_clicked: UpgradeService returned empty, trying fallback
+SCRIPT ERROR: Trying to assign an array of type "Array" to a variable of type "Array[String]".
+   at: _on_card_widget_clicked (res://Path-of-Embers/scenes/ui/rewards/UpgradeFlowPanel.gd:252)
+   GDScript backtrace (most recent call first):
+       [0] _on_card_widget_clicked (res://Path-of-Embers/scenes/ui/rewards/UpgradeFlowPanel.gd:252)
+       [1] run_tests (res://assessment/2026-09-10/run_flow.gd:112)
+       [2] settle (res://assessment/2026-09-10/run_flow.gd:15)
+UpgradeFlowPanel._on_card_widget_clicked: Rolling upgrades for card strike_1
+UpgradeFlowPanel._on_card_widget_clicked: Rolled 3 upgrade options: ["strike_damage_plus", "strike_draw", "strike_energy"]
+UpgradeFlowPanel._show_upgrade_selection: current_upgrade_options.size() = 3
+UpgradeFlowPanel._show_upgrade_selection: Creating buttons for 3 upgrades
+UpgradeFlowPanel._show_upgrade_selection: upgrade_content is valid: true, visible: true
+UpgradeFlowPanel._show_upgrade_selection: Added button for strike_damage_plus - button visible: true, size: (400.0, 80.0)
+UpgradeFlowPanel._show_upgrade_selection: Added button for strike_draw - button visible: true, size: (400.0, 80.0)
+UpgradeFlowPanel._show_upgrade_selection: Added button for strike_energy - button visible: true, size: (400.0, 80.0)
+UpgradeFlowPanel._show_upgrade_selection: upgrade_content child count after adding buttons: 3
+UpgradeFlowPanel._show_upgrade_selection: upgrade_content.visible = true, size = (0.0, 0.0)
+AutoSave: saved (force:card_upgraded)
+AutoSave: saved (force:rewards_finalized)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _finish_rewards (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:507)
+       [3] _on_continue_pressed (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:474)
+       [4] run_tests (res://assessment/2026-09-10/run_flow.gd:121)
+       [5] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 2 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 3 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 2, 3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 2, 3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3, 4]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3, 4]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 2, 3]
+MapScreen: Row 7 cols order (after explicit sort): [0, 2, 3]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [1, 4]
+MapScreen: Row 8 cols order (after explicit sort): [1, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 9 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 11 cols order (after explicit sort): [1, 2]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [1, 2]
+MapScreen: Row 12 cols order (after explicit sort): [1, 2]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [2, 3]
+MapScreen: Row 13 cols order (after explicit sort): [2, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 14 cols order (after explicit sort): [0, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_3, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_1_2, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+FLOW 1 screen=map act=1 row=5 hp=99 deck=20
+MapScreen: Node clicked: node_6_2
+MapScreen: Setting current node to: node_6_2
+MapScreen: _update_node_states called, available nodes: ["node_7_2"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_7_2"]
+MapConnectionsDraw.set_connection_data(): Received 5 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 5 connections, visible=true
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:70)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+MapConnectionsDraw._draw(): Drawing 5 connections
+FLOW 1 screen=combat act=1 row=6 hp=105 deck=20
+CombatScreen: Enemy cinder_imp died. Alive enemies: 1
+CombatScreen: Enemy ash_man died. Alive enemies: 0
+CombatScreen: All enemies dead, ending combat
+CombatController: Removed 3 temporary card(s) from deck
+AutoSave: saved (force:node_completed)
+Combat ended: all enemies dead. NodeType=FIGHT, Rewards: gold=10, cards=0, upgrades=0
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+FLOW 1 screen=rewards act=1 row=6 hp=96 deck=20
+SCRIPT ERROR: Invalid access to property or key 'gold' on a base object of type 'Node (RunState.gd)'.
+   at: _on_claim_gold (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:310)
+   GDScript backtrace (most recent call first):
+       [0] _on_claim_gold (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:310)
+       [1] run_tests (res://assessment/2026-09-10/run_flow.gd:101)
+       [2] settle (res://assessment/2026-09-10/run_flow.gd:15)
+FLOW RESULT {"act":1,"actions":88,"deck":20,"hp":96,"outcome":"rewards_continue_disabled","row":6,"transitions":17,"trial":1}
+ScreenManager: Loading scene: loadout from path: res://Path-of-Embers/scenes/screens/LoadoutScreen.tscn
+AutoSave: saved (force:scene_changed:loadout)
+ScreenManager: Successfully loaded scene: loadout
+AutoSave: saved (force:new_run_started)
+ScreenManager: Loading scene: quest_select from path: res://Path-of-Embers/scenes/screens/QuestSelectScreen.tscn
+AutoSave: saved (force:scene_changed:quest_select)
+ScreenManager: Successfully loaded scene: quest_select
+AutoSave: saved (force:quests_chosen)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _on_begin_pressed (res://Path-of-Embers/scenes/screens/QuestSelectScreen.gd:237)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:44)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [2, 3, 4]
+MapScreen: Row 0 cols order (after explicit sort): [2, 3, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [1, 4]
+MapScreen: Row 2 cols order (after explicit sort): [1, 4]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 3 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 7 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [1, 2, 3, 4]
+MapScreen: Row 9 cols order (after explicit sort): [1, 2, 3, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 2, 3]
+MapScreen: Row 10 cols order (after explicit sort): [0, 2, 3]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 1]
+MapScreen: Row 11 cols order (after explicit sort): [0, 1]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [0, 1]
+MapScreen: Row 12 cols order (after explicit sort): [0, 1]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 13 cols order (after explicit sort): [1, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 14 cols order (after explicit sort): [0, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 3
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+MapNodeWidget.setup() called for node_3_0, selectable=false
+MapNodeWidget.setup() called for node_3_1, selectable=false
+FLOW 2 screen=map act=1 row=0 hp=75 deck=16
+MapScreen: Node clicked: node_0_0
+MapScreen: Setting current node to: node_0_0
+MapScreen: _update_node_states called, available nodes: ["node_1_0", "node_1_1"]
+MapNodeWidget: set_selected(true) for node_0_0
+MapScreen: Setting node node_1_0 as selectable
+MapNodeWidget: set_selectable(true) for node_1_0
+MapScreen: Setting node node_1_1 as selectable
+MapNodeWidget: set_selectable(true) for node_1_1
+MapConnectionsDraw.set_connection_data(): Received 7 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 7 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_1_0", "node_1_1"]
+MapScreen: Setting node node_1_0 as selectable
+MapScreen: Setting node node_1_1 as selectable
+MapConnectionsDraw.set_connection_data(): Received 7 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 7 connections, visible=true
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:70)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+MapConnectionsDraw._draw(): Drawing 7 connections
+FLOW 2 screen=combat act=1 row=0 hp=81 deck=16
+CombatScreen: Enemy smolder_shade died. Alive enemies: 1
+QuestManager: Quest 'living_armor_quest_2' completed for character 'living_armor'
+QuestManager: Quest reward — +25 gold
+CombatScreen: Enemy smolder_shade died. Alive enemies: 0
+CombatScreen: All enemies dead, ending combat
+CombatController: Removed 2 temporary card(s) from deck
+AutoSave: saved (force:node_completed)
+Combat ended: all enemies dead. NodeType=FIGHT, Rewards: gold=0, cards=3, upgrades=0
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+FLOW 2 screen=rewards act=1 row=0 hp=68 deck=16
+AutoSave: saved (force:rewards_finalized)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _finish_rewards (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:507)
+       [3] _on_continue_pressed (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:474)
+       [4] run_tests (res://assessment/2026-09-10/run_flow.gd:121)
+       [5] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [2, 3, 4]
+MapScreen: Row 0 cols order (after explicit sort): [2, 3, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [1, 4]
+MapScreen: Row 2 cols order (after explicit sort): [1, 4]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 3 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 7 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [1, 2, 3, 4]
+MapScreen: Row 9 cols order (after explicit sort): [1, 2, 3, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 2, 3]
+MapScreen: Row 10 cols order (after explicit sort): [0, 2, 3]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 1]
+MapScreen: Row 11 cols order (after explicit sort): [0, 1]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [0, 1]
+MapScreen: Row 12 cols order (after explicit sort): [0, 1]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 13 cols order (after explicit sort): [1, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 14 cols order (after explicit sort): [0, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 3
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+MapNodeWidget.setup() called for node_3_0, selectable=false
+MapNodeWidget.setup() called for node_3_1, selectable=false
+FLOW 2 screen=map act=1 row=0 hp=68 deck=17
+MapScreen: Node clicked: node_1_0
+MapScreen: Setting current node to: node_1_0
+MapScreen: _update_node_states called, available nodes: ["node_2_0"]
+MapNodeWidget: set_selected(true) for node_1_0
+MapScreen: Setting node node_2_0 as selectable
+MapNodeWidget: set_selectable(true) for node_2_0
+MapConnectionsDraw.set_connection_data(): Received 7 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 7 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_2_0"]
+MapScreen: Setting node node_2_0 as selectable
+MapConnectionsDraw.set_connection_data(): Received 7 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 7 connections, visible=true
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:70)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+MapConnectionsDraw._draw(): Drawing 7 connections
+FLOW 2 screen=combat act=1 row=1 hp=74 deck=17
+CombatScreen: Enemy smolder_shade died. Alive enemies: 1
+CombatScreen: Enemy smolder_shade died. Alive enemies: 0
+CombatScreen: All enemies dead, ending combat
+CombatController: Removed 3 temporary card(s) from deck
+AutoSave: saved (force:node_completed)
+Combat ended: all enemies dead. NodeType=FIGHT, Rewards: gold=0, cards=3, upgrades=0
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+FLOW 2 screen=rewards act=1 row=1 hp=74 deck=17
+AutoSave: saved (force:rewards_finalized)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _finish_rewards (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:507)
+       [3] _on_continue_pressed (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:474)
+       [4] run_tests (res://assessment/2026-09-10/run_flow.gd:121)
+       [5] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [2, 3, 4]
+MapScreen: Row 0 cols order (after explicit sort): [2, 3, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [1, 4]
+MapScreen: Row 2 cols order (after explicit sort): [1, 4]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 3 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 7 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [1, 2, 3, 4]
+MapScreen: Row 9 cols order (after explicit sort): [1, 2, 3, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 2, 3]
+MapScreen: Row 10 cols order (after explicit sort): [0, 2, 3]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 1]
+MapScreen: Row 11 cols order (after explicit sort): [0, 1]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [0, 1]
+MapScreen: Row 12 cols order (after explicit sort): [0, 1]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 13 cols order (after explicit sort): [1, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 14 cols order (after explicit sort): [0, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 3
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+MapNodeWidget.setup() called for node_3_0, selectable=false
+MapNodeWidget.setup() called for node_3_1, selectable=false
+FLOW 2 screen=map act=1 row=1 hp=74 deck=18
+MapScreen: Node clicked: node_2_0
+MapScreen: Setting current node to: node_2_0
+MapScreen: _update_node_states called, available nodes: ["node_3_0", "node_3_1"]
+MapNodeWidget: set_selected(true) for node_2_0
+MapScreen: Setting node node_3_0 as selectable
+MapNodeWidget: set_selectable(true) for node_3_0
+MapConnectionsDraw.set_connection_data(): Received 7 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 7 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_3_0", "node_3_1"]
+MapScreen: Setting node node_3_0 as selectable
+MapConnectionsDraw.set_connection_data(): Received 7 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 7 connections, visible=true
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:70)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+MapConnectionsDraw._draw(): Drawing 7 connections
+FLOW 2 screen=combat act=1 row=2 hp=80 deck=18
+CombatScreen: Enemy ash_man died. Alive enemies: 0
+CombatScreen: All enemies dead, ending combat
+CombatController: Removed 3 temporary card(s) from deck
+AutoSave: saved (force:node_completed)
+Combat ended: all enemies dead. NodeType=FIGHT, Rewards: gold=0, cards=3, upgrades=0
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+FLOW 2 screen=rewards act=1 row=2 hp=81 deck=18
+AutoSave: saved (force:rewards_finalized)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _finish_rewards (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:507)
+       [3] _on_continue_pressed (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:474)
+       [4] run_tests (res://assessment/2026-09-10/run_flow.gd:121)
+       [5] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [2, 3, 4]
+MapScreen: Row 0 cols order (after explicit sort): [2, 3, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [1, 4]
+MapScreen: Row 2 cols order (after explicit sort): [1, 4]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 3 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 7 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [1, 2, 3, 4]
+MapScreen: Row 9 cols order (after explicit sort): [1, 2, 3, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 2, 3]
+MapScreen: Row 10 cols order (after explicit sort): [0, 2, 3]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 1]
+MapScreen: Row 11 cols order (after explicit sort): [0, 1]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [0, 1]
+MapScreen: Row 12 cols order (after explicit sort): [0, 1]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 13 cols order (after explicit sort): [1, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 14 cols order (after explicit sort): [0, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 3
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+MapNodeWidget.setup() called for node_3_0, selectable=false
+MapNodeWidget.setup() called for node_3_1, selectable=false
+FLOW 2 screen=map act=1 row=2 hp=81 deck=19
+MapScreen: Node clicked: node_3_1
+MapScreen: Setting current node to: node_3_1
+MapScreen: _update_node_states called, available nodes: ["node_4_2"]
+MapConnectionsDraw.set_connection_data(): Received 7 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 7 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_4_2"]
+MapConnectionsDraw.set_connection_data(): Received 7 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 7 connections, visible=true
+ScreenManager: Loading scene: shop from path: res://Path-of-Embers/scenes/screens/ShopScreen.tscn
+ShopScreen: generated 11 stock items
+AutoSave: saved (force:scene_changed:shop)
+ScreenManager: Successfully loaded scene: shop
+MapConnectionsDraw._draw(): Drawing 7 connections
+FLOW 2 screen=shop act=1 row=3 hp=81 deck=19
+AutoSave: saved (force:node_completed)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _on_leave_pressed (res://Path-of-Embers/scenes/screens/ShopScreen.gd:300)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:135)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [2, 3, 4]
+MapScreen: Row 0 cols order (after explicit sort): [2, 3, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [1, 4]
+MapScreen: Row 2 cols order (after explicit sort): [1, 4]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 3 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 7 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [1, 2, 3, 4]
+MapScreen: Row 9 cols order (after explicit sort): [1, 2, 3, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 2, 3]
+MapScreen: Row 10 cols order (after explicit sort): [0, 2, 3]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 1]
+MapScreen: Row 11 cols order (after explicit sort): [0, 1]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [0, 1]
+MapScreen: Row 12 cols order (after explicit sort): [0, 1]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 13 cols order (after explicit sort): [1, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 14 cols order (after explicit sort): [0, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 3
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+FLOW 2 screen=map act=1 row=3 hp=81 deck=19
+MapScreen: Node clicked: node_4_2
+MapScreen: Setting current node to: node_4_2
+MapScreen: _update_node_states called, available nodes: ["node_5_2"]
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_5_2"]
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+       [3] run_tests (res://assessment/2026-09-10/run_flow.gd:70)
+       [4] settle (res://assessment/2026-09-10/run_flow.gd:15)
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+MapConnectionsDraw._draw(): connection_data is empty
+FLOW 2 screen=combat act=1 row=4 hp=87 deck=19
+CombatScreen: Enemy ash_man died. Alive enemies: 0
+CombatScreen: All enemies dead, ending combat
+CombatController: Removed 2 temporary card(s) from deck
+AutoSave: saved (force:node_completed)
+Combat ended: all enemies dead. NodeType=FIGHT, Rewards: gold=0, cards=3, upgrades=0
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+FLOW 2 screen=rewards act=1 row=4 hp=81 deck=19
+AutoSave: saved (force:rewards_finalized)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _finish_rewards (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:507)
+       [3] _on_continue_pressed (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:474)
+       [4] run_tests (res://assessment/2026-09-10/run_flow.gd:121)
+       [5] settle (res://assessment/2026-09-10/run_flow.gd:15)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [2, 3, 4]
+MapScreen: Row 0 cols order (after explicit sort): [2, 3, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 1 cols order (after explicit sort): [1, 3]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [1, 4]
+MapScreen: Row 2 cols order (after explicit sort): [1, 4]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 3 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 4 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 5 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [0, 1, 3]
+MapScreen: Row 6 cols order (after explicit sort): [0, 1, 3]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 3, 4]
+MapScreen: Row 7 cols order (after explicit sort): [0, 3, 4]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [1, 2, 3, 4]
+MapScreen: Row 9 cols order (after explicit sort): [1, 2, 3, 4]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 2, 3]
+MapScreen: Row 10 cols order (after explicit sort): [0, 2, 3]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 1]
+MapScreen: Row 11 cols order (after explicit sort): [0, 1]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [0, 1]
+MapScreen: Row 12 cols order (after explicit sort): [0, 1]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [1, 3]
+MapScreen: Row 13 cols order (after explicit sort): [1, 3]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 2]
+MapScreen: Row 14 cols order (after explicit sort): [0, 2]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (1920.0, 1088.0)
+MapScreen: map_root min size: (2000.0, 1080.0) actual: (2000.0, 1080.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 3
+MapNodeWidget.setup() called for node_0_0, selectable=false
+MapNodeWidget.setup() called for node_0_1, selectable=false
+MapNodeWidget.setup() called for node_0_2, selectable=false
+MapNodeWidget.setup() called for node_1_0, selectable=false
+MapNodeWidget.setup() called for node_1_1, selectable=false
+MapNodeWidget.setup() called for node_2_0, selectable=false
+MapNodeWidget.setup() called for node_2_1, selectable=false
+MapNodeWidget.setup() called for node_3_0, selectable=false
+MapNodeWidget.setup() called for node_3_1, selectable=false
+FLOW 2 screen=map act=1 row=4 hp=81 deck=20
+MapScreen: Node clicked: node_5_2
+MapScreen: Setting current node to: node_5_2
+MapScreen: _update_node_states called, available nodes: ["node_6_1", "node_6_2"]
+MapConnectionsDraw.set_connection_data(): Received 7 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 7 connections, visible=true
+MapScreen: _update_node_states called, available nodes: ["node_6_1", "node_6_2"]
+MapConnectionsDraw.set_connection_data(): Received 7 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 7 connections, visible=true
+ScreenManager: Loading scene: encounter from path: res://Path-of-Embers/scenes/screens/EncounterScreen.tscn
+AutoSave: saved (force:scene_changed:encounter)
+ScreenManager: Successfully loaded scene: encounter
+MapConnectionsDraw._draw(): Drawing 7 connections
+FLOW 2 screen=encounter act=1 row=5 hp=81 deck=20
+AutoSave: saved (force:pending_rewards_set)
+ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+AutoSave: saved (force:pending_rewards_set)
+AutoSave: saved (force:scene_changed:rewards)
+ScreenManager: Successfully loaded scene: rewards
+FLOW 2 screen=rewards act=1 row=5 hp=81 deck=20
+SCRIPT ERROR: Invalid access to property or key 'gold' on a base object of type 'Node (RunState.gd)'.
+   at: _on_claim_gold (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:310)
+   GDScript backtrace (most recent call first):
+       [0] _on_claim_gold (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:310)
+       [1] run_tests (res://assessment/2026-09-10/run_flow.gd:101)
+       [2] settle (res://assessment/2026-09-10/run_flow.gd:15)
+FLOW RESULT {"act":1,"actions":87,"deck":20,"hp":81,"outcome":"rewards_continue_disabled","row":5,"transitions":17,"trial":2}
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2514)
+ERROR: 5 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:795)

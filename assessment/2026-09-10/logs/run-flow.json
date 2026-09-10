@@ -1,0 +1,32 @@
+[
+  {
+    "act": 1,
+    "actions": 80,
+    "deck": 19,
+    "hp": 92,
+    "outcome": "rewards_continue_disabled",
+    "row": 5,
+    "transitions": 14,
+    "trial": 0
+  },
+  {
+    "act": 1,
+    "actions": 88,
+    "deck": 20,
+    "hp": 96,
+    "outcome": "rewards_continue_disabled",
+    "row": 6,
+    "transitions": 17,
+    "trial": 1
+  },
+  {
+    "act": 1,
+    "actions": 87,
+    "deck": 20,
+    "hp": 81,
+    "outcome": "rewards_continue_disabled",
+    "row": 5,
+    "transitions": 17,
+    "trial": 2
+  }
+]

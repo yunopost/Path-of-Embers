@@ -1,0 +1,336 @@
+{
+  "ability_uses_total": {
+    "max": 23,
+    "mean": 18.8,
+    "min": 14,
+    "p10": 16,
+    "p50": 19,
+    "p90": 22
+  },
+  "act": 3,
+  "block_gained": {
+    "max": 107,
+    "mean": 87.8333333333333,
+    "min": 57,
+    "p10": 68,
+    "p50": 92,
+    "p90": 98
+  },
+  "block_wasted": {
+    "max": 552,
+    "mean": 198.233333333333,
+    "min": 23,
+    "p10": 50,
+    "p50": 176,
+    "p90": 343
+  },
+  "card_ticks": {
+    "max": 19,
+    "mean": 14.7,
+    "min": 10,
+    "p10": 12,
+    "p50": 14,
+    "p90": 18
+  },
+  "cards_played_total": {
+    "max": 34,
+    "mean": 29.5,
+    "min": 21,
+    "p10": 26,
+    "p50": 30,
+    "p90": 32
+  },
+  "catalogue": [
+    {
+      "card_id": "strike_1",
+      "copies": 5,
+      "cost": 1,
+      "effects": "damage{ \"amount\": 6 }",
+      "keywords": [],
+      "owner": "warrior_1",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    },
+    {
+      "card_id": "defend_1",
+      "copies": 4,
+      "cost": 1,
+      "effects": "block{ \"amount\": 5 }",
+      "keywords": [],
+      "owner": "warrior_1",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "deadly_strike",
+      "copies": 1,
+      "cost": 2,
+      "effects": "damage{ \"amount\": 10 }, vulnerable{ \"duration\": 4 }",
+      "keywords": [],
+      "owner": "warrior_1",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    },
+    {
+      "card_id": "pursuit",
+      "copies": 1,
+      "cost": 0,
+      "effects": "grant_haste_next_card{ \"conditional_draw_min_cost\": 2, \"conditional_draw_amount\": 2 }",
+      "keywords": [
+        "Haste"
+      ],
+      "owner": "warrior_1",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "cheap_shot",
+      "copies": 1,
+      "cost": 0,
+      "effects": "damage_if_last_applied_debuff{ \"base_amount\": 5, \"bonus_amount\": 5 }",
+      "keywords": [
+        "Haste"
+      ],
+      "owner": "warrior_2",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    },
+    {
+      "card_id": "shadow_step",
+      "copies": 1,
+      "cost": 1,
+      "effects": "block{ \"amount\": 6 }, next_card_haste_and_discount{ \"discount\": 1, \"grant_haste\": false }",
+      "keywords": [
+        "Haste"
+      ],
+      "owner": "warrior_2",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "bulwark",
+      "copies": 1,
+      "cost": 1,
+      "effects": "block_equal_to_pile_size{ \"pile\": \"discard\" }",
+      "keywords": [],
+      "owner": "golemancer",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "construct_punch",
+      "copies": 1,
+      "cost": 2,
+      "effects": "damage_equal_to_pile_size{ \"pile\": \"draw\" }",
+      "keywords": [],
+      "owner": "golemancer",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    }
+  ],
+  "cycles": {
+    "max": 61,
+    "mean": 58.8333333333333,
+    "min": 45,
+    "p10": 52,
+    "p50": 61,
+    "p90": 61
+  },
+  "damage_taken": {
+    "max": 78,
+    "mean": 51.5333333333333,
+    "min": 17,
+    "p10": 25,
+    "p50": 54,
+    "p90": 74
+  },
+  "deaths": 3,
+  "elapsed_ms": 194,
+  "enemies": "ember_brute:1",
+  "enemy_actions": {
+    "max": 12,
+    "mean": 10.1333333333333,
+    "min": 8,
+    "p10": 9,
+    "p50": 10,
+    "p90": 11
+  },
+  "enemy_data": [
+    {
+      "count": 1,
+      "dmg_mult": 1.6,
+      "enemy_id": "ember_brute",
+      "hp_mult": 2.2
+    }
+  ],
+  "enemy_hp_left_on_loss": {
+    "max": 18,
+    "mean": 13.3333333333333,
+    "min": 10,
+    "p10": 10,
+    "p50": 12,
+    "p90": 12
+  },
+  "energy_unspent": {
+    "max": 0,
+    "mean": 0.0,
+    "min": 0,
+    "p10": 0,
+    "p50": 0,
+    "p90": 0
+  },
+  "energy_unspent_per_turn": {
+    "max": 0.0,
+    "mean": 0.0,
+    "min": 0.0,
+    "p10": 0.0,
+    "p50": 0.0,
+    "p90": 0.0
+  },
+  "findings": [],
+  "heal_wasted": {
+    "max": 0,
+    "mean": 0.0,
+    "min": 0,
+    "p10": 0,
+    "p50": 0,
+    "p90": 0
+  },
+  "hp_end": {
+    "max": 61,
+    "mean": 26.4666666666667,
+    "min": 0,
+    "p10": 0,
+    "p50": 24,
+    "p90": 45
+  },
+  "hp_lost_gross": {
+    "max": 78,
+    "mean": 51.5333333333333,
+    "min": 17,
+    "p10": 25,
+    "p50": 54,
+    "p90": 74
+  },
+  "hp_max": 78,
+  "label": "warrior_1,warrior_2,golemancer vs ember_brute:1 act3",
+  "max_turns": 60,
+  "n": 30,
+  "never_played": [],
+  "party": [
+    "warrior_1",
+    "warrior_2",
+    "golemancer"
+  ],
+  "per_ability": [
+    {
+      "ability_name": "The Wait",
+      "character_id": "warrior_1",
+      "uses_per_fight": 9.26666666666667
+    },
+    {
+      "ability_name": "One Night Sooner",
+      "character_id": "warrior_2",
+      "uses_per_fight": 8.33333333333333
+    },
+    {
+      "ability_name": "Hold the Door",
+      "character_id": "golemancer",
+      "uses_per_fight": 1.2
+    }
+  ],
+  "per_card": [
+    {
+      "affordable": 574,
+      "card_id": "strike_1",
+      "copies": 5,
+      "plays": 299,
+      "plays_per_fight": 9.96666666666667,
+      "seen": 1077
+    },
+    {
+      "affordable": 617,
+      "card_id": "defend_1",
+      "copies": 4,
+      "plays": 230,
+      "plays_per_fight": 7.66666666666667,
+      "seen": 1151
+    },
+    {
+      "affordable": 88,
+      "card_id": "pursuit",
+      "copies": 1,
+      "plays": 64,
+      "plays_per_fight": 2.13333333333333,
+      "seen": 88
+    },
+    {
+      "affordable": 81,
+      "card_id": "cheap_shot",
+      "copies": 1,
+      "plays": 61,
+      "plays_per_fight": 2.03333333333333,
+      "seen": 81
+    },
+    {
+      "affordable": 77,
+      "card_id": "deadly_strike",
+      "copies": 1,
+      "plays": 60,
+      "plays_per_fight": 2.0,
+      "seen": 490
+    },
+    {
+      "affordable": 194,
+      "card_id": "bulwark",
+      "copies": 1,
+      "plays": 59,
+      "plays_per_fight": 1.96666666666667,
+      "seen": 359
+    },
+    {
+      "affordable": 130,
+      "card_id": "shadow_step",
+      "copies": 1,
+      "plays": 56,
+      "plays_per_fight": 1.86666666666667,
+      "seen": 248
+    },
+    {
+      "affordable": 100,
+      "card_id": "construct_punch",
+      "copies": 1,
+      "plays": 56,
+      "plays_per_fight": 1.86666666666667,
+      "seen": 642
+    }
+  ],
+  "per_enemy": [
+    {
+      "actions_per_fight": 10.1333333333333,
+      "enemy_id": "ember_brute",
+      "hp_damage_per_fight": 51.5333333333333
+    }
+  ],
+  "policy": "timed",
+  "seed": 12345,
+  "ticks": {
+    "max": 80,
+    "mean": 73.7333333333333,
+    "min": 57,
+    "p10": 67,
+    "p50": 74,
+    "p90": 80
+  },
+  "timeouts": 20,
+  "turns": {
+    "max": 61,
+    "mean": 58.8333333333333,
+    "min": 45,
+    "p10": 52,
+    "p50": 61,
+    "p90": 61
+  },
+  "win_rate": 0.233333333333333,
+  "wins": 7
+}

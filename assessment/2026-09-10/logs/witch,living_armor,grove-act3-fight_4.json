@@ -1,0 +1,350 @@
+{
+  "ability_uses_total": {
+    "max": 29,
+    "mean": 21.8666666666667,
+    "min": 13,
+    "p10": 15,
+    "p50": 21,
+    "p90": 28
+  },
+  "act": 3,
+  "block_gained": {
+    "max": 94,
+    "mean": 60.1666666666667,
+    "min": 33,
+    "p10": 39,
+    "p50": 60,
+    "p90": 78
+  },
+  "block_wasted": {
+    "max": 49,
+    "mean": 30.1,
+    "min": 7,
+    "p10": 14,
+    "p50": 31,
+    "p90": 42
+  },
+  "card_ticks": {
+    "max": 34,
+    "mean": 26.0,
+    "min": 14,
+    "p10": 19,
+    "p50": 25,
+    "p90": 32
+  },
+  "cards_played_total": {
+    "max": 34,
+    "mean": 26.0,
+    "min": 14,
+    "p10": 19,
+    "p50": 25,
+    "p90": 32
+  },
+  "catalogue": [
+    {
+      "card_id": "strike_1",
+      "copies": 3,
+      "cost": 1,
+      "effects": "damage{ \"amount\": 6 }",
+      "keywords": [],
+      "owner": "witch",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    },
+    {
+      "card_id": "defend_1",
+      "copies": 4,
+      "cost": 1,
+      "effects": "block{ \"amount\": 5 }",
+      "keywords": [],
+      "owner": "witch",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "heal_1",
+      "copies": 2,
+      "cost": 1,
+      "effects": "heal{ \"amount\": 5 }",
+      "keywords": [],
+      "owner": "witch",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "hex",
+      "copies": 1,
+      "cost": 1,
+      "effects": "add_curse_to_hand{ \"is_temporary\": true }, damage_per_curse_in_hand{ \"base_amount\": 0, \"per_curse\": 6 }",
+      "keywords": [],
+      "owner": "witch",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    },
+    {
+      "card_id": "dark_pact",
+      "copies": 1,
+      "cost": 0,
+      "effects": "exhaust_hand_curses{ \"energy_per_card\": 1, \"draw_per_card\": 1 }",
+      "keywords": [],
+      "owner": "witch",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "iron_tide",
+      "copies": 1,
+      "cost": 1,
+      "effects": "damage_equal_to_block{ \"divisor\": 2 }",
+      "keywords": [],
+      "owner": "living_armor",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    },
+    {
+      "card_id": "iron_shell",
+      "copies": 1,
+      "cost": 1,
+      "effects": "block{ \"amount\": 5 }, agility{ \"duration\": 2 }",
+      "keywords": [],
+      "owner": "living_armor",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "deadfall",
+      "copies": 1,
+      "cost": 1,
+      "effects": "damage{ \"amount\": 6 }, mill_draw_pile{ \"amount\": 2 }",
+      "keywords": [],
+      "owner": "grove",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    },
+    {
+      "card_id": "compost_heap",
+      "copies": 1,
+      "cost": 1,
+      "effects": "energy_per_discard_pile{ \"per\": 2, \"max\": 4 }",
+      "keywords": [
+        "Exhaust"
+      ],
+      "owner": "grove",
+      "targeting": "SELF",
+      "type": "SKILL"
+    }
+  ],
+  "cycles": {
+    "max": 8,
+    "mean": 5.63333333333333,
+    "min": 2,
+    "p10": 3,
+    "p50": 6,
+    "p90": 7
+  },
+  "damage_taken": {
+    "max": 72,
+    "mean": 57.8666666666667,
+    "min": 18,
+    "p10": 38,
+    "p50": 59,
+    "p90": 72
+  },
+  "deaths": 12,
+  "elapsed_ms": 162,
+  "enemies": "ember_brute:1",
+  "enemy_actions": {
+    "max": 10,
+    "mean": 7.76666666666667,
+    "min": 4,
+    "p10": 5,
+    "p50": 7,
+    "p90": 10
+  },
+  "enemy_data": [
+    {
+      "count": 1,
+      "dmg_mult": 1.6,
+      "enemy_id": "ember_brute",
+      "hp_mult": 2.2
+    }
+  ],
+  "enemy_hp_left_on_loss": {
+    "max": 56,
+    "mean": 24.25,
+    "min": 1,
+    "p10": 1,
+    "p50": 21,
+    "p90": 34
+  },
+  "energy_unspent": {
+    "max": 0,
+    "mean": 0.0,
+    "min": 0,
+    "p10": 0,
+    "p50": 0,
+    "p90": 0
+  },
+  "energy_unspent_per_turn": {
+    "max": 0.0,
+    "mean": 0.0,
+    "min": 0.0,
+    "p10": 0.0,
+    "p50": 0.0,
+    "p90": 0.0
+  },
+  "findings": [],
+  "heal_wasted": {
+    "max": 2,
+    "mean": 0.2,
+    "min": 0,
+    "p10": 0,
+    "p50": 0,
+    "p90": 1
+  },
+  "hp_end": {
+    "max": 54,
+    "mean": 14.1333333333333,
+    "min": 0,
+    "p10": 0,
+    "p50": 12,
+    "p90": 33
+  },
+  "hp_lost_gross": {
+    "max": 114,
+    "mean": 79.3333333333333,
+    "min": 53,
+    "p10": 54,
+    "p50": 79,
+    "p90": 93
+  },
+  "hp_max": 72,
+  "label": "witch,living_armor,grove vs ember_brute:1 act3",
+  "max_turns": 60,
+  "n": 30,
+  "never_played": [],
+  "party": [
+    "witch",
+    "living_armor",
+    "grove"
+  ],
+  "per_ability": [
+    {
+      "ability_name": "The Small Ending",
+      "character_id": "witch",
+      "uses_per_fight": 9.06666666666667
+    },
+    {
+      "ability_name": "Leaf-fall",
+      "character_id": "grove",
+      "uses_per_fight": 6.36666666666667
+    },
+    {
+      "ability_name": "What Was Left",
+      "character_id": "living_armor",
+      "uses_per_fight": 6.43333333333333
+    }
+  ],
+  "per_card": [
+    {
+      "affordable": 664,
+      "card_id": "defend_1",
+      "copies": 4,
+      "plays": 217,
+      "plays_per_fight": 7.23333333333333,
+      "seen": 664
+    },
+    {
+      "affordable": 381,
+      "card_id": "strike_1",
+      "copies": 3,
+      "plays": 171,
+      "plays_per_fight": 5.7,
+      "seen": 381
+    },
+    {
+      "affordable": 663,
+      "card_id": "heal_1",
+      "copies": 2,
+      "plays": 103,
+      "plays_per_fight": 3.43333333333333,
+      "seen": 663
+    },
+    {
+      "affordable": 124,
+      "card_id": "deadfall",
+      "copies": 1,
+      "plays": 55,
+      "plays_per_fight": 1.83333333333333,
+      "seen": 124
+    },
+    {
+      "affordable": 356,
+      "card_id": "hex",
+      "copies": 1,
+      "plays": 54,
+      "plays_per_fight": 1.8,
+      "seen": 356
+    },
+    {
+      "affordable": 181,
+      "card_id": "iron_shell",
+      "copies": 1,
+      "plays": 54,
+      "plays_per_fight": 1.8,
+      "seen": 181
+    },
+    {
+      "affordable": 242,
+      "card_id": "iron_tide",
+      "copies": 1,
+      "plays": 49,
+      "plays_per_fight": 1.63333333333333,
+      "seen": 242
+    },
+    {
+      "affordable": 233,
+      "card_id": "dark_pact",
+      "copies": 1,
+      "plays": 47,
+      "plays_per_fight": 1.56666666666667,
+      "seen": 233
+    },
+    {
+      "affordable": 214,
+      "card_id": "compost_heap",
+      "copies": 1,
+      "plays": 30,
+      "plays_per_fight": 1.0,
+      "seen": 214
+    }
+  ],
+  "per_enemy": [
+    {
+      "actions_per_fight": 7.76666666666667,
+      "enemy_id": "ember_brute",
+      "hp_damage_per_fight": 79.3333333333333
+    }
+  ],
+  "policy": "timed",
+  "seed": 12345,
+  "ticks": {
+    "max": 57,
+    "mean": 43.4333333333333,
+    "min": 23,
+    "p10": 29,
+    "p50": 42,
+    "p90": 54
+  },
+  "timeouts": 0,
+  "turns": {
+    "max": 8,
+    "mean": 5.63333333333333,
+    "min": 2,
+    "p10": 3,
+    "p50": 6,
+    "p90": 7
+  },
+  "win_rate": 0.6,
+  "wins": 18
+}

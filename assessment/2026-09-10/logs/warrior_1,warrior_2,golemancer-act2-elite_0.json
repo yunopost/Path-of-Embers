@@ -1,0 +1,336 @@
+{
+  "ability_uses_total": {
+    "max": 16,
+    "mean": 10.0,
+    "min": 5,
+    "p10": 6,
+    "p50": 9,
+    "p90": 13
+  },
+  "act": 2,
+  "block_gained": {
+    "max": 72,
+    "mean": 49.2,
+    "min": 25,
+    "p10": 32,
+    "p50": 48,
+    "p90": 62
+  },
+  "block_wasted": {
+    "max": 472,
+    "mean": 116.166666666667,
+    "min": 0,
+    "p10": 22,
+    "p50": 86,
+    "p90": 200
+  },
+  "card_ticks": {
+    "max": 12,
+    "mean": 8.93333333333333,
+    "min": 6,
+    "p10": 7,
+    "p50": 9,
+    "p90": 11
+  },
+  "cards_played_total": {
+    "max": 24,
+    "mean": 17.3666666666667,
+    "min": 12,
+    "p10": 13,
+    "p50": 17,
+    "p90": 20
+  },
+  "catalogue": [
+    {
+      "card_id": "strike_1",
+      "copies": 5,
+      "cost": 1,
+      "effects": "damage{ \"amount\": 6 }",
+      "keywords": [],
+      "owner": "warrior_1",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    },
+    {
+      "card_id": "defend_1",
+      "copies": 4,
+      "cost": 1,
+      "effects": "block{ \"amount\": 5 }",
+      "keywords": [],
+      "owner": "warrior_1",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "deadly_strike",
+      "copies": 1,
+      "cost": 2,
+      "effects": "damage{ \"amount\": 10 }, vulnerable{ \"duration\": 4 }",
+      "keywords": [],
+      "owner": "warrior_1",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    },
+    {
+      "card_id": "pursuit",
+      "copies": 1,
+      "cost": 0,
+      "effects": "grant_haste_next_card{ \"conditional_draw_min_cost\": 2, \"conditional_draw_amount\": 2 }",
+      "keywords": [
+        "Haste"
+      ],
+      "owner": "warrior_1",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "cheap_shot",
+      "copies": 1,
+      "cost": 0,
+      "effects": "damage_if_last_applied_debuff{ \"base_amount\": 5, \"bonus_amount\": 5 }",
+      "keywords": [
+        "Haste"
+      ],
+      "owner": "warrior_2",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    },
+    {
+      "card_id": "shadow_step",
+      "copies": 1,
+      "cost": 1,
+      "effects": "block{ \"amount\": 6 }, next_card_haste_and_discount{ \"discount\": 1, \"grant_haste\": false }",
+      "keywords": [
+        "Haste"
+      ],
+      "owner": "warrior_2",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "bulwark",
+      "copies": 1,
+      "cost": 1,
+      "effects": "block_equal_to_pile_size{ \"pile\": \"discard\" }",
+      "keywords": [],
+      "owner": "golemancer",
+      "targeting": "SELF",
+      "type": "SKILL"
+    },
+    {
+      "card_id": "construct_punch",
+      "copies": 1,
+      "cost": 2,
+      "effects": "damage_equal_to_pile_size{ \"pile\": \"draw\" }",
+      "keywords": [],
+      "owner": "golemancer",
+      "targeting": "ENEMY",
+      "type": "ATTACK"
+    }
+  ],
+  "cycles": {
+    "max": 47,
+    "mean": 31.6333333333333,
+    "min": 20,
+    "p10": 23,
+    "p50": 32,
+    "p90": 38
+  },
+  "damage_taken": {
+    "max": 78,
+    "mean": 45.4,
+    "min": 0,
+    "p10": 13,
+    "p50": 50,
+    "p90": 78
+  },
+  "deaths": 6,
+  "elapsed_ms": 120,
+  "enemies": "ashen_knight:1",
+  "enemy_actions": {
+    "max": 8,
+    "mean": 5.23333333333333,
+    "min": 3,
+    "p10": 3,
+    "p50": 5,
+    "p90": 7
+  },
+  "enemy_data": [
+    {
+      "count": 1,
+      "dmg_mult": 1.3,
+      "enemy_id": "ashen_knight",
+      "hp_mult": 1.6
+    }
+  ],
+  "enemy_hp_left_on_loss": {
+    "max": 22,
+    "mean": 9.83333333333333,
+    "min": 2,
+    "p10": 2,
+    "p50": 6,
+    "p90": 13
+  },
+  "energy_unspent": {
+    "max": 0,
+    "mean": 0.0,
+    "min": 0,
+    "p10": 0,
+    "p50": 0,
+    "p90": 0
+  },
+  "energy_unspent_per_turn": {
+    "max": 0.0,
+    "mean": 0.0,
+    "min": 0.0,
+    "p10": 0.0,
+    "p50": 0.0,
+    "p90": 0.0
+  },
+  "findings": [],
+  "heal_wasted": {
+    "max": 0,
+    "mean": 0.0,
+    "min": 0,
+    "p10": 0,
+    "p50": 0,
+    "p90": 0
+  },
+  "hp_end": {
+    "max": 78,
+    "mean": 32.6,
+    "min": 0,
+    "p10": 0,
+    "p50": 28,
+    "p90": 63
+  },
+  "hp_lost_gross": {
+    "max": 78,
+    "mean": 45.4,
+    "min": 0,
+    "p10": 13,
+    "p50": 50,
+    "p90": 78
+  },
+  "hp_max": 78,
+  "label": "warrior_1,warrior_2,golemancer vs ashen_knight:1 act2",
+  "max_turns": 60,
+  "n": 30,
+  "never_played": [],
+  "party": [
+    "warrior_1",
+    "warrior_2",
+    "golemancer"
+  ],
+  "per_ability": [
+    {
+      "ability_name": "The Wait",
+      "character_id": "warrior_1",
+      "uses_per_fight": 4.73333333333333
+    },
+    {
+      "ability_name": "One Night Sooner",
+      "character_id": "warrior_2",
+      "uses_per_fight": 4.66666666666667
+    },
+    {
+      "ability_name": "Hold the Door",
+      "character_id": "golemancer",
+      "uses_per_fight": 0.6
+    }
+  ],
+  "per_card": [
+    {
+      "affordable": 384,
+      "card_id": "strike_1",
+      "copies": 5,
+      "plays": 181,
+      "plays_per_fight": 6.03333333333333,
+      "seen": 668
+    },
+    {
+      "affordable": 367,
+      "card_id": "defend_1",
+      "copies": 4,
+      "plays": 134,
+      "plays_per_fight": 4.46666666666667,
+      "seen": 654
+    },
+    {
+      "affordable": 57,
+      "card_id": "pursuit",
+      "copies": 1,
+      "plays": 36,
+      "plays_per_fight": 1.2,
+      "seen": 57
+    },
+    {
+      "affordable": 43,
+      "card_id": "deadly_strike",
+      "copies": 1,
+      "plays": 35,
+      "plays_per_fight": 1.16666666666667,
+      "seen": 248
+    },
+    {
+      "affordable": 54,
+      "card_id": "cheap_shot",
+      "copies": 1,
+      "plays": 35,
+      "plays_per_fight": 1.16666666666667,
+      "seen": 54
+    },
+    {
+      "affordable": 129,
+      "card_id": "bulwark",
+      "copies": 1,
+      "plays": 35,
+      "plays_per_fight": 1.16666666666667,
+      "seen": 224
+    },
+    {
+      "affordable": 67,
+      "card_id": "construct_punch",
+      "copies": 1,
+      "plays": 35,
+      "plays_per_fight": 1.16666666666667,
+      "seen": 424
+    },
+    {
+      "affordable": 73,
+      "card_id": "shadow_step",
+      "copies": 1,
+      "plays": 30,
+      "plays_per_fight": 1.0,
+      "seen": 131
+    }
+  ],
+  "per_enemy": [
+    {
+      "actions_per_fight": 5.23333333333333,
+      "enemy_id": "ashen_knight",
+      "hp_damage_per_fight": 45.4
+    }
+  ],
+  "policy": "timed",
+  "seed": 12345,
+  "ticks": {
+    "max": 57,
+    "mean": 40.1666666666667,
+    "min": 26,
+    "p10": 29,
+    "p50": 40,
+    "p90": 49
+  },
+  "timeouts": 0,
+  "turns": {
+    "max": 47,
+    "mean": 31.6333333333333,
+    "min": 20,
+    "p10": 23,
+    "p50": 32,
+    "p90": 38
+  },
+  "win_rate": 0.8,
+  "wins": 24
+}

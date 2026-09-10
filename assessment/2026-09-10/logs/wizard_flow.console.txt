@@ -1,0 +1,80 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2548)
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 0 milestones, 5 encounters, 6 abilities
+ERROR: Parent node is busy setting up children, `add_child()` failed. Consider using `add_child.call_deferred(child)` instead.
+   at: add_child (scene/main/node.cpp:1689)
+   GDScript backtrace (most recent call first):
+       [0] _ready (res://tests/wizard_flow.gd:7)
+ScreenManager: Loading scene: loadout from path: res://Path-of-Embers/scenes/screens/LoadoutScreen.tscn
+AutoSave: saved (force:scene_changed:loadout)
+ScreenManager: Successfully loaded scene: loadout
+screen=loadout scene=LoadoutScreen:<Control#113967629970>
+start_btn text=NEXT: QUESTS → disabled=false
+stash=["test_synthetic_item_0", "test_synthetic_item_1", "test_synthetic_item_2", "test_synthetic_item_3", "test_synthetic_item_4", "test_synthetic_item_5", "test_synthetic_item_6", "test_synthetic_item_7", "test_synthetic_item_8", "test_synthetic_item_9", "test_synthetic_item_10", "test_synthetic_item_11"]
+equipped={  }
+AutoSave: saved (force:new_run_started)
+ScreenManager: Loading scene: quest_select from path: res://Path-of-Embers/scenes/screens/QuestSelectScreen.tscn
+AutoSave: saved (force:scene_changed:quest_select)
+ScreenManager: Successfully loaded scene: quest_select
+after NEXT: screen=quest_select scene=QuestSelectScreen:<Control#172134240538>
+begin_btn text=BEGIN RUN disabled=false
+AutoSave: saved (force:quests_chosen)
+ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
+WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+   at: load (scene/resources/resource_format_text.cpp:444)
+   GDScript backtrace (most recent call first):
+       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
+       [2] _on_begin_pressed (res://Path-of-Embers/scenes/screens/QuestSelectScreen.gd:237)
+       [3] _ready (res://tests/wizard_flow.gd:30)
+MapConnectionsDraw._ready() called
+AutoSave: saved (force:scene_changed:map)
+ScreenManager: Successfully loaded scene: map
+MapConnectionsDraw._draw(): connection_data is empty
+MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
+MapScreen: Updated MapConnections with 0 connections, visible=true
+MapScreen: Row 0 cols order (after get_nodes_in_row): [0, 1, 3, 4]
+MapScreen: Row 0 cols order (after explicit sort): [0, 1, 3, 4]
+MapScreen: Row 1 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 1 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 2 cols order (after get_nodes_in_row): [0, 2, 4]
+MapScreen: Row 2 cols order (after explicit sort): [0, 2, 4]
+MapScreen: Row 3 cols order (after get_nodes_in_row): [0, 1, 2]
+MapScreen: Row 3 cols order (after explicit sort): [0, 1, 2]
+MapScreen: Row 4 cols order (after get_nodes_in_row): [1, 3, 4]
+MapScreen: Row 4 cols order (after explicit sort): [1, 3, 4]
+MapScreen: Row 5 cols order (after get_nodes_in_row): [1, 2, 3, 4]
+MapScreen: Row 5 cols order (after explicit sort): [1, 2, 3, 4]
+MapScreen: Row 6 cols order (after get_nodes_in_row): [1, 2, 3, 4]
+MapScreen: Row 6 cols order (after explicit sort): [1, 2, 3, 4]
+MapScreen: Row 7 cols order (after get_nodes_in_row): [0, 1, 3, 4]
+MapScreen: Row 7 cols order (after explicit sort): [0, 1, 3, 4]
+MapScreen: Row 8 cols order (after get_nodes_in_row): [0, 1, 3, 4]
+MapScreen: Row 8 cols order (after explicit sort): [0, 1, 3, 4]
+MapScreen: Row 9 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 9 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 10 cols order (after get_nodes_in_row): [0, 1, 2, 3, 4]
+MapScreen: Row 10 cols order (after explicit sort): [0, 1, 2, 3, 4]
+MapScreen: Row 11 cols order (after get_nodes_in_row): [0, 1, 2, 3]
+MapScreen: Row 11 cols order (after explicit sort): [0, 1, 2, 3]
+MapScreen: Row 12 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 12 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 13 cols order (after get_nodes_in_row): [0, 1, 2, 4]
+MapScreen: Row 13 cols order (after explicit sort): [0, 1, 2, 4]
+MapScreen: Row 14 cols order (after get_nodes_in_row): [0, 1, 4]
+MapScreen: Row 14 cols order (after explicit sort): [0, 1, 4]
+MapScreen: Row 15 cols order (after get_nodes_in_row): [0]
+MapScreen: Row 15 cols order (after explicit sort): [0]
+MapConnectionsDraw._draw(): connection_data is empty
+MapScreen: viewport size: (64.0, 468.0)
+MapScreen: map_root min size: (2000.0, 460.0) actual: (2000.0, 460.0)
+MapScreen: h_scroll max: 2000.0
+MapScreen: start nodes count: 4
+MapNodeWidget.setup() called for node_0_1, selectable=false
+after BEGIN: screen=map quests=["warrior_1", "witch", "golemancer"]
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2514)
+ERROR: 3 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:795)
