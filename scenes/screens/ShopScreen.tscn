@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://h3c2p7r4a6s9u"]
 
-[ext_resource type="Script" path="res://Path-of-Embers/scenes/screens/ShopScreen.gd" id="1_shopscreen"]
+[ext_resource type="Script" path="res://scenes/screens/ShopScreen.gd" id="1_shopscreen"]
 
 [node name="ShopScreen" type="Control"]
 layout_mode = 3

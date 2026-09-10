@@ -3,12 +3,12 @@ Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
 ERROR: Failed to read the root certificate store.
    at: get_system_ca_certificates (platform/windows/os_windows.cpp:2548)
 DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 0 milestones, 5 encounters, 6 abilities
-ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
-WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+ScreenManager: Loading scene: combat from path: res://scenes/screens/CombatScreen.tscn
+WARNING: res://scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://scenes/screens/CombatScreen.gd
    at: load (scene/resources/resource_format_text.cpp:444)
    GDScript backtrace (most recent call first):
-       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
-       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
+       [0] _change_screen (res://autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://autoload/ScreenManager.gd:56)
        [2] test_input (res://assessment/2026-09-10/input_probe.gd:37)
 AutoSave: saved (force:scene_changed:combat)
 ScreenManager: Successfully loaded scene: combat

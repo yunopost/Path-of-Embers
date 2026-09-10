@@ -49,7 +49,7 @@ func _make_combat_screen() -> Control:
 	for id in PartyManager.party_ids:
 		chars.append(DataRegistry.get_character(id))
 	RunState.generate_starter_deck(chars)
-	var scene: PackedScene = load("res://Path-of-Embers/scenes/screens/CombatScreen.tscn")
+	var scene: PackedScene = load("res://scenes/screens/CombatScreen.tscn")
 	var combat_screen = scene.instantiate()
 	add_child(combat_screen)
 	combat_screen.size = Vector2(1920, 1080)

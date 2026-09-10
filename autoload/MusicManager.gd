@@ -4,7 +4,7 @@ extends Node
 ## Plays the main menu theme on launch, fades out when the player enters a run.
 ## User music volume (0..1) is persisted to user://settings.json.
 
-const MUSIC_PATH := "res://Path-of-Embers/Audio/Music/The Path of Embers.mp3"
+const MUSIC_PATH := "res://audio/music/the_path_of_embers.mp3"
 const FADE_DURATION := 1.5  # seconds
 const MUSIC_VOLUME_DB := -10.0  # playback volume at music_volume = 1.0
 const SETTINGS_PATH := "user://settings.json"

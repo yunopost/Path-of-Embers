@@ -1,17 +1,17 @@
 [gd_resource type="Resource" script_class="CharacterData" load_steps=16 format=3]
 
-[ext_resource type="Script" path="res://Path-of-Embers/data/CharacterData.gd" id="1_chardata"]
-[ext_resource type="Script" path="res://Path-of-Embers/data/CardData.gd" id="2_carddata"]
-[ext_resource type="Script" path="res://Path-of-Embers/data/QuestData.gd" id="3_questdata"]
-[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/bulwark.tres" id="4_c1"]
-[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/construct_punch.tres" id="5_c2"]
-[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/construct_punch.tres" id="6_r1"]
-[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/overclocked.tres" id="7_r2"]
-[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/calibrate.tres" id="8_r3"]
-[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/echo_strike.tres" id="9_r4"]
-[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/resonant_guard.tres" id="10_r5"]
-[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/bulwark.tres" id="11_r6"]
-[ext_resource type="Resource" path="res://Path-of-Embers/data/cards/iron_shell.tres" id="12_r7"]
+[ext_resource type="Script" path="res://data/CharacterData.gd" id="1_chardata"]
+[ext_resource type="Script" path="res://data/CardData.gd" id="2_carddata"]
+[ext_resource type="Script" path="res://data/QuestData.gd" id="3_questdata"]
+[ext_resource type="Resource" path="res://data/cards/bulwark.tres" id="4_c1"]
+[ext_resource type="Resource" path="res://data/cards/construct_punch.tres" id="5_c2"]
+[ext_resource type="Resource" path="res://data/cards/construct_punch.tres" id="6_r1"]
+[ext_resource type="Resource" path="res://data/cards/overclocked.tres" id="7_r2"]
+[ext_resource type="Resource" path="res://data/cards/calibrate.tres" id="8_r3"]
+[ext_resource type="Resource" path="res://data/cards/echo_strike.tres" id="9_r4"]
+[ext_resource type="Resource" path="res://data/cards/resonant_guard.tres" id="10_r5"]
+[ext_resource type="Resource" path="res://data/cards/bulwark.tres" id="11_r6"]
+[ext_resource type="Resource" path="res://data/cards/iron_shell.tres" id="12_r7"]
 
 [sub_resource type="Resource" id="QuestData_1" script_class="QuestData"]
 script = ExtResource("3_questdata")
@@ -41,8 +41,8 @@ str_base = 1
 def_base = 2
 spirit_base = 1
 hp_base = 28
-portrait_path = "res://Path-of-Embers/Art Assets/Golemancer/Golemancer.png"
-splash_path = "res://Path-of-Embers/Art Assets/Splash/golemancer_splash.png"
+portrait_path = "res://art/golemancer/golemancer.png"
+splash_path = "res://art/splash/golemancer_splash.png"
 theme_1 = "Damage Reduction"
 theme_2 = "Heavy Strikes"
 theme_3 = "Pet System"

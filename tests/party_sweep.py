@@ -20,7 +20,7 @@ PROJECT = os.path.dirname(HERE)
 GODOT = os.path.join(os.path.dirname(PROJECT), "Godot_v4.5-stable_linux.x86_64")
 
 # The six Early Access playable characters -- confirmed from data: these are the
-# only characters in Path-of-Embers/data/characters/*.tres with a non-empty
+# only characters in data/characters/*.tres with a non-empty
 # ability_id (the other five: warrior_3, warrior_4, hollow, mechanist, sibyl --
 # are Early-Access-locked per the comment in CharacterData.gd).
 CHARACTERS = ["warrior_1", "warrior_2", "golemancer", "grove", "living_armor", "witch"]

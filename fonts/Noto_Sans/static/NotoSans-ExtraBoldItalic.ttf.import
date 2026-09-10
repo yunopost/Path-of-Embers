@@ -3,12 +3,12 @@
 importer="font_data_dynamic"
 type="FontFile"
 uid="uid://bdka087xrn1ld"
-path="res://.godot/imported/NotoSans-ExtraBoldItalic.ttf-967b4221e650338aaae6295f40667384.fontdata"
+path="res://.godot/imported/NotoSans-ExtraBoldItalic.ttf-75f53b0f694d54f66f9547c67f083ef8.fontdata"
 
 [deps]
 
-source_file="res://Path-of-Embers/fonts/Noto_Sans/static/NotoSans-ExtraBoldItalic.ttf"
-dest_files=["res://.godot/imported/NotoSans-ExtraBoldItalic.ttf-967b4221e650338aaae6295f40667384.fontdata"]
+source_file="res://fonts/Noto_Sans/static/NotoSans-ExtraBoldItalic.ttf"
+dest_files=["res://.godot/imported/NotoSans-ExtraBoldItalic.ttf-75f53b0f694d54f66f9547c67f083ef8.fontdata"]
 
 [params]
 

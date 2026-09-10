@@ -8,14 +8,14 @@ var ui_root: Control = null
 var current_scene: Node = null
 
 const SCENE_PATHS = {
-	"main": "res://Path-of-Embers/scenes/screens/Main.tscn",
-	"main_menu": "res://Path-of-Embers/scenes/screens/Main.tscn",  # Alias for main
-	"character_select": "res://Path-of-Embers/scenes/screens/CharacterSelect.tscn",
-	"map": "res://Path-of-Embers/scenes/screens/MapScreen.tscn",
-	"combat": "res://Path-of-Embers/scenes/screens/CombatScreen.tscn",
-	"encounter": "res://Path-of-Embers/scenes/screens/EncounterScreen.tscn",
-	"shop": "res://Path-of-Embers/scenes/screens/ShopScreen.tscn",
-	"rewards": "res://Path-of-Embers/scenes/screens/RewardsScreen.tscn"
+	"main": "res://scenes/screens/Main.tscn",
+	"main_menu": "res://scenes/screens/Main.tscn",  # Alias for main
+	"character_select": "res://scenes/screens/CharacterSelect.tscn",
+	"map": "res://scenes/screens/MapScreen.tscn",
+	"combat": "res://scenes/screens/CombatScreen.tscn",
+	"encounter": "res://scenes/screens/EncounterScreen.tscn",
+	"shop": "res://scenes/screens/ShopScreen.tscn",
+	"rewards": "res://scenes/screens/RewardsScreen.tscn"
 }
 
 func _ready():

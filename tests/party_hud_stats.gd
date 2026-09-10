@@ -35,7 +35,7 @@ func _run() -> void:
 	add_child(cc)
 	cc.start_combat([{"enemy_id": "ash_man", "count": 1}])
 
-	var block_scene: PackedScene = load("res://Path-of-Embers/scenes/ui/hud/CharacterHUDBlock.tscn")
+	var block_scene: PackedScene = load("res://scenes/ui/hud/CharacterHUDBlock.tscn")
 	var block = block_scene.instantiate()
 	add_child(block)
 	block.initialize("witch")

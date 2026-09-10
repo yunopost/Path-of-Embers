@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://b5u423stfwvg1"]
 
-[ext_resource type="Script" uid="uid://571q3qracesn" path="res://Path-of-Embers/scenes/screens/CombatScreen.gd" id="1_combatscreen"]
-[ext_resource type="Script" uid="uid://7tie5fmscalt" path="res://Path-of-Embers/core/combat/CombatController.gd" id="2_combatcontroller"]
+[ext_resource type="Script" uid="uid://571q3qracesn" path="res://scenes/screens/CombatScreen.gd" id="1_combatscreen"]
+[ext_resource type="Script" uid="uid://7tie5fmscalt" path="res://core/combat/CombatController.gd" id="2_combatcontroller"]
 
 [node name="CombatScreen" type="Control"]
 layout_mode = 3

@@ -46,7 +46,7 @@ func run_probes():
 	SaveManager.save_game()
 	var saved = SaveManager._serialize_run_state()
 	print("PROBE mid-combat save: selected=", start_id, " completed=", MapManager.current_map.get_node(start_id).is_completed, " next=", MapManager.available_next_node_ids, " enemy state saved=", saved.has("enemies"))
-	var menu = load("res://Path-of-Embers/scenes/screens/Main.tscn").instantiate()
+	var menu = load("res://scenes/screens/Main.tscn").instantiate()
 	get_tree().root.add_child(menu)
 	ScreenManager.current_scene = menu
 	await get_tree().process_frame

@@ -37,7 +37,7 @@ func _test_bespoke_art_path_wins() -> void:
 	# it also has an owner whose portrait exists -- bespoke art always wins.
 	var card_data = CardData.new()
 	card_data.owner_character_id = "witch"
-	card_data.art_path = "res://Path-of-Embers/Art Assets/Card Assets/card_frame_curse.png"
+	card_data.art_path = "res://art/card_assets/card_frame_curse.png"
 	_check("art_path is set and exists on disk (test precondition)",
 		ResourceLoader.exists(card_data.art_path))
 	var resolved = CardWidget.resolve_card_art_path(card_data)

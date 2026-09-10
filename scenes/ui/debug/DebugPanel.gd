@@ -15,7 +15,7 @@ signal instant_win_pressed
 const NODE_NAME := "DebugPanel"
 ## Loaded at call time (not preloaded) to avoid a self-referencing preload
 ## cycle in this script's own compilation.
-const SCRIPT_PATH := "res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd"
+const SCRIPT_PATH := "res://scenes/ui/debug/DebugPanel.gd"
 
 var _context: String = ""
 var _screen: Node = null

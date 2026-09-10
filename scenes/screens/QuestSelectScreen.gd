@@ -9,8 +9,8 @@ extends Control
 ## panel styling, header and footer as CharacterSelect / LoadoutScreen so this
 ## no longer reads as a different game.
 
-const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
-const PRE_RUN_CHROME = preload("res://Path-of-Embers/scenes/ui/PreRunChrome.gd")
+const DEBUG_PANEL_SCRIPT = preload("res://scenes/ui/debug/DebugPanel.gd")
+const PRE_RUN_CHROME = preload("res://scenes/ui/PreRunChrome.gd")
 
 const ROLE_COLORS := {
 	"warrior": Color("#C43030"),

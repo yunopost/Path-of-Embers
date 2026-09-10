@@ -4,14 +4,14 @@ extends Node
 ## Loads resources from .tres files and provides caching/registry functionality
 
 # Data directory paths (relative to res://)
-const DATA_DIR_CARDS = "res://Path-of-Embers/data/cards/"
-const DATA_DIR_CHARACTERS = "res://Path-of-Embers/data/characters/"
-const DATA_DIR_ENEMIES = "res://Path-of-Embers/data/enemies/"
-const DATA_DIR_UPGRADES = "res://Path-of-Embers/data/upgrades/"
-const DATA_DIR_EQUIPMENT = "res://Path-of-Embers/data/equipment/"
-const DATA_DIR_MILESTONES = "res://Path-of-Embers/data/milestones/"
-const DATA_DIR_ENCOUNTERS = "res://Path-of-Embers/data/encounters/"
-const DATA_DIR_ABILITIES = "res://Path-of-Embers/data/abilities/"
+const DATA_DIR_CARDS = "res://data/cards/"
+const DATA_DIR_CHARACTERS = "res://data/characters/"
+const DATA_DIR_ENEMIES = "res://data/enemies/"
+const DATA_DIR_UPGRADES = "res://data/upgrades/"
+const DATA_DIR_EQUIPMENT = "res://data/equipment/"
+const DATA_DIR_MILESTONES = "res://data/milestones/"
+const DATA_DIR_ENCOUNTERS = "res://data/encounters/"
+const DATA_DIR_ABILITIES = "res://data/abilities/"
 
 var character_cache: Dictionary = {}  # Maps character_id -> CharacterData
 

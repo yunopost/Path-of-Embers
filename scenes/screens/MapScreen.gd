@@ -2,8 +2,8 @@ extends Control
 
 ## Map screen - displays STS-style node map with branching paths
 
-const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
-const BACKPACK_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/backpack/BackpackPanel.gd")
+const DEBUG_PANEL_SCRIPT = preload("res://scenes/ui/debug/DebugPanel.gd")
+const BACKPACK_PANEL_SCRIPT = preload("res://scenes/ui/backpack/BackpackPanel.gd")
 
 var map_generator: MapGenerator = null
 var _backpack_button: Button = null
@@ -42,7 +42,7 @@ func _ready():
 func _setup_background() -> void:
 	## Full-rect background behind the map node graph; ignores mouse so
 	## nodes/scroll still receive input normally.
-	var bg_path := "res://Path-of-Embers/Art Assets/Backgrounds/map_act1.png"
+	var bg_path := "res://art/backgrounds/map_act1.png"
 	if not ResourceLoader.exists(bg_path):
 		return
 	var bg_tex = load(bg_path)
@@ -220,7 +220,7 @@ func _show_reward_pool_popup():
 
 func _create_reward_pool_popup():
 	## Create the reward pool popup instance
-	var popup_scene = load("res://Path-of-Embers/scenes/ui/RewardPoolPopup.tscn")
+	var popup_scene = load("res://scenes/ui/RewardPoolPopup.tscn")
 	if popup_scene:
 		var popup = popup_scene.instantiate()
 		add_child(popup)
@@ -465,7 +465,7 @@ func _render_map():
 	_update_node_states()
 
 func _create_node_widget(node: MapNodeData, node_position: Vector2) -> void:
-	var widget_scene := load("res://Path-of-Embers/scenes/ui/MapNodeWidget.tscn")
+	var widget_scene := load("res://scenes/ui/MapNodeWidget.tscn")
 	var widget := widget_scene.instantiate() as MapNodeWidget
 	map_nodes.add_child(widget)
 

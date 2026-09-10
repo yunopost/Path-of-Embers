@@ -7,9 +7,9 @@ extends Control
 ## Run initialisation (starter deck + map) happens HERE so that
 ## equipment injected_cards are included in the starting deck.
 
-const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
-const PRE_RUN_CHROME = preload("res://Path-of-Embers/scenes/ui/PreRunChrome.gd")
-const EQUIP_DND = preload("res://Path-of-Embers/scenes/ui/equipment/EquipDragDrop.gd")
+const DEBUG_PANEL_SCRIPT = preload("res://scenes/ui/debug/DebugPanel.gd")
+const PRE_RUN_CHROME = preload("res://scenes/ui/PreRunChrome.gd")
+const EQUIP_DND = preload("res://scenes/ui/equipment/EquipDragDrop.gd")
 
 # ── UI refs (built in _build_ui) ──────────────────────────────────────────────
 var scroll_root: ScrollContainer = null       # unused; kept for API compatibility
@@ -70,15 +70,15 @@ func _get_font(variant: String) -> Font:
 	match variant:
 		"extrabold":
 			if not _font_extrabold:
-				_font_extrabold = load("res://Path-of-Embers/fonts/Cinzel/static/Cinzel-ExtraBold.ttf")
+				_font_extrabold = load("res://fonts/Cinzel/static/Cinzel-ExtraBold.ttf")
 			return _font_extrabold
 		"bold":
 			if not _font_bold:
-				_font_bold = load("res://Path-of-Embers/fonts/Cinzel/static/Cinzel-Bold.ttf")
+				_font_bold = load("res://fonts/Cinzel/static/Cinzel-Bold.ttf")
 			return _font_bold
 		_:
 			if not _font_regular:
-				_font_regular = load("res://Path-of-Embers/fonts/Cinzel/static/Cinzel-Regular.ttf")
+				_font_regular = load("res://fonts/Cinzel/static/Cinzel-Regular.ttf")
 			return _font_regular
 
 func _ready():

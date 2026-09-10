@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="EnemyData" load_steps=8 format=3]
 
-[ext_resource type="Script" path="res://Path-of-Embers/data/EnemyData.gd" id="1_enemydata"]
-[ext_resource type="Script" path="res://Path-of-Embers/data/EffectData.gd" id="2_effectdata"]
+[ext_resource type="Script" path="res://data/EnemyData.gd" id="1_enemydata"]
+[ext_resource type="Script" path="res://data/EffectData.gd" id="2_effectdata"]
 
 [sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
 script = ExtResource("2_effectdata")
@@ -38,7 +38,7 @@ script = ExtResource("1_enemydata")
 id = "boss_act1"
 display_name = "The Eternal Ember"
 name = "The Eternal Ember"
-sprite_path = "res://Path-of-Embers/Art Assets/Boss Sprites/the_eternal_ember.png"
+sprite_path = "res://art/boss_sprites/the_eternal_ember.png"
 act = 1
 enemy_type = 2
 min_hp = 82

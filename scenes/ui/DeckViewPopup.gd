@@ -80,7 +80,7 @@ func _update_card_grid():
 		child.queue_free()
 	
 	# Load card widget scene
-	var card_widget_scene = load("res://Path-of-Embers/scenes/ui/cards/DeckCardWidget.tscn")
+	var card_widget_scene = load("res://scenes/ui/cards/DeckCardWidget.tscn")
 	if not card_widget_scene:
 		push_error("DeckViewPopup: Could not load DeckCardWidget scene")
 		return

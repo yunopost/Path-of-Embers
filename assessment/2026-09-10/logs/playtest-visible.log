@@ -5,7 +5,7 @@ DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipme
 Main.gd: Main menu _ready() called
 Main.gd: Nodes found - new_game: true, continue: true
 Main.gd: Main menu initialization complete - should be visible now
-ScreenManager: Loading scene: character_select from path: res://Path-of-Embers/scenes/screens/CharacterSelect.tscn
+ScreenManager: Loading scene: character_select from path: res://scenes/screens/CharacterSelect.tscn
 ScreenManager: Found initial scene node: RunState
 ScreenManager: Found initial scene node: SceneRouter
 ScreenManager: Found initial scene node: SaveManager
@@ -24,21 +24,21 @@ ScreenManager: Found initial scene node: DebugMode
 ScreenManager: Found initial scene node: Main
 AutoSave: saved (force:scene_changed:character_select)
 ScreenManager: Successfully loaded scene: character_select
-ScreenManager: Loading scene: loadout from path: res://Path-of-Embers/scenes/screens/LoadoutScreen.tscn
+ScreenManager: Loading scene: loadout from path: res://scenes/screens/LoadoutScreen.tscn
 AutoSave: saved (force:scene_changed:loadout)
 ScreenManager: Successfully loaded scene: loadout
 AutoSave: saved (force:new_run_started)
-ScreenManager: Loading scene: quest_select from path: res://Path-of-Embers/scenes/screens/QuestSelectScreen.tscn
+ScreenManager: Loading scene: quest_select from path: res://scenes/screens/QuestSelectScreen.tscn
 AutoSave: saved (force:scene_changed:quest_select)
 ScreenManager: Successfully loaded scene: quest_select
 AutoSave: saved (force:quests_chosen)
-ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
-WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+ScreenManager: Loading scene: map from path: res://scenes/screens/MapScreen.tscn
+WARNING: res://scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://scenes/screens/MapScreen.gd
    at: load (scene/resources/resource_format_text.cpp:444)
    GDScript backtrace (most recent call first):
-       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
-       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
-       [2] _on_begin_pressed (res://Path-of-Embers/scenes/screens/QuestSelectScreen.gd:237)
+       [0] _change_screen (res://autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://autoload/ScreenManager.gd:42)
+       [2] _on_begin_pressed (res://scenes/screens/QuestSelectScreen.gd:237)
 MapConnectionsDraw._ready() called
 AutoSave: saved (force:scene_changed:map)
 ScreenManager: Successfully loaded scene: map
@@ -175,13 +175,13 @@ MapScreen: Setting node node_1_1 as selectable
 MapScreen: Setting node node_1_2 as selectable
 MapConnectionsDraw.set_connection_data(): Received 57 connections, queueing redraw, visible=true
 MapScreen: Updated MapConnections with 57 connections, visible=true
-ScreenManager: Loading scene: combat from path: res://Path-of-Embers/scenes/screens/CombatScreen.tscn
-WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+ScreenManager: Loading scene: combat from path: res://scenes/screens/CombatScreen.tscn
+WARNING: res://scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://scenes/screens/CombatScreen.gd
    at: load (scene/resources/resource_format_text.cpp:444)
    GDScript backtrace (most recent call first):
-       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
-       [1] go_to_combat (res://Path-of-Embers/autoload/ScreenManager.gd:56)
-       [2] _on_node_clicked (res://Path-of-Embers/scenes/screens/MapScreen.gd:632)
+       [0] _change_screen (res://autoload/ScreenManager.gd:107)
+       [1] go_to_combat (res://autoload/ScreenManager.gd:56)
+       [2] _on_node_clicked (res://scenes/screens/MapScreen.gd:632)
 AutoSave: saved (force:scene_changed:combat)
 ScreenManager: Successfully loaded scene: combat
 MapConnectionsDraw._draw(): Drawing 57 connections

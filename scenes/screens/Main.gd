@@ -76,7 +76,7 @@ func _setup_title() -> void:
 	if not is_instance_valid(title_label):
 		return
 	_title_label = title_label
-	var font = load("res://Path-of-Embers/fonts/Cinzel/static/Cinzel-ExtraBold.ttf")
+	var font = load("res://fonts/Cinzel/static/Cinzel-ExtraBold.ttf")
 	if font:
 		title_label.add_theme_font_override("font", font)
 	title_label.offset_top = 150
@@ -111,7 +111,7 @@ func _setup_title() -> void:
 	var glow_label: Label = get_node_or_null("GlowLabel")
 	if is_instance_valid(glow_label):
 		_glow_label = glow_label
-		var glow_font = load("res://Path-of-Embers/fonts/Cinzel/static/Cinzel-ExtraBold.ttf")
+		var glow_font = load("res://fonts/Cinzel/static/Cinzel-ExtraBold.ttf")
 		if glow_font:
 			glow_label.add_theme_font_override("font", glow_font)
 		glow_label.offset_top = title_label.offset_top
@@ -126,7 +126,7 @@ func _setup_title() -> void:
 	var glow_label2: Label = get_node_or_null("GlowLabel2")
 	if is_instance_valid(glow_label2):
 		_glow_label2 = glow_label2
-		var glow_font2 = load("res://Path-of-Embers/fonts/Cinzel/static/Cinzel-ExtraBold.ttf")
+		var glow_font2 = load("res://fonts/Cinzel/static/Cinzel-ExtraBold.ttf")
 		if glow_font2:
 			glow_label2.add_theme_font_override("font", glow_font2)
 		glow_label2.offset_top = title_label.offset_top
@@ -141,7 +141,7 @@ func setup_menu_button(button: Button, label_text: String) -> void:
 	button.text = label_text
 
 	# Font
-	var font = load("res://Path-of-Embers/fonts/Cinzel/static/Cinzel-Bold.ttf")
+	var font = load("res://fonts/Cinzel/static/Cinzel-Bold.ttf")
 	if font:
 		button.add_theme_font_override("font", font)
 	button.add_theme_font_size_override("font_size", 28)
@@ -247,7 +247,7 @@ func _setup_mute_button() -> void:
 	var btn: Button = get_node_or_null("MuteButton")
 	if not is_instance_valid(btn):
 		return
-	var font = load("res://Path-of-Embers/fonts/Cinzel/static/Cinzel-Regular.ttf")
+	var font = load("res://fonts/Cinzel/static/Cinzel-Regular.ttf")
 	if font:
 		btn.add_theme_font_override("font", font)
 	btn.add_theme_font_size_override("font_size", 14)
@@ -363,7 +363,7 @@ func _on_quit_pressed():
 
 func _load_settings_popup():
 	## Load settings popup scene
-	var settings_scene = load("res://Path-of-Embers/scenes/ui/SettingsPopup.tscn")
+	var settings_scene = load("res://scenes/ui/SettingsPopup.tscn")
 	if settings_scene:
 		settings_popup = settings_scene.instantiate()
 		add_child(settings_popup)

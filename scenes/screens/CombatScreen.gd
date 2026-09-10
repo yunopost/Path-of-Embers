@@ -2,7 +2,7 @@ extends Control
 
 ## Preloaded rather than referenced by class_name: a missing .uid meant Godot
 ## never registered the global class and the screen failed to parse at runtime.
-const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
+const DEBUG_PANEL_SCRIPT = preload("res://scenes/ui/debug/DebugPanel.gd")
 
 ## Combat screen with full combat implementation
 
@@ -139,13 +139,13 @@ func _setup_background() -> void:
 	if MapManager and MapManager.has_method("get_current_node_type"):
 		node_type = MapManager.get_current_node_type()
 
-	var bg_path := "res://Path-of-Embers/Art Assets/Backgrounds/combat_act1_a.png"
+	var bg_path := "res://art/backgrounds/combat_act1_a.png"
 	if node_type == MapNodeData.NodeType.BOSS or node_type == MapNodeData.NodeType.FINAL_BOSS:
-		bg_path = "res://Path-of-Embers/Art Assets/Backgrounds/boss_act1.png"
+		bg_path = "res://art/backgrounds/boss_act1.png"
 	else:
 		var seed_str: String = MapManager.current_node_id if MapManager else ""
 		if seed_str.hash() % 2 == 1:
-			bg_path = "res://Path-of-Embers/Art Assets/Backgrounds/combat_act1_b.png"
+			bg_path = "res://art/backgrounds/combat_act1_b.png"
 
 	if not ResourceLoader.exists(bg_path):
 		return
@@ -564,18 +564,18 @@ func _setup_enemies():
 		enemy_displays.append(enemy_display)
 
 # -- Enemy intent rendering from effects (Addendum §4 item 4) -----------------
-## Six intent icons exist at Art Assets/UI/icon_intent_*.png: attack, defend,
+## Six intent icons exist at art/ui/icon_intent_*.png: attack, defend,
 ## buff, debuff, heal, multi. There is NO icon_intent_special.png in the asset
 ## drop despite the spec calling for a "special" fallback -- "multi" is used
 ## as the generic fallback instead (closest existing icon); flagged for
 ## Director/Art follow-up rather than guessed at further.
 const INTENT_ICON_PATHS := {
-	"attack": "res://Path-of-Embers/Art Assets/UI/icon_intent_attack.png",
-	"defend": "res://Path-of-Embers/Art Assets/UI/icon_intent_defend.png",
-	"buff": "res://Path-of-Embers/Art Assets/UI/icon_intent_buff.png",
-	"debuff": "res://Path-of-Embers/Art Assets/UI/icon_intent_debuff.png",
-	"heal": "res://Path-of-Embers/Art Assets/UI/icon_intent_heal.png",
-	"multi": "res://Path-of-Embers/Art Assets/UI/icon_intent_multi.png",
+	"attack": "res://art/ui/icon_intent_attack.png",
+	"defend": "res://art/ui/icon_intent_defend.png",
+	"buff": "res://art/ui/icon_intent_buff.png",
+	"debuff": "res://art/ui/icon_intent_debuff.png",
+	"heal": "res://art/ui/icon_intent_heal.png",
+	"multi": "res://art/ui/icon_intent_multi.png",
 }
 var _intent_icon_cache: Dictionary = {}
 
@@ -710,14 +710,14 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 			vbox.add_child(sprite_rect)
 	
 	# Health bar (at top)
-	var health_bar_scene = load("res://Path-of-Embers/scenes/ui/HealthBar.tscn")
+	var health_bar_scene = load("res://scenes/ui/HealthBar.tscn")
 	if health_bar_scene:
 		var health_bar = health_bar_scene.instantiate()
 		health_bar.setup(enemy.stats)
 		vbox.add_child(health_bar)
 	
 	# Status effect indicators (below health bar)
-	var status_indicator_scene = load("res://Path-of-Embers/scenes/ui/StatusEffectIndicator.tscn")
+	var status_indicator_scene = load("res://scenes/ui/StatusEffectIndicator.tscn")
 	if status_indicator_scene:
 		var status_indicator = status_indicator_scene.instantiate()
 		status_indicator.setup(enemy.stats)
@@ -929,7 +929,7 @@ func _setup_player_status_indicator():
 		player_status_indicator = null
 	
 	# Create and add status indicator
-	var status_indicator_scene = load("res://Path-of-Embers/scenes/ui/StatusEffectIndicator.tscn")
+	var status_indicator_scene = load("res://scenes/ui/StatusEffectIndicator.tscn")
 	if status_indicator_scene:
 		player_status_indicator = status_indicator_scene.instantiate()
 		player_status_indicator.setup(combat_controller.player_stats)

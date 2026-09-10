@@ -20,7 +20,7 @@ Three run attempts stopped at Act I rows 5, 6, and 5 respectively. A separate co
 
 **Fix direction:** use ResourceManager consistently for the transaction; persist the consumed reward state. Check every reward category and partially claimed rewards after reload, not just combat victory.
 
-Source: [RewardsScreen.gd:310](C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/scenes/screens/RewardsScreen.gd:310).
+Source: [RewardsScreen.gd:310](C:/Users/amkru/Documents/path-of-embers/scenes/screens/RewardsScreen.gd:310).
 
 ### 2. A selectable Witch quest cannot progress and locks the final boss — release blocker
 
@@ -30,7 +30,7 @@ The quest listens for `CARD_DISCARDED`; a project-wide search found no gameplay 
 
 **Fix direction:** define which discard operations count and emit the event from those operations, then test the quest end to end. For the demo, making quests optional rewards would also remove the risk of an otherwise successful run becoming permanently unwinnable because of a missed objective. Simply hiding this one broken quest is the narrower emergency option.
 
-Sources: [QuestSystem.gd:95](C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/systems/QuestSystem.gd:95), [MapManager.gd:125](C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/autoload/MapManager.gd:125).
+Sources: [QuestSystem.gd:95](C:/Users/amkru/Documents/path-of-embers/systems/QuestSystem.gd:95), [MapManager.gd:125](C:/Users/amkru/Documents/path-of-embers/autoload/MapManager.gd:125).
 
 ### 3. Some upgrade selections fail at runtime — fix before distribution
 
@@ -40,7 +40,7 @@ During the run tests, choosing a Strike for an upgrade generated a typed-array e
 
 **Fix direction:** keep the upgrade-option collections explicitly typed through both normal and fallback paths. Test repeated upgrades on the same card and small/exhausted option pools.
 
-Sources: [UpgradeService.gd:52](C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/core/run/UpgradeService.gd:52), [UpgradeFlowPanel.gd:252](C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/scenes/ui/rewards/UpgradeFlowPanel.gd:252).
+Sources: [UpgradeService.gd:52](C:/Users/amkru/Documents/path-of-embers/core/run/UpgradeService.gd:52), [UpgradeFlowPanel.gd:252](C:/Users/amkru/Documents/path-of-embers/scenes/ui/rewards/UpgradeFlowPanel.gd:252).
 
 ### 4. Continue skips unfinished combat — fix the save boundary
 
@@ -50,7 +50,7 @@ This is more than an exploit: players who quit during a boss fight can lose the 
 
 **Fix direction:** choose a clear resume contract. A checkpoint immediately before the encounter is likely cheaper for this demo than serializing every aspect of live combat. Prevent incomplete nodes from advancing the map. Test quitting during an ordinary fight, both act bosses, and the final boss, plus quitting after a partial reward claim.
 
-Sources: [Main.gd:324](C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/scenes/screens/Main.gd:324), [MapManager.gd:117](C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/autoload/MapManager.gd:117), [SaveManager.gd](C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/autoload/SaveManager.gd).
+Sources: [Main.gd:324](C:/Users/amkru/Documents/path-of-embers/scenes/screens/Main.gd:324), [MapManager.gd:117](C:/Users/amkru/Documents/path-of-embers/autoload/MapManager.gd:117), [SaveManager.gd](C:/Users/amkru/Documents/path-of-embers/autoload/SaveManager.gd).
 
 ### 5. Fresh profiles cannot actually choose a party composition
 
@@ -58,7 +58,7 @@ With developer mode disabled, only Monster Hunter, Witch, and Living Armor were 
 
 **Fix direction:** make the six implemented characters available for this demo, provided each receives a smoke test, and clearly mark or hide unfinished characters. That would expose 20 party combinations without adding new characters. Keeping three available is a legitimate tightly scoped combat test, but it does not meet the requested party-building/replay goal.
 
-Source: [MilestoneManager.gd:15](C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/autoload/MilestoneManager.gd:15). Runtime evidence: registry reports 0 milestones.
+Source: [MilestoneManager.gd:15](C:/Users/amkru/Documents/path-of-embers/autoload/MilestoneManager.gd:15). Runtime evidence: registry reports 0 milestones.
 
 ### 6. Equipment HP bonuses accumulate every fight
 
@@ -68,7 +68,7 @@ With unchanged Chain Mail and Iron Helm, maximum HP went **75 → 81 → 87 → 
 
 This should be fixed before tuning late-game difficulty: otherwise balance feedback measures an accidental source of permanent growth.
 
-Source: [CombatController.gd:230](C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/core/combat/CombatController.gd:230).
+Source: [CombatController.gd:230](C:/Users/amkru/Documents/path-of-embers/core/combat/CombatController.gd:230).
 
 ### 7. Combat presentation hides information the player needs
 
@@ -80,7 +80,7 @@ The front-end art has a coherent dark-fantasy direction, and the character-selec
 
 **Fix direction:** initialize HUD blocks after adding them to the tree; reserve distinct areas for hand, enemies, and party controls; make all card text readable on hover. Verify at 1920×1080 and 1280×720 as well as 1600×900. The smaller and default resolutions were not visually certified in this assessment.
 
-Source: [PartyHUD.gd:120](C:/Users/amkru/Documents/path-of-embers/Path-of-Embers/scenes/ui/hud/PartyHUD.gd:120).
+Source: [PartyHUD.gd:120](C:/Users/amkru/Documents/path-of-embers/scenes/ui/hud/PartyHUD.gd:120).
 
 [Observed combat screenshot](C:/Users/amkru/Documents/path-of-embers/assessment/2026-09-10/evidence/combat-1600x900.png).
 

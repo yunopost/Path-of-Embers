@@ -19,7 +19,7 @@ const CARD_BG     := Color("#1A1F2BEE") # character card background
 const BORDER_DIM  := Color("#4A5060")   # unselected card border
 const BORDER_GLOW := Color("#3A2E1F")   # general border tint
 
-const PRE_RUN_CHROME = preload("res://Path-of-Embers/scenes/ui/PreRunChrome.gd")
+const PRE_RUN_CHROME = preload("res://scenes/ui/PreRunChrome.gd")
 
 const HP_GREEN    := Color("#3A9050")
 const HP_GOLD     := Color("#C4821A")
@@ -67,15 +67,15 @@ func _get_font(variant: String) -> Font:
 	match variant:
 		"extrabold":
 			if not _font_extrabold:
-				_font_extrabold = load("res://Path-of-Embers/fonts/Cinzel/static/Cinzel-ExtraBold.ttf")
+				_font_extrabold = load("res://fonts/Cinzel/static/Cinzel-ExtraBold.ttf")
 			return _font_extrabold
 		"bold":
 			if not _font_bold:
-				_font_bold = load("res://Path-of-Embers/fonts/Cinzel/static/Cinzel-Bold.ttf")
+				_font_bold = load("res://fonts/Cinzel/static/Cinzel-Bold.ttf")
 			return _font_bold
 		_:
 			if not _font_regular:
-				_font_regular = load("res://Path-of-Embers/fonts/Cinzel/static/Cinzel-Regular.ttf")
+				_font_regular = load("res://fonts/Cinzel/static/Cinzel-Regular.ttf")
 			return _font_regular
 
 # ─────────────────────────────────────────────────────────────────────────────

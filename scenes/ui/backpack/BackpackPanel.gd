@@ -9,7 +9,7 @@ extends Control
 ## drop OR click-to-select-then-click-target. Slot-type restrictions still
 ## apply (RunState.can_swap_backpack_item); an illegal drop/click says why.
 
-const EQUIP_DND = preload("res://Path-of-Embers/scenes/ui/equipment/EquipDragDrop.gd")
+const EQUIP_DND = preload("res://scenes/ui/equipment/EquipDragDrop.gd")
 
 const SLOT_ICONS := {
 	"HELMET": "🪖", "CHEST": "🛡", "LEGS": "🦺",

@@ -4,7 +4,7 @@ ERROR: Failed to read the root certificate store.
    at: get_system_ca_certificates (platform/windows/os_windows.cpp:2548)
 DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 0 milestones, 5 encounters, 6 abilities
 === hex_playability test ===
-WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+WARNING: res://scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://scenes/screens/CombatScreen.gd
    at: load (scene/resources/resource_format_text.cpp:444)
    GDScript backtrace (most recent call first):
        [0] _make_combat_screen (res://tests/hex_playability.gd:52)
@@ -24,7 +24,7 @@ PASS: Hex CardUI._is_targeting_card() is true (fresh hand)
 PASS: a press at Hex's own center hits its click rect (fresh hand)
 PASS: _start_drag() sets is_dragging (fresh hand)
 PASS: _start_drag() draws the targeting line (targeting_line_visible) (fresh hand)
-WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+WARNING: res://scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://scenes/screens/CombatScreen.gd
    at: load (scene/resources/resource_format_text.cpp:444)
    GDScript backtrace (most recent call first):
        [0] _make_combat_screen (res://tests/hex_playability.gd:52)
@@ -47,7 +47,7 @@ PASS: Hex CardUI._is_targeting_card() is true (full hand)
 PASS: a press at Hex's own center hits its click rect (full hand)
 PASS: _start_drag() sets is_dragging (full hand)
 PASS: _start_drag() draws the targeting line (targeting_line_visible) (full hand)
-WARNING: res://Path-of-Embers/scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://Path-of-Embers/scenes/screens/CombatScreen.gd
+WARNING: res://scenes/screens/CombatScreen.tscn:3 - ext_resource, invalid UID: uid://571q3qracesn - using text path instead: res://scenes/screens/CombatScreen.gd
    at: load (scene/resources/resource_format_text.cpp:444)
    GDScript backtrace (most recent call first):
        [0] _make_combat_screen (res://tests/hex_playability.gd:52)

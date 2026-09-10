@@ -103,7 +103,7 @@ func _ready():
 
 func _load_popups():
 	# Load Settings popup
-	var settings_scene = load("res://Path-of-Embers/scenes/ui/SettingsPopup.tscn")
+	var settings_scene = load("res://scenes/ui/SettingsPopup.tscn")
 	settings_popup = settings_scene.instantiate()
 	add_child(settings_popup)
 	settings_popup.visible = false
@@ -112,7 +112,7 @@ func _load_popups():
 		settings_popup.popup_closed.connect(_on_popup_closed)
 	
 	# Load Deck popup
-	var deck_scene = load("res://Path-of-Embers/scenes/ui/DeckViewPopup.tscn")
+	var deck_scene = load("res://scenes/ui/DeckViewPopup.tscn")
 	deck_popup = deck_scene.instantiate()
 	add_child(deck_popup)
 	deck_popup.visible = false

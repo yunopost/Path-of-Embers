@@ -11,19 +11,19 @@ var current_scene: Node = null
 var ui_root: Control = null
 
 var screen_scenes: Dictionary = {
-	"main": "res://Path-of-Embers/scenes/screens/Main.tscn",
-	"main_menu": "res://Path-of-Embers/scenes/screens/Main.tscn",  # Alias for main
-	"character_select": "res://Path-of-Embers/scenes/screens/CharacterSelect.tscn",
-	"loadout": "res://Path-of-Embers/scenes/screens/LoadoutScreen.tscn",
-	"quest_select": "res://Path-of-Embers/scenes/screens/QuestSelectScreen.tscn",
-	"map": "res://Path-of-Embers/scenes/screens/MapScreen.tscn",
-	"combat": "res://Path-of-Embers/scenes/screens/CombatScreen.tscn",
-	"rewards": "res://Path-of-Embers/scenes/screens/RewardsScreen.tscn",
-	"encounter": "res://Path-of-Embers/scenes/screens/EncounterScreen.tscn",
-	"shop": "res://Path-of-Embers/scenes/screens/ShopScreen.tscn",
-	"boss_rush": "res://Path-of-Embers/scenes/screens/BossRushScreen.tscn",
-	"game_over": "res://Path-of-Embers/scenes/screens/GameOverScreen.tscn",
-	"victory": "res://Path-of-Embers/scenes/screens/VictoryScreen.tscn",
+	"main": "res://scenes/screens/Main.tscn",
+	"main_menu": "res://scenes/screens/Main.tscn",  # Alias for main
+	"character_select": "res://scenes/screens/CharacterSelect.tscn",
+	"loadout": "res://scenes/screens/LoadoutScreen.tscn",
+	"quest_select": "res://scenes/screens/QuestSelectScreen.tscn",
+	"map": "res://scenes/screens/MapScreen.tscn",
+	"combat": "res://scenes/screens/CombatScreen.tscn",
+	"rewards": "res://scenes/screens/RewardsScreen.tscn",
+	"encounter": "res://scenes/screens/EncounterScreen.tscn",
+	"shop": "res://scenes/screens/ShopScreen.tscn",
+	"boss_rush": "res://scenes/screens/BossRushScreen.tscn",
+	"game_over": "res://scenes/screens/GameOverScreen.tscn",
+	"victory": "res://scenes/screens/VictoryScreen.tscn",
 }
 
 func _ready():
@@ -31,7 +31,7 @@ func _ready():
 	await get_tree().process_frame
 	
 	# Load and add UIRoot to scene tree
-	var ui_root_scene = load("res://Path-of-Embers/scenes/ui/UIRoot.tscn")
+	var ui_root_scene = load("res://scenes/ui/UIRoot.tscn")
 	ui_root = ui_root_scene.instantiate()
 	get_tree().root.add_child(ui_root)
 	ui_root.set_anchors_preset(Control.PRESET_FULL_RECT)

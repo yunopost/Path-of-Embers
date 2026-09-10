@@ -23,11 +23,11 @@ const STEPS := ["PARTY", "LOADOUT", "QUESTS"]
 static func _get_font(variant: String) -> Font:
 	match variant:
 		"bold":
-			return load("res://Path-of-Embers/fonts/Cinzel/static/Cinzel-Bold.ttf")
+			return load("res://fonts/Cinzel/static/Cinzel-Bold.ttf")
 		"extrabold":
-			return load("res://Path-of-Embers/fonts/Cinzel/static/Cinzel-ExtraBold.ttf")
+			return load("res://fonts/Cinzel/static/Cinzel-ExtraBold.ttf")
 		_:
-			return load("res://Path-of-Embers/fonts/Cinzel/static/Cinzel-Regular.ttf")
+			return load("res://fonts/Cinzel/static/Cinzel-Regular.ttf")
 
 static func build_step_bar(current_step: int) -> Control:
 	## current_step: 0 = Party, 1 = Loadout, 2 = Quests.
@@ -253,7 +253,7 @@ static func ensure_background(screen: Control) -> void:
 	## whose .tscn predates the shared pre-run look.
 	if screen.get_node_or_null("BackgroundTexture"):
 		return
-	var bg_tex: Texture2D = load("res://Path-of-Embers/Art Assets/Start Menu/Main Menu background v2.png")
+	var bg_tex: Texture2D = load("res://art/start_menu/main_menu_background_v2.png")
 	if bg_tex:
 		var bg := TextureRect.new()
 		bg.name = "BackgroundTexture"

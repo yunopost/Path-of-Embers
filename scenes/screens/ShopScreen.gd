@@ -37,7 +37,7 @@ const EQUIP_DROP_WEIGHT: Dictionary = {
 	EquipmentData.Rarity.RARE:     15,
 }
 
-const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
+const DEBUG_PANEL_SCRIPT = preload("res://scenes/ui/debug/DebugPanel.gd")
 
 # ── Persistent stock (kept for current node visit only) ───────────────────────
 # Each entry: { "type": "card"/"upgrade_bundle"/"transcendence"/"equipment",

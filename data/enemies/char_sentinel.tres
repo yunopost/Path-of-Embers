@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="EnemyData" load_steps=6 format=3]
 
-[ext_resource type="Script" path="res://Path-of-Embers/data/EnemyData.gd" id="1_enemydata"]
-[ext_resource type="Script" path="res://Path-of-Embers/data/EffectData.gd" id="2_effectdata"]
+[ext_resource type="Script" path="res://data/EnemyData.gd" id="1_enemydata"]
+[ext_resource type="Script" path="res://data/EffectData.gd" id="2_effectdata"]
 
 [sub_resource type="Resource" id="EffectData_1" script_class="EffectData"]
 script = ExtResource("2_effectdata")
@@ -28,7 +28,7 @@ script = ExtResource("1_enemydata")
 id = "char_sentinel"
 display_name = "Char Sentinel"
 name = "Char Sentinel"
-sprite_path = "res://Path-of-Embers/Art Assets/Enemy Sprites/Char Sentinel (elite).png"
+sprite_path = "res://art/enemy_sprites/char_sentinel_elite.png"
 act = 1
 enemy_type = 1
 min_hp = 48

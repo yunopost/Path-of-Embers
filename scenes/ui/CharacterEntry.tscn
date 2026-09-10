@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://character_entry"]
 
-[ext_resource type="Script" path="res://Path-of-Embers/scenes/ui/CharacterEntry.gd" id="1_character_entry"]
+[ext_resource type="Script" path="res://scenes/ui/CharacterEntry.gd" id="1_character_entry"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
 bg_color = Color(0.2, 0.2, 0.2, 0.5)

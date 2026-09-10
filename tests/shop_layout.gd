@@ -7,7 +7,7 @@ func _ready():
 		var host := Control.new()
 		host.size = sz
 		add_child(host)
-		var shop = load("res://Path-of-Embers/scenes/screens/ShopScreen.tscn").instantiate()
+		var shop = load("res://scenes/screens/ShopScreen.tscn").instantiate()
 		host.add_child(shop)
 		shop.size = sz
 		await get_tree().process_frame

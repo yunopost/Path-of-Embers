@@ -2,7 +2,7 @@ extends Control
 
 ## Rewards screen - displays and allows player to claim rewards
 
-const DEBUG_PANEL_SCRIPT = preload("res://Path-of-Embers/scenes/ui/debug/DebugPanel.gd")
+const DEBUG_PANEL_SCRIPT = preload("res://scenes/ui/debug/DebugPanel.gd")
 
 @onready var title_label: Label = $CenterPanel/VBoxContainer/TitleLabel
 @onready var rewards_container: VBoxContainer = $CenterPanel/VBoxContainer/RewardsContainer
@@ -353,7 +353,7 @@ func _create_upgrade_flow_panel():
 	if upgrade_flow_panel:
 		return
 	
-	var upgrade_flow_scene = load("res://Path-of-Embers/scenes/ui/rewards/UpgradeFlowPanel.tscn")
+	var upgrade_flow_scene = load("res://scenes/ui/rewards/UpgradeFlowPanel.tscn")
 	if not upgrade_flow_scene:
 		push_error("RewardsScreen: Could not load UpgradeFlowPanel scene")
 		return

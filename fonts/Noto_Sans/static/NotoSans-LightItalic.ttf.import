@@ -3,12 +3,12 @@
 importer="font_data_dynamic"
 type="FontFile"
 uid="uid://f1vchpfxbp21"
-path="res://.godot/imported/NotoSans-LightItalic.ttf-c8594d75e709dc629d083c77bbf72aff.fontdata"
+path="res://.godot/imported/NotoSans-LightItalic.ttf-3cdf334cbce5a30f9721b618fb9624bd.fontdata"
 
 [deps]
 
-source_file="res://Path-of-Embers/fonts/Noto_Sans/static/NotoSans-LightItalic.ttf"
-dest_files=["res://.godot/imported/NotoSans-LightItalic.ttf-c8594d75e709dc629d083c77bbf72aff.fontdata"]
+source_file="res://fonts/Noto_Sans/static/NotoSans-LightItalic.ttf"
+dest_files=["res://.godot/imported/NotoSans-LightItalic.ttf-3cdf334cbce5a30f9721b618fb9624bd.fontdata"]
 
 [params]
 

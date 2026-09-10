@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3]
 
-[ext_resource type="Script" path="res://Path-of-Embers/scenes/screens/LoadoutScreen.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://ckenb5r6kqdjq" path="res://Path-of-Embers/Art Assets/Start Menu/Main Menu background v2.png" id="2_bg"]
+[ext_resource type="Script" path="res://scenes/screens/LoadoutScreen.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://ckenb5r6kqdjq" path="res://art/start_menu/main_menu_background_v2.png" id="2_bg"]
 [ext_resource type="Shader" path="res://shaders/vignette.gdshader" id="3_vignette"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]

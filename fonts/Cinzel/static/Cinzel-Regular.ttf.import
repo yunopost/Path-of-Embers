@@ -3,12 +3,12 @@
 importer="font_data_dynamic"
 type="FontFile"
 uid="uid://c1ao38tks2ky4"
-path="res://.godot/imported/Cinzel-Regular.ttf-d6fe2b4624635a2d5a304f963e6acdbc.fontdata"
+path="res://.godot/imported/Cinzel-Regular.ttf-8c4985eae5afa5a7e131e390d959a104.fontdata"
 
 [deps]
 
-source_file="res://Path-of-Embers/fonts/Cinzel/static/Cinzel-Regular.ttf"
-dest_files=["res://.godot/imported/Cinzel-Regular.ttf-d6fe2b4624635a2d5a304f963e6acdbc.fontdata"]
+source_file="res://fonts/Cinzel/static/Cinzel-Regular.ttf"
+dest_files=["res://.godot/imported/Cinzel-Regular.ttf-8c4985eae5afa5a7e131e390d959a104.fontdata"]
 
 [params]
 

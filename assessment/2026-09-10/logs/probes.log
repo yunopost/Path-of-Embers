@@ -10,13 +10,13 @@ PROBE mid-combat save: selected=node_0_0 completed=false next=["node_1_0", "node
 Main.gd: Main menu _ready() called
 Main.gd: Nodes found - new_game: true, continue: true
 Main.gd: Main menu initialization complete - should be visible now
-ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
-WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+ScreenManager: Loading scene: map from path: res://scenes/screens/MapScreen.tscn
+WARNING: res://scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://scenes/screens/MapScreen.gd
    at: load (scene/resources/resource_format_text.cpp:444)
    GDScript backtrace (most recent call first):
-       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
-       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
-       [2] _on_continue_pressed (res://Path-of-Embers/scenes/screens/Main.gd:342)
+       [0] _change_screen (res://autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://autoload/ScreenManager.gd:42)
+       [2] _on_continue_pressed (res://scenes/screens/Main.gd:342)
        [3] run_probes (res://assessment/2026-09-10/probes.gd:54)
 MapConnectionsDraw._ready() called
 AutoSave: saved (force:scene_changed:map)
@@ -69,10 +69,10 @@ MapScreen: Updated MapConnections with 0 connections, visible=true
 WARNING: MapScreen: No map to render
    at: push_warning (core/variant/variant_utility.cpp:1034)
    GDScript backtrace (most recent call first):
-       [0] _render_map (res://Path-of-Embers/scenes/screens/MapScreen.gd:328)
-       [1] _on_map_changed (res://Path-of-Embers/scenes/screens/MapScreen.gd:672)
-       [2] reset_map_state (res://Path-of-Embers/autoload/MapManager.gd:173)
-       [3] reset_run (res://Path-of-Embers/autoload/RunState.gd:629)
+       [0] _render_map (res://scenes/screens/MapScreen.gd:328)
+       [1] _on_map_changed (res://scenes/screens/MapScreen.gd:672)
+       [2] reset_map_state (res://autoload/MapManager.gd:173)
+       [3] reset_run (res://autoload/RunState.gd:629)
        [4] run_probes (res://assessment/2026-09-10/probes.gd:59)
 MapScreen: _update_node_states called, available nodes: []
 MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redraw, visible=true
@@ -82,15 +82,15 @@ MapConnectionsDraw.set_connection_data(): Received 0 connections, queueing redra
 MapScreen: Updated MapConnections with 0 connections, visible=true
 PROBE unchanged equipment max HP across three combat starts: [75, 81, 87, 93]
 AutoSave: saved (force:pending_rewards_set)
-ScreenManager: Loading scene: rewards from path: res://Path-of-Embers/scenes/screens/RewardsScreen.tscn
+ScreenManager: Loading scene: rewards from path: res://scenes/screens/RewardsScreen.tscn
 AutoSave: saved (force:pending_rewards_set)
 AutoSave: saved (force:scene_changed:rewards)
 ScreenManager: Successfully loaded scene: rewards
 MapConnectionsDraw._draw(): connection_data is empty
 SCRIPT ERROR: Invalid access to property or key 'gold' on a base object of type 'Node (RunState.gd)'.
-   at: _on_claim_gold (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:310)
+   at: _on_claim_gold (res://scenes/screens/RewardsScreen.gd:310)
    GDScript backtrace (most recent call first):
-       [0] _on_claim_gold (res://Path-of-Embers/scenes/screens/RewardsScreen.gd:310)
+       [0] _on_claim_gold (res://scenes/screens/RewardsScreen.gd:310)
        [1] run_probes (res://assessment/2026-09-10/probes.gd:81)
 PROBE gold reward: gold=0 bundle gold=10 Continue disabled=true
 WARNING: ObjectDB instances leaked at exit (run with --verbose for details).

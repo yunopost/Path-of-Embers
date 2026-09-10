@@ -69,7 +69,7 @@ func _show_card_selection():
 		title_label.text = "Choose a card to %s (%d remaining) — Points: %d" % [upgrade_type_text, reward_bundle.upgrade_count, pts]
 	
 	# Load card widget scene
-	var card_widget_scene = load("res://Path-of-Embers/scenes/ui/cards/DeckCardWidget.tscn")
+	var card_widget_scene = load("res://scenes/ui/cards/DeckCardWidget.tscn")
 	if not card_widget_scene:
 		push_error("UpgradeFlowPanel: Could not load DeckCardWidget scene")
 		return

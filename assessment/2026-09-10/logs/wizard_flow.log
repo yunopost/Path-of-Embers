@@ -7,7 +7,7 @@ ERROR: Parent node is busy setting up children, `add_child()` failed. Consider u
    at: add_child (scene/main/node.cpp:1689)
    GDScript backtrace (most recent call first):
        [0] _ready (res://tests/wizard_flow.gd:7)
-ScreenManager: Loading scene: loadout from path: res://Path-of-Embers/scenes/screens/LoadoutScreen.tscn
+ScreenManager: Loading scene: loadout from path: res://scenes/screens/LoadoutScreen.tscn
 AutoSave: saved (force:scene_changed:loadout)
 ScreenManager: Successfully loaded scene: loadout
 screen=loadout scene=LoadoutScreen:<Control#113967629970>
@@ -15,19 +15,19 @@ start_btn text=NEXT: QUESTS → disabled=false
 stash=["test_synthetic_item_0", "test_synthetic_item_1", "test_synthetic_item_2", "test_synthetic_item_3", "test_synthetic_item_4", "test_synthetic_item_5", "test_synthetic_item_6", "test_synthetic_item_7", "test_synthetic_item_8", "test_synthetic_item_9", "test_synthetic_item_10", "test_synthetic_item_11"]
 equipped={  }
 AutoSave: saved (force:new_run_started)
-ScreenManager: Loading scene: quest_select from path: res://Path-of-Embers/scenes/screens/QuestSelectScreen.tscn
+ScreenManager: Loading scene: quest_select from path: res://scenes/screens/QuestSelectScreen.tscn
 AutoSave: saved (force:scene_changed:quest_select)
 ScreenManager: Successfully loaded scene: quest_select
 after NEXT: screen=quest_select scene=QuestSelectScreen:<Control#172134240538>
 begin_btn text=BEGIN RUN disabled=false
 AutoSave: saved (force:quests_chosen)
-ScreenManager: Loading scene: map from path: res://Path-of-Embers/scenes/screens/MapScreen.tscn
-WARNING: res://Path-of-Embers/scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://Path-of-Embers/scenes/screens/MapScreen.gd
+ScreenManager: Loading scene: map from path: res://scenes/screens/MapScreen.tscn
+WARNING: res://scenes/screens/MapScreen.tscn:3 - ext_resource, invalid UID: uid://by5q1cbcwp65n - using text path instead: res://scenes/screens/MapScreen.gd
    at: load (scene/resources/resource_format_text.cpp:444)
    GDScript backtrace (most recent call first):
-       [0] _change_screen (res://Path-of-Embers/autoload/ScreenManager.gd:107)
-       [1] go_to_map (res://Path-of-Embers/autoload/ScreenManager.gd:42)
-       [2] _on_begin_pressed (res://Path-of-Embers/scenes/screens/QuestSelectScreen.gd:237)
+       [0] _change_screen (res://autoload/ScreenManager.gd:107)
+       [1] go_to_map (res://autoload/ScreenManager.gd:42)
+       [2] _on_begin_pressed (res://scenes/screens/QuestSelectScreen.gd:237)
        [3] _ready (res://tests/wizard_flow.gd:30)
 MapConnectionsDraw._ready() called
 AutoSave: saved (force:scene_changed:map)

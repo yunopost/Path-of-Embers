@@ -3,12 +3,12 @@
 importer="font_data_dynamic"
 type="FontFile"
 uid="uid://3aqb8b41al4n"
-path="res://.godot/imported/NotoSans_SemiCondensed-ExtraLight.ttf-f173d083b596fae2de929532bd04cd49.fontdata"
+path="res://.godot/imported/NotoSans_SemiCondensed-ExtraLight.ttf-70c7cf9f441abb4df2cf8e5db5bb9be7.fontdata"
 
 [deps]
 
-source_file="res://Path-of-Embers/fonts/Noto_Sans/static/NotoSans_SemiCondensed-ExtraLight.ttf"
-dest_files=["res://.godot/imported/NotoSans_SemiCondensed-ExtraLight.ttf-f173d083b596fae2de929532bd04cd49.fontdata"]
+source_file="res://fonts/Noto_Sans/static/NotoSans_SemiCondensed-ExtraLight.ttf"
+dest_files=["res://.godot/imported/NotoSans_SemiCondensed-ExtraLight.ttf-70c7cf9f441abb4df2cf8e5db5bb9be7.fontdata"]
 
 [params]
 

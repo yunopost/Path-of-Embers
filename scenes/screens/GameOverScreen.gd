@@ -60,7 +60,7 @@ func _ready() -> void:
 
 func _setup_background() -> void:
 	## Full-rect death-screen background; ignores mouse so buttons still work.
-	var bg_path := "res://Path-of-Embers/Art Assets/Backgrounds/death.png"
+	var bg_path := "res://art/backgrounds/death.png"
 	if not ResourceLoader.exists(bg_path):
 		return
 	var bg_tex = load(bg_path)

@@ -3,12 +3,12 @@
 importer="font_data_dynamic"
 type="FontFile"
 uid="uid://cbod23niacpyr"
-path="res://.godot/imported/NotoSans-ExtraBold.ttf-a16c0934d1cdffd26c58300276497c55.fontdata"
+path="res://.godot/imported/NotoSans-ExtraBold.ttf-b510cc58bed68da156329eb5792a12b7.fontdata"
 
 [deps]
 
-source_file="res://Path-of-Embers/fonts/Noto_Sans/static/NotoSans-ExtraBold.ttf"
-dest_files=["res://.godot/imported/NotoSans-ExtraBold.ttf-a16c0934d1cdffd26c58300276497c55.fontdata"]
+source_file="res://fonts/Noto_Sans/static/NotoSans-ExtraBold.ttf"
+dest_files=["res://.godot/imported/NotoSans-ExtraBold.ttf-b510cc58bed68da156329eb5792a12b7.fontdata"]
 
 [params]
 

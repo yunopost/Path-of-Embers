@@ -3,12 +3,12 @@
 importer="font_data_dynamic"
 type="FontFile"
 uid="uid://cui3be4ogqmck"
-path="res://.godot/imported/NotoSans-VariableFont_wdth,wght.ttf-0ccb12f69cdb6ec369ffe5b88921bfa2.fontdata"
+path="res://.godot/imported/NotoSans-VariableFont_wdth,wght.ttf-954a44313921c7cb500fb5e646318c4f.fontdata"
 
 [deps]
 
-source_file="res://Path-of-Embers/fonts/Noto_Sans/NotoSans-VariableFont_wdth,wght.ttf"
-dest_files=["res://.godot/imported/NotoSans-VariableFont_wdth,wght.ttf-0ccb12f69cdb6ec369ffe5b88921bfa2.fontdata"]
+source_file="res://fonts/Noto_Sans/NotoSans-VariableFont_wdth,wght.ttf"
+dest_files=["res://.godot/imported/NotoSans-VariableFont_wdth,wght.ttf-954a44313921c7cb500fb5e646318c4f.fontdata"]
 
 [params]
 

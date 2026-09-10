@@ -10,7 +10,7 @@ extends Control
 signal ability_pressed(character_id: String)
 
 # Constants
-const CHARACTER_HUD_BLOCK_SCENE = preload("res://Path-of-Embers/scenes/ui/hud/CharacterHUDBlock.tscn")
+const CHARACTER_HUD_BLOCK_SCENE = preload("res://scenes/ui/hud/CharacterHUDBlock.tscn")
 
 # Private variables
 var _character_hud_blocks: Array[Control] = []

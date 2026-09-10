@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://character_hud_block"]
 
-[ext_resource type="Script" path="res://Path-of-Embers/scenes/ui/hud/CharacterHUDBlock.gd" id="1_character_hud_block"]
+[ext_resource type="Script" path="res://scenes/ui/hud/CharacterHUDBlock.gd" id="1_character_hud_block"]
 
 [node name="CharacterHUDBlock" type="VBoxContainer"]
 custom_minimum_size = Vector2(200, 190)
