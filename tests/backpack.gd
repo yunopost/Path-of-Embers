@@ -99,8 +99,8 @@ func _test_loss_keeps_only_safe_slot() -> void:
 	RunState.settle_backpack_on_loss()
 	var after: Array[String] = SaveManager.load_persistent_stash()
 
-	_check("on loss, the safe-slot item (index 0) reaches the persistent stash", after.has(ids[0]))
-	_check("on loss, the non-safe-slot item does NOT reach the persistent stash", not (after.has(ids[1]) and not before.has(ids[1])))
+	_check("loss does not export equipment to meta", after == before)
+	_check("loss keeps run contents until reset", RunState.backpack == ids)
 	# settle_backpack_on_loss() only settles the stash transfer; the actual run
 	# teardown (clearing the backpack) happens in reset_run(), same as every
 	# other run-scoped field -- see CombatScreen._on_player_defeated().
@@ -117,11 +117,12 @@ func _test_win_keeps_whole_backpack() -> void:
 	RunState.backpack_add(ids[0])
 	RunState.backpack_add(ids[1])
 
+	var before := SaveManager.load_persistent_stash()
 	RunState.settle_backpack_on_win()
 	var after: Array[String] = SaveManager.load_persistent_stash()
 
-	_check("on win, the safe-slot item reaches the persistent stash", after.has(ids[0]))
-	_check("on win, the non-safe-slot item ALSO reaches the persistent stash", after.has(ids[1]))
+	_check("win does not export equipment to meta", after == before)
+	_check("win keeps run contents until reset", RunState.backpack == ids)
 	RunState.reset_run()
 	_check("reset_run() (called after settle) clears the backpack", RunState.backpack.is_empty())
 	_reset_backpack_state()

@@ -735,3 +735,8 @@ This document is the **source of truth** for mechanics and design philosophy. Wh
 3. Use the synergy web when designing new cards — every card should have a home in at least one party strategy.
 4. Use "satisfyingly in control of chaos" as the filter for every design decision. If a mechanic adds chaos without a corresponding player lever to manage it, reconsider.
 5. When designing cards for the six new characters, use the existing six as a reference for scope and power level — starter cards should communicate the first two themes immediately, reward pool cards can explore the edges of the advanced theme.
+
+
+## Art direction update — 11 September 2026
+
+Follow [ART_DIRECTION.md](ART_DIRECTION.md): Witch-led color balance; varied cool/neutral palette, selective warmth; clear level combat floor and CZN-referenced actor scale. Older sunset/warm-equals-life constraints are superseded. UI work may replace previous implementation when measured readability or interaction improves.

@@ -4,6 +4,8 @@ extends Control
 ## never registered the global class and the screen failed to parse at runtime.
 const DEBUG_PANEL_SCRIPT = preload("res://scenes/ui/debug/DebugPanel.gd")
 const COMBAT_GUIDE_SCRIPT = preload("res://scenes/ui/CombatGuide.gd")
+const PRESENTATION_SCRIPT = preload("res://scenes/ui/CombatPresentation.gd")
+var presentation: Node
 var combat_guide: AcceptDialog
 
 ## Combat screen with full combat implementation
@@ -51,19 +53,20 @@ func _ready():
 	
 	# Connect combat controller signals
 	combat_controller.combat_started.connect(_on_combat_started)
-	combat_controller.turn_ended.connect(_on_turn_ended)
+	combat_controller.resource_action_taken.connect(_on_resource_action_taken)
 
 	set_process_unhandled_input(true)
 	set_process(true)
 
 	# Setup play area (invisible but detects drops)
 	if play_area:
-		play_area.color = Color(1, 1, 1, 0.08)  # Subtle guide — brightens green when card is dragged
+		play_area.color = Color.TRANSPARENT  # The play zone appears only during a drag.
 		play_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	_apply_combat_ui_style()
 	resized.connect(_update_hand)
 	resized.connect(_layout_combat)
+	enemy_slots.minimum_size_changed.connect(_layout_combat)
 
 	# Initialize screen (architecture rule 2.1)
 	initialize()
@@ -71,19 +74,30 @@ func _ready():
 	combat_guide = AcceptDialog.new()
 	combat_guide.set_script(COMBAT_GUIDE_SCRIPT)
 	add_child(combat_guide)
+	presentation = Node.new()
+	presentation.set_script(PRESENTATION_SCRIPT)
+	add_child(presentation)
+	presentation.setup(self)
 	if MapManager.current_map != null:
 		combat_guide.call_deferred("show_if_new")
 
 func _layout_combat() -> void:
-	# At 720p reserve the top-right navigation and the hand before sizing art.
-	# Text and target hitboxes retain their size; only enemy artwork shrinks.
-	var compact := size.y < 850
+	var floor_y := size.y * 0.68
 	var anchor := $CombatArea/EnemyAnchor
-	anchor.offset_top = 105.0 - size.y * 0.5 if compact else -315.0
 	for display in enemy_displays:
 		var sprite := display.find_child("EnemySprite", true, false) as TextureRect
 		if sprite:
-			sprite.custom_minimum_size.y = 50 if compact else 110
+			var enemy: Enemy = display.get_meta("enemy")
+			var boss := enemy.enemy_data.enemy_type == EnemyData.EnemyType.BOSS
+			sprite.custom_minimum_size.y = minf(size.y * (0.34 if boss else 0.26), floor_y - (250 if boss else 290))
+			display.custom_minimum_size.x = size.y * 0.40 if boss else 150
+	for i in range(2):
+		await get_tree().process_frame
+	if not is_inside_tree():
+		return
+	var area := $CombatArea/EnemyAnchor/EnemyArea as VBoxContainer
+	anchor.offset_top = floor_y - area.get_combined_minimum_size().y - size.y * 0.5
+	anchor.offset_bottom = floor_y - size.y * 0.5
 
 func _apply_combat_ui_style() -> void:
 	## Apply visual styling to combat screen elements
@@ -160,13 +174,13 @@ func _setup_background() -> void:
 	if MapManager and MapManager.has_method("get_current_node_type"):
 		node_type = MapManager.get_current_node_type()
 
-	var bg_path := "res://art/backgrounds/combat_act1_a.png"
+	var bg_path := "res://art/backgrounds/combat_courtyard_v2.png"
 	if node_type == MapNodeData.NodeType.BOSS or node_type == MapNodeData.NodeType.FINAL_BOSS:
-		bg_path = "res://art/backgrounds/boss_act1.png"
+		bg_path = "res://art/backgrounds/boss_courtyard_v2.png"
 	else:
 		var seed_str: String = MapManager.current_node_id if MapManager else ""
 		if seed_str.hash() % 2 == 1:
-			bg_path = "res://art/backgrounds/combat_act1_b.png"
+			bg_path = "res://art/backgrounds/combat_courtyard_v2.png"
 
 	if not ResourceLoader.exists(bg_path):
 		return
@@ -386,7 +400,7 @@ func _setup_ability_bar() -> void:
 	var breathe_btn = Button.new()
 	breathe_btn.name = "BreatheButton"
 	breathe_btn.text = "BREATHE\n[Space]"
-	breathe_btn.tooltip_text = "Breathe: +1 Energy (no upper cap), starts a new cycle. 1 tick. No cooldown."
+	breathe_btn.tooltip_text = "Breathe: +1 Energy (no upper cap). 1 tick. No cooldown."
 	breathe_btn.pressed.connect(_on_breathe_pressed)
 	_style_ability_button(breathe_btn)
 	ability_bar.add_child(breathe_btn)
@@ -394,7 +408,7 @@ func _setup_ability_bar() -> void:
 	var focus_btn = Button.new()
 	focus_btn.name = "FocusButton"
 	focus_btn.text = "FOCUS\n[F]"
-	focus_btn.tooltip_text = "Focus: draw 2, starts a new cycle. 1 tick. No cooldown."
+	focus_btn.tooltip_text = "Focus: draw 2. 1 tick. No cooldown."
 	focus_btn.pressed.connect(_on_focus_pressed)
 	_style_ability_button(focus_btn)
 	ability_bar.add_child(focus_btn)
@@ -437,6 +451,8 @@ func _refresh_ability_bar() -> void:
 	var party_hud := _get_party_hud()
 	if party_hud:
 		party_hud.refresh_ability_states()
+	if presentation:
+		presentation.refresh()
 
 func _on_breathe_pressed() -> void:
 	_cancel_ability_targeting()
@@ -475,7 +491,7 @@ func _cancel_ability_targeting() -> void:
 	pending_ability_character_id = ""
 	_refresh_ability_bar()
 
-func _on_enemy_panel_gui_input(event: InputEvent, enemy_panel: Panel) -> void:
+func _on_enemy_panel_gui_input(event: InputEvent, enemy_panel: Control) -> void:
 	if pending_ability_character_id.is_empty():
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -720,6 +736,7 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 	enemy_panel.custom_minimum_size = Vector2(150, 200)
 	enemy_panel.name = "Enemy_" + enemy.enemy_id
 	enemy_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	enemy_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	
 	# Store reference to enemy for targeting
 	enemy_panel.set_meta("enemy", enemy)
@@ -798,6 +815,9 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 	intent_row.mouse_filter = Control.MOUSE_FILTER_PASS
 	vbox.add_child(intent_row)
 	_populate_intent_row(intent_row, enemy.intent)
+	var battle_sprite := vbox.get_node_or_null("EnemySprite")
+	if battle_sprite:
+		vbox.move_child(battle_sprite, vbox.get_child_count() - 1)
 
 	# Connect to timer and intent signals
 	enemy.time_changed.connect(func(current, max_time):
@@ -812,90 +832,61 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 	return enemy_panel
 
 func _update_hand():
-	## Update hand UI with current cards.
-	##
-	## Re-entrancy (fixed 10 Sep 2026 — this was the "Hex cannot be picked up"
-	## bug): this function awaits frames while it rebuilds the tray, and the
-	## guard below used to simply `return` when a second call arrived during
-	## that window. Every hand_changed emitted mid-rebuild was therefore
-	## dropped and nothing re-ran afterwards, leaving a tray that did not match
-	## the hand -- a card in hand with no CardUI under it cannot be clicked or
-	## dragged at all. Hex hit it most often because Hex adds a Curse to hand as
-	## it resolves, emitting hand_changed a second time during its own rebuild.
-	## A dropped update must instead be remembered and replayed once.
 	if is_updating_hand:
 		_hand_update_pending = true
 		return
 	is_updating_hand = true
 	_hand_update_pending = false
-
-	# Immediately remove all existing card UIs from container
-	for card_ui in card_ui_instances:
-		if is_instance_valid(card_ui) and card_ui.get_parent():
-			card_ui.get_parent().remove_child(card_ui)
-		card_ui.queue_free()
-	card_ui_instances.clear()
-	
-	# Wait for layout to update and nodes to be freed
-	await get_tree().process_frame
-	await get_tree().process_frame
-	
-	# Create card UIs for each card in hand
-	# Use deck_model.get_hand_cards() which handles instance_id lookup
 	var hand_cards: Array[DeckCardData] = RunState.deck_model.get_hand_cards()
+	var existing := {}
+	for ui in card_ui_instances:
+		if is_instance_valid(ui):
+			existing[ui.deck_card_data.instance_id] = ui
+	var next_cards: Array[CardUI] = []
+	var newcomers: Array[CardUI] = []
 	var available_width := maxf(size.x, get_viewport_rect().size.x)
-	var width_per_card := clampf((available_width - 80.0 - max(0, hand_cards.size() - 1) * 8.0) / max(1, hand_cards.size()), 120.0, 210.0)
-	
-	for deck_card in hand_cards:
-		# Double-check type before calling setup_card
-		if not deck_card is DeckCardData:
-			push_error("CombatScreen: Expected DeckCardData but got %s" % typeof(deck_card))
-			continue
-		var card_ui = CardUI.new()
-		card_ui.card_width = width_per_card
-		hand_container.add_child(card_ui)
-		card_ui.setup_card(deck_card)
-		card_ui.set_combat_controller(combat_controller)
-		card_ui.card_played.connect(_on_card_played)
-		
-		# Set valid targets (enemies) - do this before waiting
-		card_ui.valid_targets = enemy_displays
-
-		# Enemy timer ghost preview on hover (spec §8)
-		card_ui.mouse_entered.connect(_on_card_hover_start.bind(card_ui))
-		card_ui.mouse_exited.connect(_on_card_hover_end.bind(card_ui))
-		
-		card_ui_instances.append(card_ui)
-
-	# Layout settles once for the whole tray, not once per card. Awaiting two
-	# frames inside the loop meant an 8-card hand spent 16 frames rebuilding,
-	# and every hand_changed arriving in that window was lost (see the
-	# re-entrancy note at the top of this function). Two frames total is enough
-	# for the container to size its children.
+	var width := 210.0
+	var separation := minf(8.0, (available_width - 340.0 - width * hand_cards.size()) / max(1, hand_cards.size() - 1))
+	hand_container.add_theme_constant_override("separation", int(separation))
+	for card in hand_cards:
+		var ui: CardUI = existing.get(card.instance_id)
+		if ui:
+			existing.erase(card.instance_id)
+		else:
+			ui = CardUI.new()
+			ui.card_width = width
+			hand_container.add_child(ui)
+			ui.setup_card(card)
+			ui.set_combat_controller(combat_controller)
+			ui.card_played.connect(_on_card_played)
+			ui.mouse_entered.connect(_on_card_hover_start.bind(ui))
+			ui.mouse_exited.connect(_on_card_hover_end.bind(ui))
+			newcomers.append(ui)
+		ui.custom_minimum_size.x = width
+		ui.resting_rotation = deg_to_rad((float(next_cards.size()) / maxf(1, hand_cards.size() - 1) - 0.5) * 7.0)
+		ui.card_panel.pivot_offset = Vector2(width * 0.5, 280)
+		ui.card_panel.rotation = ui.resting_rotation
+		ui.card_widget.custom_minimum_size.x = width
+		ui.card_width = width
+		ui.valid_targets = enemy_displays
+		hand_container.move_child(ui, next_cards.size())
+		next_cards.append(ui)
+	for ui in existing.values():
+		hand_container.remove_child(ui)
+		ui.queue_free()
+	card_ui_instances = next_cards
 	await get_tree().process_frame
 	await get_tree().process_frame
-
-	for card_ui in card_ui_instances:
-		if not is_instance_valid(card_ui):
-			continue
-		card_ui.mouse_filter = Control.MOUSE_FILTER_STOP
-		card_ui.visible = true
-
-		# Force minimum size if card still has no size. A zero-size CardUI
-		# swallows every click (see CardUI._gui_input's rect test), so this
-		# fallback is what keeps an unlaid-out card playable rather than dead.
-		if card_ui.size == Vector2.ZERO:
-			card_ui.custom_minimum_size = Vector2(120, 160)
-			card_ui.size = Vector2(120, 160)
-
-		# Set play area after layout updates
-		if play_area:
-			card_ui.play_area = Rect2(play_area.global_position, play_area.size)
-			card_ui.play_area_node = play_area
-
+	for ui in card_ui_instances:
+		ui.play_area = Rect2(play_area.global_position, play_area.size)
+		ui.play_area_node = play_area
+		ui.refresh_preview()
+	for i in range(newcomers.size()):
+		var ui := newcomers[i]
+		if is_instance_valid(ui):
+			ui.animate_draw(draw_pile_label.global_position, i * 0.035)
 	is_updating_hand = false
 	if _hand_update_pending:
-		_hand_update_pending = false
 		await _update_hand()
 
 func _on_card_played(card_ui: CardUI, target: Node = null):
@@ -903,12 +894,38 @@ func _on_card_played(card_ui: CardUI, target: Node = null):
 	var deck_card = card_ui.deck_card_data
 	if not deck_card:
 		return
+	var ghost := CardWidget.new()
+	ghost.name = "PlayedCardMotion"
+	ghost.card_width = card_ui.card_width
+	ghost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ghost.z_index = 200
+	add_child(ghost)
+	ghost.setup_card(deck_card)
+	ghost.position = card_ui.global_position - global_position
+	var start := ghost.position
 	
 	_on_card_hover_end()  # card is leaving the hand either way; drop any ghost preview
 	var success = combat_controller.play_card(deck_card, target)
 	if not success:
 		# Card couldn't be played (not enough energy)
 		card_ui._snap_back()
+		ghost.queue_free()
+	else:
+		var motion := create_tween()
+		motion.tween_property(ghost, "position", start + Vector2(0, -80), 0.12).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		motion.tween_interval(0.08)
+		if card_ui.card_data.keywords.has("Exhaust"):
+			motion.tween_property(ghost, "modulate", Color(1, 0.35, 0.05, 0), 0.22)
+		else:
+			motion.set_parallel(true)
+			motion.tween_property(ghost, "position", discard_pile_label.global_position - global_position, 0.28).set_delay(0.20)
+			motion.tween_property(ghost, "scale", Vector2(0.15, 0.15), 0.28).set_delay(0.20)
+			motion.tween_property(ghost, "modulate:a", 0.0, 0.28).set_delay(0.20)
+		motion.chain().tween_callback(ghost.queue_free)
+		if is_instance_valid(target) and target is Control:
+			var flash := create_tween()
+			flash.tween_property(target, "modulate", Color(1.4, 0.7, 0.4), 0.06)
+			flash.tween_property(target, "modulate", Color.WHITE, 0.18)
 	_refresh_ability_bar()
 	_update_tick_counter()
 
@@ -979,7 +996,7 @@ func _setup_player_status_indicator():
 		player_area.add_child(player_status_indicator)
 		player_area.move_child(player_status_indicator, hp_label_index)
 
-func _on_turn_ended():
+func _on_resource_action_taken():
 	_update_player_hp()
 	_refresh_ability_bar()
 	_update_tick_counter()

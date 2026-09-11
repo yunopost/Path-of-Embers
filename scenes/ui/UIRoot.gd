@@ -218,7 +218,7 @@ func _on_gold_changed():
 
 func _on_node_position_changed():
 	if is_instance_valid(node_progress_label) and MapManager:
-		node_progress_label.text = "Node: %d" % MapManager.node_position
+		node_progress_label.text = str(MapManager.node_position)
 
 func _on_map_button_pressed():
 	ScreenManager.go_to_map()
@@ -261,8 +261,11 @@ func _setup_debug_info():
 
 func _update_debug_info():
 	## Update debug info display
-	if is_instance_valid(debug_label) and OS.is_debug_build():
+	if is_instance_valid(debug_label) and DebugMode.is_enabled():
 		var party_str = ", ".join(PartyManager.party_ids) if PartyManager and PartyManager.party_ids.size() > 0 else "None"
 		var deck_count = RunState.get_deck_size() if RunState and RunState.has_method("get_deck_size") else 0
 		debug_label.text = "Party: [%s] | Deck: %d" % [party_str, deck_count]
 		debug_label.visible = true
+
+	elif is_instance_valid(debug_label):
+		debug_label.hide()

@@ -6,16 +6,18 @@ Extract the entire ZIP to a folder, then open **Path of Embers.exe**. Keep the e
 
 Choose three companions, equip them, and choose one quest for each. All three quests must be completed to open the final boss path, so read their requirements before beginning. Your companions share HP and one combined deck.
 
-In combat, drag a targeted card onto an enemy; drag other cards upward. Hover over a card for its full rules. Time advances when you act, so you can stop and think. Watch enemy intentions and the time cost of your cards.
+In combat, drag a targeted card onto an enemy; drag other cards upward. Hover over a card to enlarge it; right-click to pin or unpin it for reading; Escape closes the enlarged card. Time advances when you act, so you can stop and think. Watch enemy intentions and the time cost of your cards.
 
 - **Space / Breathe:** gain 1 energy; advance the clock by 1 tick. Energy has no upper cap.
 - **F / Focus:** draw 2 cards; advance the clock by 1 tick. Cards drawn into a full hand go to discard.
-- **Party ability:** click the button below a portrait, then an enemy if a target is required. Hover for costs; Escape cancels targeting.
-- **How to Play:** reopen the combat introduction whenever you need it.
+- **Party ability:** click its button on the left, then an enemy if a target is required. Hover for costs; Escape cancels targeting.
+- **How to Play:** use the help button at the upper right to reopen the combat introduction.
 
-Breathe and Focus each begin a new cycle for effects that mention cycles. Block remains until damage consumes it.
+Block remains until damage consumes it.
 
 ## Progress and saves
+
+New Run starts with three starter equipment pieces and an empty backpack. Equipment does not carry between runs; unlock milestones do. Continue retains the equipment saved in that run. Old equipment collections are backed up in `meta-before-equipment-reset.json`.
 
 The game autosaves. Continue resumes your run; quitting during combat restarts that encounter from its pre-fight checkpoint. Enemy composition stays the same, but opening cards and random rolls may differ. Claimed rewards stay claimed.
 

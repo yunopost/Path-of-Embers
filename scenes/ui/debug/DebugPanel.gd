@@ -166,7 +166,8 @@ func _on_grant_all_equipment() -> void:
 		return
 	var count := 0
 	for equip in DataRegistry.get_all_equipment():
-		SaveManager.add_to_persistent_stash(equip.id)
+		if not RunState.run_stash.has(equip.id):
+			RunState.run_stash.append(equip.id)
 		count += 1
 	_set_status("Granted %d equipment ids" % count)
 	# Refresh the Loadout screen's stash display immediately if that's where we are.

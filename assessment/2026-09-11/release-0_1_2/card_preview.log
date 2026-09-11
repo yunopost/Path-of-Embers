@@ -1,0 +1,43 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 3 milestones, 5 encounters, 6 abilities
+=== card_preview test ===
+PASS: defend_1 drawn
+PASS: Block preview includes owner's base Dexterity (def_base)
+PASS: Block preview reflects the new equipment Dexterity bonus
+PASS: Block preview is marked modified relative to the static value
+PASS: strike_1 drawn
+PASS: Damage against a Vulnerable target is int(raw*1.5)
+PASS: Damage preview marked modified while target is Vulnerable
+PASS: bulwark drawn
+PASS: Bulwark Block == discard pile size (+ owner Dexterity)
+PASS: Bulwark Block preview grows with the discard pile
+PASS: construct_punch drawn
+PASS: Construct Punch damage == draw pile size (+ owner Strength)
+PASS: iron_tide drawn
+PASS: Iron Tide damage == ceil(7/2) + owner Strength = 4 + str
+PASS: Iron Tide preview does not spend Block
+PASS: hex drawn
+PASS: Hex with 0 Curses in hand previews base_amount(0) + owner Strength, no per-curse bonus
+PASS: Hex damage == 6 per Curse in hand (1 curse -> 6 + Strength)
+PASS: Hex preview is marked modified (value is entirely live/state-driven)
+PASS: hex preview does not change hand size
+PASS: hex preview does not change draw pile size
+PASS: hex preview does not change discard pile size
+PASS: bulwark preview does not change hand size
+PASS: bulwark preview does not change draw pile size
+PASS: bulwark preview does not change discard pile size
+PASS: construct_punch preview does not change hand size
+PASS: construct_punch preview does not change draw pile size
+PASS: construct_punch preview does not change discard pile size
+PASS: defend_1 preview does not change hand size
+PASS: defend_1 preview does not change draw pile size
+PASS: defend_1 preview does not change discard pile size
+PASS: strike_1 preview does not change hand size
+PASS: strike_1 preview does not change draw pile size
+PASS: strike_1 preview does not change discard pile size
+PASS: next_card_discount untouched by previews
+PASS: haste_next_card untouched by previews
+PASS: Block untouched by previews
+PASS: Energy untouched by previews
+--- card_preview summary: 38 passed, 0 failed ---

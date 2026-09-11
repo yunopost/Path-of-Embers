@@ -59,3 +59,11 @@ The added `release_blockers` scene has 71 integration assertions. `combat_layout
 ## Friends demo candidate follow-up
 
 See `DEMO_CANDIDATE_STATUS.md` for the new introduction, card tooltips, compact combat layout, release-only resource loader fix, reproducible Windows packaging, and outstanding acceptance gates. This supersedes the earlier lack of an export; it does not certify full-run readiness.
+
+## Version 0.1.1 follow-up
+
+See [COMBAT_POLISH_0_1_1.md](COMBAT_POLISH_0_1_1.md) for the approved equipment reset, cycle removal, CZN-inspired combat layout, animations, starting-party cutouts, 362 passing assertions, rendered checks, and new Windows ZIP. This supersedes the earlier equipment carryover and non-overlapping hand descriptions. Full-run balance acceptance remains open.
+
+## Current candidate: 0.1.2
+
+[COMBAT_POLISH_0_1_2.md](COMBAT_POLISH_0_1_2.md) supersedes the 0.1.1 presentation: cooler staging backgrounds, shared actor baseline, compact fanned hand with raised readable cards, upper-right help, and current art-direction authority.

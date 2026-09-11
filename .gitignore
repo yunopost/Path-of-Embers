@@ -8,3 +8,7 @@ poe_snapshot.tgz
 .claude/worktrees/
 *.tgz
 /builds/
+
+# Disposable verification profiles and editor imports of evidence images
+assessment/**/profile-*/
+assessment/**/*.png.import

@@ -86,7 +86,7 @@ func _build_ui() -> void:
 	header.add_child(close_btn)
 
 	var subtitle := Label.new()
-	subtitle.text = "Drag gear between your backpack and equipped slots, or click one then the other. Slot 1 is SAFE: only it survives a loss."
+	subtitle.text = "Drag gear between your backpack and equipped slots, or click one then the other. Equipment is kept for this run. New Run starts with fresh gear."
 	subtitle.add_theme_font_size_override("font_size", 12)
 	subtitle.add_theme_color_override("font_color", FOG)
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -198,7 +198,7 @@ func _refresh_backpack_grid() -> void:
 		_backpack_grid.add_child(_build_backpack_tile(i, equipment_id))
 
 func _build_backpack_tile(index: int, equipment_id: String) -> PanelContainer:
-	var is_safe: bool = index == RunState.BACKPACK_SAFE_SLOT_INDEX
+	var is_safe: bool = false
 	var is_selected: bool = index == _selected_backpack_index
 
 	var style := StyleBoxFlat.new()
@@ -394,8 +394,6 @@ func _show_full_backpack_prompt() -> void:
 		var existing_id: String = RunState.backpack[i]
 		var existing_data: EquipmentData = DataRegistry.get_equipment(existing_id) if DataRegistry else null
 		var name_text: String = existing_data.name if existing_data else existing_id
-		if i == RunState.BACKPACK_SAFE_SLOT_INDEX:
-			name_text += " (safe slot)"
 		var discard_btn := Button.new()
 		discard_btn.text = "Make room: discard %s" % name_text
 		discard_btn.pressed.connect(func():

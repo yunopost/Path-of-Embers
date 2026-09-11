@@ -49,3 +49,5 @@ theme_3 = "Contagion"
 starter_unique_cards = Array[ExtResource("2_carddata")]([ExtResource("4_c1"), ExtResource("5_c2")])
 reward_card_pool = Array[ExtResource("2_carddata")]([ExtResource("6_r1"), ExtResource("7_r2"), ExtResource("8_r3"), ExtResource("9_r4"), ExtResource("10_r5"), ExtResource("11_r6"), ExtResource("12_r7")])
 quests = Array[ExtResource("3_questdata")]([SubResource("QuestData_1"), SubResource("QuestData_2")])
+
+fullbody_path = "res://art/battle/witch_battle.png"

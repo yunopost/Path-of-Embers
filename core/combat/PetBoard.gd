@@ -202,17 +202,6 @@ func check_assembly() -> void:
 
 # ═══════════════════════════  Combat Lifecycle Hooks  =========================
 
-func on_start_player_turn() -> void:
-	current_turn += 1
-	fire_hook("START_OF_PLAYER_TURN", {})
-	check_assembly()
-
-func on_end_player_turn() -> void:
-	fire_hook("END_OF_PLAYER_TURN", {})
-	# Clear per-turn pet flags
-	for pet in pets:
-		pet.reinforced_this_turn = false
-
 func on_enemy_acted(enemy) -> void:
 	## Call this from CombatController._on_enemy_acted, passing the acting Enemy.
 	## Fires WHEN_ENEMY_ACTS on all pets, then checks Reinforced Frame draw.

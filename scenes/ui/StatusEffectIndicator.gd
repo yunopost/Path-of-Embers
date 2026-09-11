@@ -109,7 +109,7 @@ func _create_status_indicator(status_type: String, value, is_stacking: bool = fa
 	if is_stacking:
 		container.tooltip_text = "%s: %s" % [status_name, str(value_display)]
 	else:
-		container.tooltip_text = "%s: %s turns" % [status_name, str(value_display)]
+		container.tooltip_text = "%s: %s ticks" % [status_name, str(value_display)]
 	
 	return container
 

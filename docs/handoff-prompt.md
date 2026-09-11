@@ -73,3 +73,8 @@ Spawn agents for mechanical and parallelizable work, but **verify their claims y
 Watch cost: I am on the $20/month tier. Use cheaper models for mechanical work and reserve the expensive ones for judgment-heavy design. Never dump file contents through the shell to move them — use the file staging tools.
 
 Start by confirming the shell, then reading the project docs, then finishing the restructure.
+
+
+## Art direction update — 11 September 2026
+
+Follow [ART_DIRECTION.md](ART_DIRECTION.md): Witch-led color balance; varied cool/neutral palette, selective warmth; clear level combat floor and CZN-referenced actor scale. Older sunset/warm-equals-life constraints are superseded. UI work may replace previous implementation when measured readability or interaction improves.

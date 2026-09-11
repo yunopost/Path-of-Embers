@@ -23,6 +23,19 @@ var play_area: Rect2 = Rect2()
 var play_area_node: ColorRect = null  # Optional: node ref for visual highlight
 var valid_targets: Array = []
 var current_target: Node = null
+var visual_tween: Tween
+var reading_card: CardWidget
+var resting_rotation := 0.0
+var reading_pinned := false
+
+func animate_draw(origin: Vector2, delay: float) -> void:
+	if visual_tween:
+		visual_tween.kill()
+	card_panel.position = origin - global_position
+	card_panel.modulate.a = 0.0
+	visual_tween = create_tween().set_parallel(true)
+	visual_tween.tween_property(card_panel, "position", Vector2.ZERO, 0.24).set_delay(delay).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	visual_tween.tween_property(card_panel, "modulate:a", 1.0, 0.18).set_delay(delay)
 
 ## Live-preview combat context (Job: real-time card numbers) -- see
 ## CardWidget.set_preview_context / CardRules.get_live_preview.
@@ -82,6 +95,9 @@ func refresh_preview() -> void:
 	## card -- cheap enough to call every frame for a hand's worth of cards.
 	if card_widget:
 		card_widget.set_preview_context(combat_controller, _resolve_preview_target())
+	if is_instance_valid(reading_card):
+		reading_card.set_preview_context(combat_controller, _resolve_preview_target())
+		_format_reading_card()
 
 func _resolve_preview_target() -> EntityStats:
 	## The enemy the preview should read Vulnerable/Weakness from: the one
@@ -121,6 +137,14 @@ func _gui_input(event):
 	
 	# Handle mouse/touch press on card
 	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			reading_pinned = not reading_pinned
+			if reading_pinned:
+				_show_reading_card()
+			else:
+				_hide_reading_card()
+			accept_event()
+			return
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
 				var local_pos = get_local_mouse_position()
@@ -138,6 +162,9 @@ func _gui_input(event):
 		accept_event()
 
 func _input(event):
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		reading_pinned = false
+		_hide_reading_card()
 	# Handle drag motion globally when dragging
 	if is_dragging and event is InputEventMouseMotion:
 		_update_drag(get_global_mouse_position())
@@ -156,6 +183,13 @@ func _start_drag(start_pos: Vector2):
 		return
 	
 	is_dragging = true
+	reading_pinned = false
+	_hide_reading_card()
+	if visual_tween:
+		visual_tween.kill()
+	card_panel.position = Vector2.ZERO
+	card_panel.rotation = 0.0
+	card_panel.modulate.a = 1.0
 	drag_start_pos = start_pos
 	original_position = global_position
 	z_index = 100
@@ -165,7 +199,7 @@ func _start_drag(start_pos: Vector2):
 	if _is_targeting_card():
 		_show_targeting_line(start_pos)
 	elif play_area_node:
-		play_area_node.color = Color(0.2, 0.8, 0.2, 0.35)  # Green highlight when dragging
+		play_area_node.color = Color(0.30, 0.50, 0.52, 0.20)  # Green highlight when dragging
 
 func _show_targeting_line(start_pos: Vector2):
 	targeting_line_visible = true
@@ -205,10 +239,21 @@ func _get_target_at_position(pos: Vector2) -> Node:
 
 func _draw():
 	if targeting_line_visible and is_dragging:
-		var start = size / 2
-		var end = get_local_mouse_position()
-		var color = Color.GREEN if current_target else Color.YELLOW
-		draw_line(start, end, color, 2.0)
+		var start: Vector2 = size / 2
+		var end: Vector2 = get_local_mouse_position()
+		var color = Color("ffd28a") if current_target else Color("ac7950")
+		var control := (start + end) * 0.5 + Vector2(0, -80)
+		var points := PackedVector2Array()
+		for i in range(25):
+			var t := i / 24.0
+			points.append(start.lerp(control, t).lerp(control.lerp(end, t), t))
+		draw_polyline(points, Color(color, 0.20), 14.0, true)
+		draw_polyline(points, color, 5.0, true)
+		var direction := (end - points[-2]).normalized()
+		var side := direction.orthogonal()
+		draw_colored_polygon(PackedVector2Array([end + direction * 8, end - direction * 16 + side * 10, end - direction * 16 - side * 10]), color)
+		if current_target:
+			draw_circle(end, 18, Color(color, 0.15))
 
 func _end_drag(end_pos: Vector2):
 	if not is_dragging:
@@ -221,7 +266,7 @@ func _end_drag(end_pos: Vector2):
 
 	# Reset play area highlight
 	if play_area_node:
-		play_area_node.color = Color(1, 1, 1, 0.1)
+		play_area_node.color = Color.TRANSPARENT
 
 	var can_play = false
 
@@ -236,12 +281,16 @@ func _end_drag(end_pos: Vector2):
 			can_play = true
 			card_played.emit(self, null)
 	
-	if can_play:
+	if can_play and not RunState.deck_model.hand.has(deck_card_data.instance_id):
 		visible = false
 	else:
 		_snap_back()
 
 func _snap_back():
+	card_panel.rotation = resting_rotation
+	visible = true
+	current_target = null
+	scale = Vector2.ONE
 	var tween = create_tween()
 	tween.tween_property(self, "global_position", original_position, 0.2)
 	tween.tween_callback(func(): global_position = original_position)
@@ -280,10 +329,7 @@ func _on_mouse_entered():
 	## Hover effect: scale up card from center
 	if is_dragging:
 		return  # Don't scale during drag
-	# Set pivot to center for scaling
-	pivot_offset = size / 2.0
-	var tween = create_tween()
-	tween.tween_property(self, "scale", Vector2(1.1, 1.1), 0.15)
+	_show_reading_card()
 	# Bring to front during hover to prevent clipping
 	z_index = 10
 	# Read the complete live rules without relying on narrow hand-card text.
@@ -312,8 +358,42 @@ func _on_mouse_exited():
 	## Hover effect: scale back down
 	if is_dragging:
 		return  # Don't scale during drag
-	var tween = create_tween()
-	tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.15)
+	if not reading_pinned:
+		_hide_reading_card()
+	scale = Vector2.ONE
 	# Reset z-index if not dragging
 	if not is_dragging:
 		z_index = 0
+
+func _show_reading_card() -> void:
+	if reading_card or not deck_card_data:
+		return
+	for sibling in get_parent().get_children():
+		if sibling is CardUI and sibling != self:
+			sibling.reading_pinned = false
+			sibling._hide_reading_card()
+	reading_card = CardWidget.new()
+	reading_card.card_width = 290
+	reading_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	reading_card.z_index = 150
+	add_child(reading_card)
+	reading_card.setup_card(deck_card_data)
+	reading_card.set_preview_context(combat_controller, _resolve_preview_target())
+	reading_card.custom_minimum_size.y = 340
+	reading_card.size = Vector2(290, 340)
+	reading_card.scale = Vector2(1.1, 1.1)
+	_format_reading_card()
+	reading_card.position = Vector2((size.x - 319) * 0.5, get_viewport_rect().size.y - global_position.y - 398)
+	reading_card.position.x = clampf(reading_card.position.x, -global_position.x + 8, get_viewport_rect().size.x - global_position.x - 327)
+
+func _hide_reading_card() -> void:
+	if is_instance_valid(reading_card):
+		reading_card.queue_free()
+	reading_card = null
+
+func _format_reading_card() -> void:
+	for container in [reading_card.stats_container, reading_card.keywords_container]:
+		for label in container.get_children():
+			if label is Label:
+				label.add_theme_font_size_override("font_size", 14)
+	reading_card.name_label.add_theme_font_size_override("font_size", 16)

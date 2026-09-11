@@ -35,6 +35,18 @@ func _ready():
 	_setup_title()
 	_setup_mute_button()
 	_setup_debug_toggle()
+	var version_label := Label.new()
+	version_label.name = "VersionLabel"
+	version_label.text = "Friends Demo · v" + str(ProjectSettings.get_setting("application/config/version", "0.1.1"))
+	version_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	version_label.offset_left = -280
+	version_label.offset_right = -24
+	version_label.offset_top = 18
+	version_label.offset_bottom = 44
+	version_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	version_label.add_theme_color_override("font_color", Color("d8bb92"))
+	version_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(version_label)
 
 	# Load settings popup
 	_load_settings_popup()

@@ -27,6 +27,15 @@ signal ability_pressed(character_id: String)
 var _character_id: String = ""
 var _combat_controller: CombatController = null
 
+func set_compact(value: bool) -> void:
+	custom_minimum_size = Vector2(150, 90) if value else Vector2(200, 190)
+	portrait_container.custom_minimum_size = Vector2(130, 60) if value else Vector2(170, 95)
+	hp_contribution_label.visible = not value
+	quest_title_label.visible = not value
+	quest_container.visible = not value
+	ability_button.visible = not value and _combat_controller != null
+	portrait_container.tooltip_text = quest_title_label.text + "\n" + quest_progress_label.text
+
 # Three visually distinct ability-button states (Addendum §4 item 2): ready /
 # on cooldown / cannot afford. "Cannot afford" must not look like "on
 # cooldown" -- the player's fix differs (wait vs. spend differently).
@@ -51,6 +60,7 @@ func initialize(character_id: String) -> void:
 func refresh_quest_info(character_id: String) -> void:
 	## Refresh quest information (called when quest state changes)
 	_update_quest_info(character_id)
+	portrait_container.tooltip_text = quest_title_label.text + "\n" + quest_progress_label.text
 
 # -- Combat ability button (Addendum §4) ---------------------------------------
 
@@ -144,7 +154,7 @@ func refresh_ability_state() -> void:
 	## Update the button's label, cost badge, cooldown fill, and the
 	## ready/cooldown/cannot-afford visual state. Call after any action that
 	## could change energy, hand size, HP, Block, or cooldowns.
-	if not _combat_controller or not is_instance_valid(ability_button) or not ability_button.visible:
+	if not _combat_controller or not is_instance_valid(ability_button):
 		return
 	var char_data := DataRegistry.get_character(_character_id) if DataRegistry else null
 	if not char_data or char_data.ability_id.is_empty():
@@ -273,4 +283,3 @@ func _update_quest_info(character_id: String) -> void:
 		quest_title_label.text = ""
 		quest_progress_label.text = "Progress: —"
 		quest_progress_label.remove_theme_color_override("font_color")
-

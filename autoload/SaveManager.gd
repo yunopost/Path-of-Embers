@@ -433,6 +433,23 @@ func save_meta_game() -> bool:
 ## Starter equipment granted to brand-new players (first launch, no meta save yet)
 const STARTER_EQUIPMENT: Array[String] = ["iron_helm", "chain_mail", "swift_boots"]
 
+func archive_legacy_stash() -> void:
+	var data := _load_raw_meta()
+	if data.has("equipment_policy"):
+		return
+	# Keep a recoverable copy; leave milestones and other meta fields untouched.
+	if FileAccess.file_exists(META_SAVE_PATH):
+		var backup_path := "user://meta-before-equipment-reset.json"
+		if not FileAccess.file_exists(backup_path):
+			var backup := FileAccess.open(backup_path, FileAccess.WRITE)
+			if not backup:
+				push_warning("Could not back up legacy equipment; migration deferred.")
+				return
+			backup.store_string(JSON.stringify(data, "  "))
+			backup.close()
+	data["equipment_policy"] = "fresh_starters_per_run"
+	_write_raw_meta(data)
+
 func load_persistent_stash() -> Array[String]:
 	## Return the persistent equipment stash from meta.json.
 	## On a fresh profile (no stash key at all), seed 3 common starter items

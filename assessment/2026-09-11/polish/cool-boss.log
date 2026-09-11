@@ -1,0 +1,11 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+OpenGL API 3.3.0 Core Profile Context 26.8.1.260806 - Compatibility - Using Device: ATI Technologies Inc. - AMD Radeon RX 6700 XT
+
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 3 milestones, 5 encounters, 6 abilities
+ScreenManager: Loading scene: combat from path: res://scenes/screens/CombatScreen.tscn
+AutoSave: saved (force:scene_changed:combat)
+ScreenManager: Successfully loaded scene: combat
+AutoSave: saved (debounced:piles_changed)
+LAYOUT {"bottom":"[P: (710.0, 872.0), S: (180.0, 28.0)]","dark_pact":{"owner":"[P: (324.31, 958.8792), S: (200.0, 13.0)]","rect":"[P: (320.0, 692.5), S: (210.0, 280.0)]"},"deadly_strike":{"owner":"[P: (474.5631, 957.1238), S: (200.0, 13.0)]","rect":"[P: (470.0, 692.5), S: (210.0, 280.0)]"},"defend_1":{"owner":"[P: (624.8467, 955.3733), S: (200.0, 13.0)]","rect":"[P: (620.0, 692.5), S: (210.0, 280.0)]"},"enemies":"[P: (840.0, 164.0), S: (720.0, 448.0)]","hand":"[P: (170.0, 692.5), S: (1260.0, 280.0)]","hex":{"owner":"[P: (174.0876, 960.6384), S: (200.0, 13.0)]","rect":"[P: (170.0, 692.5), S: (210.0, 280.0)]"},"iron_tide":{"owner":"[P: (775.1609, 953.6281), S: (200.0, 13.0)]","rect":"[P: (770.0, 692.5), S: (210.0, 280.0)]"},"pursuit":{"owner":"[P: (925.5055, 951.8885), S: (200.0, 13.0)]","rect":"[P: (920.0, 692.5), S: (210.0, 280.0)]"},"shadow_step":{"owner":"[P: (1226.285, 948.4287), S: (200.0, 13.0)]","rect":"[P: (1220.0, 692.5), S: (210.0, 280.0)]"},"strike_1":{"owner":"[P: (1075.88, 950.1552), S: (200.0, 13.0)]","rect":"[P: (1070.0, 692.5), S: (210.0, 280.0)]"}}
+AutoSave: saved (debounced:piles_changed)
+--- combat_layout: 0 layout failures ---

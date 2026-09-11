@@ -22,6 +22,7 @@ func _ready():
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	# Set minimum height to ensure proper spacing
 	custom_minimum_size = Vector2(0, BAR_HEIGHT)
+	resized.connect(_update_bar_fills)
 	_update_display()
 
 func _setup_nodes():
@@ -34,6 +35,7 @@ func _setup_nodes():
 		bar_container.name = "BarContainer"
 		bar_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		add_child(bar_container)
+		bar_container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	
 	bar_stack = bar_container.get_node_or_null("BarStack")
 	if not bar_stack:

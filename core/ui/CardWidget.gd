@@ -702,7 +702,7 @@ func _generate_effect_description(effect: EffectData, _card_data: CardData) -> S
 
 		"conditional_strength_if_no_damage":
 			var amount = effect.params.get("amount", 1)
-			return "If you've taken no damage since the last enemy action, gain %d Strength" % amount
+			return "Before the next enemy acts, gain %d Strength if you have taken no damage since the last enemy action" % amount
 
 		"block_on_enemy_act":
 			var amount = effect.params.get("amount", 1)
@@ -718,7 +718,7 @@ func _generate_effect_description(effect: EffectData, _card_data: CardData) -> S
 
 		"draw_per_turn":
 			var amount = effect.params.get("amount", 1)
-			return "Draw %d extra card%s each turn" % [amount, "s" if amount != 1 else ""]
+			return "Draw %d extra card%s when you Focus" % [amount, "s" if amount != 1 else ""]
 
 		"damage_conditional_elite":
 			var normal_damage = effect.params.get("normal_amount", 18)
@@ -740,7 +740,7 @@ func _generate_effect_description(effect: EffectData, _card_data: CardData) -> S
 
 		"draw_if_took_damage":
 			var amount = effect.params.get("amount", 2)
-			return "If you took damage this turn, draw %d card%s" % [amount, "s" if amount != 1 else ""]
+			return "If you took damage this combat, draw %d card%s" % [amount, "s" if amount != 1 else ""]
 
 		"block_to_energy":
 			var ratio = effect.params.get("block_per_energy", 3)

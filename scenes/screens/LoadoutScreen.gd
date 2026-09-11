@@ -630,14 +630,9 @@ func _load_portrait_for(char_data: CharacterData) -> Control:
 # ── Meta save integration ──────────────────────────────────────────────────────
 
 func _load_stash_from_meta():
-	## Populate run_stash from persistent meta save.
-	if not SaveManager:
-		return
-	var persistent: Array[String] = SaveManager.load_persistent_stash()
-	for equip_id in persistent:
-		if RunState.run_stash.size() < RunState.MAX_STASH_SIZE:
-			if not RunState.run_stash.has(equip_id):
-				RunState.run_stash.append(equip_id)
+	## New Run seeds equipment in reset_run; Continue restores it from its save.
+	## Archive legacy equipment without importing it into this run.
+	SaveManager.archive_legacy_stash()
 
 # ── Refresh ────────────────────────────────────────────────────────────────────
 
@@ -960,4 +955,4 @@ func _on_start_run_pressed():
 		AutoSaveManager.force_save("new_run_started")
 
 	# Wizard step 4: pick one quest per companion before hitting the map
-	ScreenManager.go_to_quest_select() 
+	ScreenManager.go_to_quest_select()

@@ -1,0 +1,47 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 3 milestones, 5 encounters, 6 abilities
+=== card_art test ===
+PASS: art_path is set and exists on disk (test precondition)
+PASS: bespoke art_path is used over the owner's portrait
+PASS: hex card data loaded
+PASS: hex has no bespoke art_path (test precondition)
+PASS: hex is owned by the witch (test precondition)
+PASS: witch character data loaded
+PASS: owned card with no art_path falls back to the owner's portrait
+PASS: the resolved fallback path is non-empty
+PASS: strike_1 card data loaded
+PASS: strike_1 has no owner (test precondition)
+PASS: unowned card resolves to no art (default type-icon treatment)
+PASS: unknown/portrait-less owner resolves to no art, not a crash
+PASS: golemancer has an accent color distinct from every other EA character so far
+PASS: grove has an accent color distinct from every other EA character so far
+PASS: living_armor has an accent color distinct from every other EA character so far
+PASS: warrior_1 has an accent color distinct from every other EA character so far
+PASS: warrior_2 has an accent color distinct from every other EA character so far
+PASS: witch has an accent color distinct from every other EA character so far
+PASS: all six EA characters resolved to distinct accent colors
+PASS: no two owner accent colors differ only by red vs. green
+PASS: golemancer character data loaded
+PASS: golemancer.portrait_path is set
+PASS: golemancer.portrait_path exists on disk: res://art/golemancer/golemancer.png
+PASS: grove character data loaded
+PASS: grove.portrait_path is set
+PASS: grove.portrait_path exists on disk: res://art/grove/grove.png
+PASS: living_armor character data loaded
+PASS: living_armor.portrait_path is set
+PASS: living_armor.portrait_path exists on disk: res://art/living_armor/living_armor.png
+PASS: warrior_1 character data loaded
+PASS: warrior_1.portrait_path is set
+PASS: warrior_1.portrait_path exists on disk: res://art/monster_hunter/monster_hunter.png
+PASS: warrior_2 character data loaded
+PASS: warrior_2.portrait_path is set
+PASS: warrior_2.portrait_path exists on disk: res://art/shadowfoot/shadowfoot.png
+PASS: witch character data loaded
+PASS: witch.portrait_path is set
+PASS: witch.portrait_path exists on disk: res://art/witch/witch.png
+--- card_art summary: 38 passed, 0 failed ---
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2514)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:795)

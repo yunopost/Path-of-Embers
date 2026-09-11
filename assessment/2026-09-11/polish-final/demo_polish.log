@@ -1,0 +1,26 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 3 milestones, 5 encounters, 6 abilities
+PASS: legacy equipment backup exists
+PASS: migration retains unrelated progress
+PASS: New Run installs only starter equipment
+PASS: New Run clears backpack and equipped gear
+ERROR: Party must contain exactly 3 characters, got 0
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] set_party (res://autoload/PartyManager.gd:14)
+       [1] _deserialize_run_state (res://autoload/SaveManager.gd:194)
+       [2] probe (res://tests/demo_polish.gd:31)
+PASS: Continue restores run equipment
+PASS: revisiting loadout preserves current stash
+PASS: second New Run imports no old equipment
+PASS: Breathe advances exactly one tick
+PASS: Breathe does not resolve a legacy cycle reward
+PASS: Focus advances exactly one tick
+PASS: Focus does not resolve a legacy cycle reward
+PASS: enemy action consumes pending no-damage reward
+--- demo_polish summary: 12 passed, 0 failed ---
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2514)
+ERROR: 1 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:795)

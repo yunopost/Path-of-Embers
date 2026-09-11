@@ -1,0 +1,15 @@
+Godot Engine v4.5.1.stable.official.f62fdbde1 - https://godotengine.org
+
+DataRegistry: Loaded 31 cards, 9 enemies, 12 characters, 18 upgrades, 20 equipment, 3 milestones, 5 encounters, 6 abilities
+=== party_hud_stats test ===
+PASS: stats row hidden before combat is bound
+PASS: stats row visible once bound to combat
+PASS: STR label shows witch's base Strength
+PASS: DEF label shows witch's base Dexterity
+PASS: SPI label shows witch's base Faith
+PASS: HP contribution label shows witch's base HP with no equipment
+PASS: DEF label reflects the newly equipped Dexterity bonus
+PASS: HP contribution label reflects the equipped HP bonus
+PASS: golemancer's own block is unaffected by witch's equipment
+PASS: stats row hidden again after unbind_combat
+--- party_hud_stats summary: 10 passed, 0 failed ---

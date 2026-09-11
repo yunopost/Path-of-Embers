@@ -47,7 +47,7 @@ func probe() -> void:
 	guide.hide()
 	guide.show_if_new()
 	check(not guide.visible, "Acknowledged guide should not repeat")
-	screen.ability_bar.get_node("CombatGuideButton").pressed.emit()
+	screen.get_node("CombatGuideButton").pressed.emit()
 	check(guide.visible, "Rules must be reopenable")
 	guide.canceled.emit()
 	guide.hide()

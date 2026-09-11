@@ -1,9 +1,9 @@
 extends Node
 class_name CombatController
 
-## Manages combat flow: turns, card play, enemy actions
+## Manages the shared clock, card play, and enemy actions
 
-signal turn_ended
+signal resource_action_taken
 signal combat_started
 signal combat_ended
 signal boss_rush_combat_finished(victory: bool, score: int)
@@ -31,13 +31,8 @@ var enemy_time_system: EnemyTimeSystem
 var intent_system: IntentSystem
 var pet_board: PetBoard
 
-# Cycle tracking (a "cycle" is the span from one Focus to the next — spec §5)
-var cards_played_this_cycle: int = 0  # Track cards played this cycle
-var block_at_start_of_cycle: int = 0  # Track block for block gain detection
 
-# Fade Step bookkeeping (Card-Clock Combat, 9 Sep 2026): "no damage taken since the
-# last enemy action", not a cycle window. Cleared in _on_enemy_acted(), set in
-# _on_player_hp_changed() the moment HP actually drops.
+# Fade Step: reset after each enemy action; set when player HP drops.
 var damage_taken_since_last_enemy_action: bool = false
 var _last_seen_hp: int = 50  # Watermark used by _on_player_hp_changed to detect any HP decrease
 
@@ -66,12 +61,6 @@ var last_card_target_enemy: Enemy = null  # Target Enemy of last card (Echo MIRR
 # Pending state flags (set during effect resolution, consumed after card fully resolves)
 var _mirror_active: bool = false  # Prevent infinite MIRROR recursion
 var _regrowth_pending: bool = false  # Grove: return played card to draw pile instead of discard
-
-# Effects resolved at the start of the next cycle (i.e. next Focus). Not currently
-# populated by any effect (FORCE_END_TURN/Hollow Dominance was removed — see Slow 3
-# in DataRegistry) but kept as the cycle-boundary hook per spec §10.2.
-# Each entry: { "type": String, "amount": int }
-var _pending_next_turn_effects: Array = []
 
 # Delayed effects that fire after N ticks pass on the shared clock (spec §5: "next
 # turn" → "N ticks", default 4). Each entry: { "type": String, "amount": int, "ticks_remaining": int }
@@ -118,7 +107,6 @@ func start_combat(enemy_data: Array):
 
 	# Reset pet board and pending effects for fresh combat
 	pet_board = PetBoard.new(self)
-	_pending_next_turn_effects.clear()
 
 	# Initialize deck piles (ensure fresh state for combat)
 	RunState._initialize_deck_piles()
@@ -227,14 +215,11 @@ func start_combat(enemy_data: Array):
 			if spirit_bonus > 0:
 				character_stats[char_id].apply_status(StatusEffectType.FAITH, spirit_bonus)
 
-	# Player starts with 3 energy and a 5-card hand. No other turn setup (spec §10.3) —
-	# no block reset (there is no block yet), no status ticking, no pet cycle hooks.
+	# Player starts with 3 energy and a 5-card hand.
 	current_energy = 3
 	if ResourceManager:
 		ResourceManager.set_energy(current_energy)
-	cards_played_this_cycle = 0
 	damage_taken_since_last_enemy_action = false
-	block_at_start_of_cycle = player_stats.block
 	previous_block = player_stats.block  # Initialize previous_block for block gain detection
 	_last_seen_hp = player_stats.current_hp
 	RunState.draw_cards(5)
@@ -243,7 +228,7 @@ func start_combat(enemy_data: Array):
 
 func breathe() -> void:
 	## Universal player action (Addendum §1): +1 energy (uncapped — Design ruling,
-	## 10 Sep 2026), starts a new cycle, then advances the clock by 1 tick. Half of
+	## 10 Sep 2026), then advances the clock by 1 tick. Half of
 	## the old focus() — energy generation now costs a dedicated action so it is scarce.
 	if not combat_active:
 		return
@@ -252,11 +237,11 @@ func breathe() -> void:
 	if ResourceManager:
 		ResourceManager.set_energy(current_energy)
 
-	_start_new_cycle()
+	resource_action_taken.emit()
 	advance_clock(1)
 
 func focus() -> void:
-	## Universal player action (Addendum §1): draw 2, starts a new cycle, then
+	## Universal player action (Addendum §1): draw 2, then
 	## advances the clock by 1 tick. The other half of the old focus() — pure
 	## card draw, no energy.
 	if not combat_active:
@@ -269,28 +254,8 @@ func focus() -> void:
 		base_draw += int(bonus_draw_status)
 	RunState.draw_cards(base_draw)
 
-	_start_new_cycle()
+	resource_action_taken.emit()
 	advance_clock(1)
-
-func _start_new_cycle() -> void:
-	## Cycle boundary (spec §5): the span from one Focus to the next. Runs the
-	## checks that used to fire at end-of-turn against the OUTGOING cycle's
-	## counters, fires the PetBoard cycle hooks, then resets counters for the
-	## INCOMING cycle.
-	if pet_board:
-		pet_board.on_end_player_turn()
-		pet_board.on_start_player_turn()
-
-	# Fade Step: check the pending "no damage since last enemy action" status
-	_check_end_of_turn_effects()
-	# Resolve any effects queued for "start of next cycle"
-	_resolve_pending_next_turn_effects()
-
-	# Reset counters for the incoming cycle
-	cards_played_this_cycle = 0
-	block_at_start_of_cycle = player_stats.block
-
-	turn_ended.emit()  # kept for UI subscribers; fires once per cycle boundary now
 
 func can_play_card(card_cost: int, card_data: CardData = null) -> bool:
 	## Check if card can be played based on cost type. This gate is the floor
@@ -328,7 +293,6 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 		return false
 
 	# Increment cards played counter
-	cards_played_this_cycle += 1
 	if RunState and RunState.is_boss_rush and RunState.boss_rush_stats.has("cards_played"):
 		RunState.boss_rush_stats["cards_played"] += 1
 	
@@ -367,7 +331,6 @@ func play_card(deck_card: DeckCardData, target: Node = null):
 	
 	# Pursuit (GRANT_HASTE_NEXT_CARD's conditional_draw_*): capture BEFORE
 	# _get_card_timer_tick() below consumes/resets it, since that's the same
-	# one-shot "next card" flag lifecycle as haste_next_card/next_card_discount.
 	var _pursuit_draw_min_cost: int = RunState.next_card_conditional_draw_min_cost
 	var _pursuit_draw_amount: int = RunState.next_card_conditional_draw_amount
 
@@ -807,8 +770,7 @@ func _resolve_delayed_tick_effect(entry: Dictionary) -> void:
 		_:
 			push_warning("CombatController: unknown delayed_tick_effect type '%s'" % entry.get("type", ""))
 
-func _check_end_of_turn_effects():
-	## Check effects that trigger at the end of a cycle (called from _start_new_cycle).
+func _resolve_no_damage_reward():
 	# Fade Step: gain Strength if no damage has been taken since the last enemy action.
 	var pending_strength = player_stats.get_status(StatusEffectType.PENDING_STRENGTH_IF_NO_DAMAGE)
 	if pending_strength != null:
@@ -953,6 +915,8 @@ func _setup_power_card_effects(_deck_card: DeckCardData, _card_data: CardData, e
 			player_stats.apply_status(StatusEffectType.DRAW_PER_TURN, effect.params.get("amount", 1))
 
 func _pre_enemy_act(enemy) -> void:
+	## Close the no-damage window when the next enemy action begins.
+	_resolve_no_damage_reward()
 	## Called by EnemyTimeSystem immediately before an enemy executes its intent.
 	## Lets PetBoard know which enemy is currently acting (for WHEN_ENEMY_ACTS targeting).
 	if pet_board:
@@ -1034,21 +998,6 @@ func end_combat(victory: bool) -> void:
 				cards
 			)
 		boss_rush_combat_finished.emit(victory, score)
-
-func _resolve_pending_next_turn_effects() -> void:
-	## Process START_OF_NEXT_PLAYER_TURN queued effects (e.g. Delayed Slam).
-	if _pending_next_turn_effects.is_empty():
-		return
-	var effects_snapshot: Array = _pending_next_turn_effects.duplicate()
-	_pending_next_turn_effects.clear()
-	for entry in effects_snapshot:
-		var effect_type: String = entry.get("type", "")
-		match effect_type:
-			"damage_random_enemy":
-				var dmg: int = int(entry.get("amount", 0))
-				_apply_damage_to_random_enemy(dmg)
-			_:
-				push_warning("CombatController: unknown pending_next_turn_effect type '%s'" % effect_type)
 
 func _apply_damage_to_random_enemy(amount: int) -> void:
 	## Deal damage to a random alive enemy (used by Delayed Slam etc.)

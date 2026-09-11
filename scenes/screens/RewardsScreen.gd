@@ -285,8 +285,6 @@ func _show_backpack_full_prompt(equipment_id: String):
 		var existing_id: String = RunState.backpack[i]
 		var existing_data: EquipmentData = DataRegistry.get_equipment(existing_id) if DataRegistry else null
 		var name_text: String = existing_data.name if existing_data else existing_id
-		if i == RunState.BACKPACK_SAFE_SLOT_INDEX:
-			name_text += " (safe slot)"
 		var discard_btn := Button.new()
 		discard_btn.text = "Make room: discard %s" % name_text
 		discard_btn.pressed.connect(func():

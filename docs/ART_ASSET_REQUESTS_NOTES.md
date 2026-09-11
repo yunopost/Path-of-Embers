@@ -1,3 +1,7 @@
+# Current direction — 2026-09-11
+
+See [ART_DIRECTION.md](ART_DIRECTION.md). Aaron identified excessive sepia/warm/golden-hour treatment. The old low-left golden sun and warm-brown linework instructions are superseded. The Witch is the palette reference. Existing backgrounds with a giant foreground wheel or high camera need replacement for a level, unobstructed combat stage; judge actors and backgrounds together at actual game scale. Historical deviations below remain provenance, not current art guidance.
+
 # Image asset deviations — 2026-09-06
 - E1, E3, E4, E5: built-in edit outputs are opaque painted checkerboards (sampled minimum alpha 255); not game-ready, and some painted details changed despite preservation prompts.
 - E2: actual alpha present, but generation changed some brushwork/shading and left broad soft edge regions; not a pixel-preserving extraction.

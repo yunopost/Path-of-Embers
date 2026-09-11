@@ -54,7 +54,7 @@ var _enemy_acted_this_action: bool = false
 var _enemy_actions: int = 0
 var _dmg_by_enemy: Dictionary = {}     # enemy_id -> HP damage dealt to player
 var _actions_by_enemy: Dictionary = {}
-var _turn_ended_count: int = 0
+var _resource_action_taken_count: int = 0
 var _block_gained: int = 0
 var _block_decreased: int = 0
 var _hp_lost_gross: int = 0
@@ -207,13 +207,13 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 	_enemy_actions = 0
 	_dmg_by_enemy = {}
 	_actions_by_enemy = {}
-	_turn_ended_count = 0
+	_resource_action_taken_count = 0
 	_block_gained = 0
 	_block_decreased = 0
 	_hp_lost_gross = 0
 	cc.player_stats.hp_changed.connect(_on_hp_changed)
 	cc.player_stats.block_changed.connect(_on_block_changed)
-	cc.turn_ended.connect(func(): _turn_ended_count += 1)
+	cc.resource_action_taken.connect(func(): _resource_action_taken_count += 1)
 
 	cc.start_combat(enemy_data.duplicate(true))
 	_hp_cur = cc.player_stats.current_hp
@@ -312,8 +312,8 @@ func run_fight(idx: int, enemy_data: Array) -> Dictionary:
 			cc.end_combat(false)
 
 	var turns := end_turns + 1
-	if _turn_ended_count != end_turns:
-		_note("turn_ended signal count %d != advance() calls %d (forced end-turn effects?)" % [_turn_ended_count, end_turns])
+	if _resource_action_taken_count != end_turns:
+		_note("resource_action_taken signal count %d != advance() calls %d (forced end-turn effects?)" % [_resource_action_taken_count, end_turns])
 
 	var row := {
 		"fight": idx, "seed": int(cfg.seed) + idx, "result": result,

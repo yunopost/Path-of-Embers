@@ -29,3 +29,11 @@ Three new ordinary-policy attempts died in Act II at rows 0, 6, and 1. They ente
 Two legitimate three-act victories with different party compositions in the extracted release remain unverified. So do extracted-build defeat/restart, quit/resume at all specified boundaries, repeated-run equipment checks, and actual drag/hotkey/dialog interaction. The earlier integration tests remain useful but do not replace these packaged-game checks. Minimum-resolution combat and party-selection inspection does not certify every screen. The original assessment's release gate remains in force.
 
 Next priority: play the extracted candidate from a fresh profile, exercise the intended reward/equipment/shop choices, and record the first point of confusion or failure. Use that evidence to address bugs and make any difficulty decision. Keep the approved temporary unlocks and boss upgrade substitution; freeze new mechanics/content for the deadline.
+
+## Version 0.1.1 follow-up
+
+See [COMBAT_POLISH_0_1_1.md](COMBAT_POLISH_0_1_1.md) for the approved equipment reset, cycle removal, CZN-inspired combat layout, animations, starting-party cutouts, 362 passing assertions, rendered checks, and new Windows ZIP. This supersedes the earlier equipment carryover and non-overlapping hand descriptions. Full-run balance acceptance remains open.
+
+## Current candidate: 0.1.2
+
+[COMBAT_POLISH_0_1_2.md](COMBAT_POLISH_0_1_2.md) supersedes the 0.1.1 presentation: cooler staging backgrounds, shared actor baseline, compact fanned hand with raised readable cards, upper-right help, and current art-direction authority.

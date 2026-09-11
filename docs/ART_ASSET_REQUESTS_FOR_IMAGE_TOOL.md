@@ -10,6 +10,8 @@ All paths below are relative to this folder (the Godot project root). Create fol
 
 ## 1. The look — read before generating anything
 
+**Current authority:** [ART_DIRECTION.md](ART_DIRECTION.md), updated by Aaron on 11 September 2026. Its palette, combat floor and scale requirements supersede the original batch compositions below. Historical blockouts are not approved combat compositions when they obstruct actor placement.
+
 **Reference images (match these — they define the style):**
 - `art/monster_hunter/monster_hunter.png` — the line and paint register for anything with a face
 - `art/witch/witch_2.png` — same
@@ -17,17 +19,17 @@ All paths below are relative to this folder (the Godot project root). Create fol
 - `art/card_assets/combat_background.png` — the environment register
 - `art/start_menu/main_menu_background_v2.png` — the ink-wash register for menus
 
-**Style in one paragraph:** painted illustration with loose, slightly wavering warm-brown linework over gouache-like paint and visible brush texture. Not photoreal, not 3D, not cel-shaded anime, not glossy, not grimdark. Faces read as tired and resolved, never heroic or smiling. Compositions are asymmetric.
+**Style:** painted gouache-like illustration with visible brush texture and loose charcoal/slate/local-color ink contours. Match the Witch's balanced palette; do not impose warm-brown linework or a sepia grade.
 
-**The world:** a fantasy world frozen in an eternal golden-hour sunset. Nothing has moved for centuries. Warm = alive; cool = stopped. The player's characters are the only warm, living things; the world behind them is cool and still.
+**The world:** a fantasy world suspended in stillness. This no longer mandates eternal golden-hour lighting, or warm = alive and cool = stopped.
 
-**Palette (hex):** warm — deep amber `#C4821A`, faded gold `#D4A847`, ember orange `#E8723A` (fire and embers only), pale bone `#F0E6C8` (brightest highlight). Cool — ashen blue-grey `#4A5566`, deep slate `#2A3040`, cold teal `#5A8090` (haze and rim light), near-black blue `#12161E`. **Never use pure black `#000000` or pure white `#FFFFFF` anywhere.** Roughly 70 % of any frame cool, 30 % warm, warm concentrated on living things.
+**Palette:** primarily varied cool and neutral slate, teal, moss green, muted violet and stone. Preserve character-specific colors. Amber, faded gold and ember orange are selective local accents, not a wash over the scene. Pale bone may be a local material highlight. Avoid pure-black or pure-white areas that destroy paint texture. No fixed warm-percentage quota.
 
-**Light:** one warm key light from the **low left** (a sun about 15–20° above the horizon on the screen-left side). Shadow sides are cool blue-grey, never dark-warm. A thin cold-teal rim on the upper-right edge of figures. Fire/embers are the only things allowed to light from anywhere else. Check: cover the left half of the image — the right half must be the cooler half.
+**Light:** soft neutral or cool illumination by default; intentional warm sources may add localized accents. No obligatory low-left sun, golden sky or warm skin/cloth tint. Check the entire frame for excessive sepia and amber.
 
 **No wind. No motion. No weather.** This is a hard rule for every environment, sprite, and illustration: banners hang straight down, smoke stands in a column, water is glass, flames are solid sculpted shapes, nothing drifts or blurs. A character's own hair or cloak may show *their* movement; the world behind them never moves.
 
-**Characters vs enemies:** characters keep warmth in their skin and cloth on the lit side. Enemies get **no interior warmth** — their lit side is the sun colour exactly, grey-and-cool bodies with a single contained ember somewhere (a glow in a crack, a heart, a hand). Enemies are people or things caught at the moment of their ending and held there.
+**Characters vs enemies:** preserve readable silhouettes and distinct local palettes. Contained ember details may be warm; surrounding metal, cloth, stone and skin should retain their natural colors.
 
 **One signature colour per character** (never on any other character): Monster Hunter dusky purple; Witch deep teal-green; Shadowfoot a single gold thread; Grove dull gold; Golemancer terracotta; Living Armor ember-orange seam light.
 
@@ -68,19 +70,19 @@ All paths below are relative to this folder (the Godot project root). Create fol
 
 ### 4B. Backgrounds — 1920×1080, opaque, one each
 
-Use `Combat background.png` and `Main Menu background v2.png` as style references and the named blockout as the composition reference. Every background: sun low on the **left** behind something, long shadows running right, top ~30 % of the frame cool, bottom ~30 % warmest, nothing in motion.
+Use the painted texture of the existing environments with the palette and floor plan in ART_DIRECTION.md. Combat backgrounds require eye-level staging, clear actor silhouettes and a shared ground baseline; the historical scenes below must be adapted to that requirement. No default sunset or warm foreground.
 
 | # | Blockout | Scene | Output |
 |---|---|---|---|
-| B1 | `B1_town_square.png` | A farming town's square on the night of a harvest festival, seen at eye level from under the dark edge of a market awning (top-left of frame). A stone fountain right of centre whose water stands mid-fall like glass. An apple hangs in the air above a stall. Bunting hangs dead straight. Rooftops left and right, sun low-left behind them. | `art/backgrounds/combat_act1_a.png` |
-| B2 | `B2_granary_road.png` | The same valley, a dirt road between grain fields, camera almost on the ground. An enormous wagon wheel fills the right foreground, dark. In the middle distance a hay wagon is tipping over, sheaves hanging in the air where they were thrown. Chaff suspended like snow. Sun low-left shining through the standing grain in still shafts. | `.../Backgrounds/combat_act1_b.png` |
-| B3 | `B3_festival_green.png` | The festival green seen from high up in a barn loft: a dark beam across the top of the frame and a rope hanging straight down. Below, the great harvest bonfire, its flames a solid sculpted shape, sparks fixed in the air above it in a column. Empty benches and tables around it, long shadows. This is a **boss arena**: keep the centre-bottom third uncluttered. | `.../Backgrounds/boss_act1.png` |
+| B1 | `B1_town_square.png` | A farming town's square on the night of a harvest festival, seen at eye level from under the dark edge of a market awning (top-left of frame). A stone fountain right of centre whose water stands mid-fall like glass. An apple hangs in the air above a stall. Bunting hangs dead straight. Rooftops left and right under soft cool daylight; move the fountain beyond the actor staging floor. | `art/backgrounds/combat_act1_a.png` |
+| B2 | `B2_granary_road.png` | The same valley, a dirt road between grain fields, eye-level camera across a clear level staging floor. Keep wagon remains small and behind the combatants. In the middle distance a hay wagon is tipping over, sheaves hanging in the air where they were thrown. Chaff suspended like snow. Soft cool daylight across the still grain. | `.../Backgrounds/combat_act1_b.png` |
+| B3 | `B3_festival_green.png` | The festival green seen at eye level across an open courtyard; beams and hanging ropes stay at the outer edges. Below, a small distant harvest bonfire with contained warmth; its sculpted flames and fixed sparks never occupy the playable floor. Empty benches and tables around it, long shadows. This is a **boss arena**: keep the centre-bottom third uncluttered. | `.../Backgrounds/boss_act1.png` |
 | B4 | `B4_map_valley.png` | The whole valley from a map-maker's height: a road as a pale line from bottom-left to top-right, a river as a still ribbon, a village with smoke standing in straight columns, hills at the top edge rim-lit from the far left. **Low detail and low contrast** — a node graph will be drawn on top of this, so nothing in it may compete: no strong shapes in the middle band. | `.../Backgrounds/map_act1.png` |
-| B6 | `B6_death_road.png` | Lying on the ground beside the road, camera at grass level. Huge dark grass blades across the foreground, the road soft and out of focus ahead, the low sun on the left flaring warm into the frame. One small sharp bird fixed in the sky. Quiet; nothing else. | `.../Backgrounds/death.png` |
+| B6 | `B6_death_road.png` | Lying on the ground beside the road, camera at grass level. Huge dark grass blades across the foreground, the road soft and out of focus ahead, soft neutral daylight fading into cool haze. One small sharp bird fixed in the sky. Quiet; nothing else. | `.../Backgrounds/death.png` |
 
 ### 4C. Character splash art — 1200×900 (4:3), opaque, six
 
-A wide cinematic illustration of the character from the waist up, standing in the named place, placed off-centre (left or right third, never centred). The figure is the only warm, living thing; the world behind recedes into ashen blue-grey and cold teal haze. Golden light from the low left. **Use the character's existing portrait as the face/costume reference** (paths in §1 and `art/<Name>/`). Nothing behind the figure moves.
+A wide cinematic illustration of the character from the waist up, standing in the named place, placed off-centre (left or right third, never centred). Preserve the figure's individual palette against ashen blue-grey and cold teal haze. Use balanced neutral/cool lighting with small local warm accents. **Use the character's existing portrait as the face/costume reference** (paths in §1 and `art/<Name>/`). Nothing behind the figure moves.
 
 | # | Character (reference file) | Place | The one frozen detail | Output |
 |---|---|---|---|---|

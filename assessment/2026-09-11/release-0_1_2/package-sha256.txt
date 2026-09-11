@@ -1,0 +1,3 @@
+Algorithm : SHA256
+Hash      : B8436152A36C121A8B94D5CC9D4F42EC6AF76C4CD380F00142282FA852B624F5
+Path      : C:\Users\amkru\Documents\path-of-embers\builds\friends-v0_1_2\Path-of-Embers-friends-v0_1_2.zip

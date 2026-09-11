@@ -651,6 +651,7 @@ func reset_run() -> void:
 	# Reset equipment state
 	equipment_slots.clear()
 	run_stash.clear()
+	run_stash.assign(SaveManager.STARTER_EQUIPMENT)
 	backpack.clear()
 	pending_backpack_drop = ""
 	equipment_changed.emit()
@@ -884,17 +885,9 @@ func unequip_to_backpack(char_id: String, slot_name: String) -> bool:
 	return true
 
 func settle_backpack_on_loss() -> void:
-	## Run loss (spec §2): only the safe-slot item (index 0) survives to the
-	## persistent stash. Everything else in the backpack is lost. Must be
-	## called BEFORE reset_run() (which clears the backpack unconditionally).
-	if backpack.size() > BACKPACK_SAFE_SLOT_INDEX:
-		var safe_item: String = backpack[BACKPACK_SAFE_SLOT_INDEX]
-		if not safe_item.is_empty() and SaveManager:
-			SaveManager.add_to_persistent_stash(safe_item)
+	# Equipment belongs to this run; New Run installs fresh starter gear.
+	pass
 
 func settle_backpack_on_win() -> void:
-	## Run win (spec §2): the entire backpack survives to the persistent stash.
-	## Must be called BEFORE reset_run().
-	if SaveManager:
-		for equipment_id in backpack:
-			SaveManager.add_to_persistent_stash(equipment_id)
+	# Preserve the completed run until reset, without exporting its equipment.
+	pass
