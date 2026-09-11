@@ -50,8 +50,12 @@ The added `release_blockers` scene has 71 integration assertions. `combat_layout
 
 ## Remaining release work
 
-- No Windows export preset or tested distributable has been produced in this task.
+- Windows candidate packaging is now implemented; see the demo candidate report below for its narrower verification status.
 - No ordinary-play three-act victory has been certified. The controlled progression pass does not establish game balance or difficulty.
 - Existing ObjectDB/resource cleanup leaks remain in several headless harnesses (also present before stabilization).
 - Witch balance remains unchanged. Do not use old full-run measurements with accumulated equipment HP as a release balance sign-off.
 - Shop/backpack policy, equipment affixes/rarities, expanded card/enemy/boss content, and the art queue remain outside this stabilization pass.
+
+## Friends demo candidate follow-up
+
+See `DEMO_CANDIDATE_STATUS.md` for the new introduction, card tooltips, compact combat layout, release-only resource loader fix, reproducible Windows packaging, and outstanding acceptance gates. This supersedes the earlier lack of an export; it does not certify full-run readiness.

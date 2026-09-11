@@ -724,6 +724,11 @@ func _build_character_card(char_data: CharacterData) -> PanelContainer:
 
 	if locked:
 		panel.modulate = Color(1, 1, 1, 0.5)
+		panel.tooltip_text = "Not available in this demo."
+		for milestone in DataRegistry.milestone_cache.values():
+			if milestone.unlock_type == "character" and milestone.unlock_target == char_data.id:
+				panel.tooltip_text = milestone.unlock_hint + " Progress carries across runs."
+				break
 	else:
 		# Hover: show detail panel
 		panel.mouse_entered.connect(_on_card_hover.bind(char_data.id))

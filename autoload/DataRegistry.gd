@@ -162,6 +162,9 @@ func _load_resources_from_directory(path: String, resource_type_name: String) ->
 	var file_name = dir.get_next()
 	
 	while file_name != "":
+		# Exported text resources are listed as .tres.remap. Load their
+		# original resource path so ResourceLoader resolves the packed binary.
+		file_name = file_name.trim_suffix(".remap")
 		if file_name.ends_with(".tres"):
 			var full_path = path + file_name
 			var resource = load(full_path)
@@ -176,7 +179,8 @@ func _load_resources_from_directory(path: String, resource_type_name: String) ->
 					push_error("DataRegistry: Invalid resource type in %s (expected %s, got %s)" % [full_path, resource_type_name, actual_type])
 		
 		file_name = dir.get_next()
-	
+	dir.list_dir_end()
+
 	return resources
 
 func _validate_card_resource(card: CardData) -> bool:

@@ -286,6 +286,27 @@ func _on_mouse_entered():
 	tween.tween_property(self, "scale", Vector2(1.1, 1.1), 0.15)
 	# Bring to front during hover to prevent clipping
 	z_index = 10
+	# Read the complete live rules without relying on narrow hand-card text.
+	tooltip_text = "Card rules"
+
+func _get_tooltip(_at_position: Vector2) -> String:
+	if not card_widget or not card_data or is_dragging:
+		return ""
+	var lines: Array[String] = [card_data.name]
+	for container in [card_widget.keywords_container, card_widget.stats_container]:
+		if container:
+			for child in container.get_children():
+				if child is Label and not child.is_queued_for_deletion():
+					lines.append(child.text)
+	return "\n".join(lines)
+
+func _make_custom_tooltip(for_text: String) -> Object:
+	var label := Label.new()
+	label.text = for_text
+	label.custom_minimum_size.x = 340
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_font_size_override("font_size", 18)
+	return label
 
 func _on_mouse_exited():
 	## Hover effect: scale back down

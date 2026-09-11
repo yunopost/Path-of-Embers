@@ -18,7 +18,7 @@ try {
     & $Godot --headless --path $projectRoot --editor --quit *> (Join-Path $output 'editor.log')
     if ($LASTEXITCODE -ne 0) { throw 'Editor failed' }
     if (Select-String -Path (Join-Path $output 'editor.log') -Pattern 'ERROR|Failed|not declared|does not exist' -Quiet) { throw 'Editor log contains errors' }
-    $expected = [ordered]@{card_clock=94; signature_cards=49; card_preview=38; hex_playability=19; party_hud_stats=10; card_art=38; backpack=23; release_blockers=71}
+    $expected = [ordered]@{card_clock=94; signature_cards=49; card_preview=38; hex_playability=19; party_hud_stats=10; card_art=38; backpack=23; release_blockers=71; combat_guide=8}
     foreach ($suite in $expected.Keys) {
         $log = Join-Path $output "$suite.log"
         & $Godot --headless --path $projectRoot --quit-after 4000 "res://tests/$suite.tscn" -- --no-debug *> $log

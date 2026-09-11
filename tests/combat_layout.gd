@@ -8,6 +8,8 @@ func probe() -> void:
 	for i in range(5):
 		await get_tree().process_frame
 	get_tree().root.size = Vector2i(1920, 1080) if "--large" in OS.get_cmdline_user_args() else Vector2i(1600, 900)
+	if "--small" in OS.get_cmdline_user_args():
+		get_tree().root.size = Vector2i(1280, 720)
 	RunState.reset_run()
 	PartyManager.set_party(["warrior_1", "witch", "living_armor"])
 	var chars: Array[CharacterData] = []
@@ -28,6 +30,10 @@ func probe() -> void:
 	for i in range(40):
 		await get_tree().process_frame
 	var screen = ScreenManager.current_scene
+	if "--guide" in OS.get_cmdline_user_args():
+		screen.combat_guide.show_guide()
+		for i in range(5):
+			await get_tree().process_frame
 	var areas := {}
 	areas["hand"] = str(screen.hand_container.get_global_rect())
 	areas["enemies"] = str(screen.enemy_slots.get_global_rect())

@@ -3,6 +3,8 @@ extends Control
 ## Preloaded rather than referenced by class_name: a missing .uid meant Godot
 ## never registered the global class and the screen failed to parse at runtime.
 const DEBUG_PANEL_SCRIPT = preload("res://scenes/ui/debug/DebugPanel.gd")
+const COMBAT_GUIDE_SCRIPT = preload("res://scenes/ui/CombatGuide.gd")
+var combat_guide: AcceptDialog
 
 ## Combat screen with full combat implementation
 
@@ -61,9 +63,27 @@ func _ready():
 
 	_apply_combat_ui_style()
 	resized.connect(_update_hand)
+	resized.connect(_layout_combat)
 
 	# Initialize screen (architecture rule 2.1)
 	initialize()
+	_layout_combat.call_deferred()
+	combat_guide = AcceptDialog.new()
+	combat_guide.set_script(COMBAT_GUIDE_SCRIPT)
+	add_child(combat_guide)
+	if MapManager.current_map != null:
+		combat_guide.call_deferred("show_if_new")
+
+func _layout_combat() -> void:
+	# At 720p reserve the top-right navigation and the hand before sizing art.
+	# Text and target hitboxes retain their size; only enemy artwork shrinks.
+	var compact := size.y < 850
+	var anchor := $CombatArea/EnemyAnchor
+	anchor.offset_top = 105.0 - size.y * 0.5 if compact else -315.0
+	for display in enemy_displays:
+		var sprite := display.find_child("EnemySprite", true, false) as TextureRect
+		if sprite:
+			sprite.custom_minimum_size.y = 50 if compact else 110
 
 func _apply_combat_ui_style() -> void:
 	## Apply visual styling to combat screen elements
@@ -349,7 +369,7 @@ func _update_player_block_label(new_block: int) -> void:
 	player_block_label.text = "Block: %d" % new_block if new_block > 0 else ""
 
 # -- Ability Bar (spec S8/S10.8) -----------------------------------------------
-## [FOCUS] [A1] [A2] [A3] replaces End Turn. Hotkeys: Space = Focus, 1/2/3 = abilities.
+## Breathe and Focus replace End Turn. Space = Breathe, F = Focus.
 ## ENEMY-targeted abilities enter target-select (click an enemy to confirm, Escape cancels).
 
 func _setup_ability_bar() -> void:
@@ -366,7 +386,7 @@ func _setup_ability_bar() -> void:
 	var breathe_btn = Button.new()
 	breathe_btn.name = "BreatheButton"
 	breathe_btn.text = "BREATHE\n[Space]"
-	breathe_btn.tooltip_text = "Breathe: +1 Energy (capped), starts a new cycle. 1 tick. No cooldown."
+	breathe_btn.tooltip_text = "Breathe: +1 Energy (no upper cap), starts a new cycle. 1 tick. No cooldown."
 	breathe_btn.pressed.connect(_on_breathe_pressed)
 	_style_ability_button(breathe_btn)
 	ability_bar.add_child(breathe_btn)
@@ -378,6 +398,14 @@ func _setup_ability_bar() -> void:
 	focus_btn.pressed.connect(_on_focus_pressed)
 	_style_ability_button(focus_btn)
 	ability_bar.add_child(focus_btn)
+	var guide_btn := Button.new()
+	guide_btn.name = "CombatGuideButton"
+	guide_btn.text = "HOW TO\nPLAY"
+	guide_btn.pressed.connect(func():
+		_cancel_ability_targeting()
+		combat_guide.show_guide())
+	_style_ability_button(guide_btn)
+	ability_bar.add_child(guide_btn)
 
 	_bind_party_hud_abilities()
 	_refresh_ability_bar()
@@ -460,6 +488,8 @@ func _on_enemy_panel_gui_input(event: InputEvent, enemy_panel: Panel) -> void:
 		_update_tick_counter()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if combat_guide and combat_guide.visible:
+		return
 	if not combat_controller or not combat_controller.combat_active:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -703,6 +733,7 @@ func _create_enemy_display(enemy: Enemy) -> Control:
 		var sprite_tex = load(enemy_blueprint.sprite_path)
 		if sprite_tex:
 			var sprite_rect = TextureRect.new()
+			sprite_rect.name = "EnemySprite"
 			sprite_rect.texture = sprite_tex
 			sprite_rect.custom_minimum_size = Vector2(0, 110)
 			sprite_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL

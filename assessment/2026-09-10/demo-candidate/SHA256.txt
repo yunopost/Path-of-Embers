@@ -1,0 +1,5 @@
+
+Algorithm : SHA256
+Hash      : BBA4A975343A0D1B1240AE33619013419656983379D5AC29DA3F1A2E0AF2D6B3
+Path      : C:\Users\amkru\Documents\path-of-embers\builds\friends-candidate-03\Path-of-Embers-friends-candidate-03.zip
+

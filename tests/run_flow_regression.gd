@@ -9,6 +9,7 @@ var actions = 0
 var last_screen = ""
 var reports = []
 var flow_only := false
+var encounters: Array = []
 
 func _ready():
 	call_deferred("run_tests")
@@ -57,12 +58,21 @@ func run_tests():
 		actions = 0
 		transitions = 0
 		last_screen = ""
+		encounters = []
 		var outcome = "action_limit"
 		for step in range(5000):
 			await settle()
 			var s = ScreenManager.current_scene
 			var screen = ScreenManager.current_screen
 			if screen != last_screen:
+				if last_screen == "combat" and not encounters.is_empty():
+					encounters[-1]["hp_after"] = ResourceManager.current_hp
+					encounters[-1]["actions"] = actions - int(encounters[-1]["action_start"])
+				if screen == "combat":
+					encounters.append({"act": MapManager.act, "row": MapManager.node_position,
+						"hp_before": ResourceManager.current_hp, "max_hp": ResourceManager.max_hp,
+						"action_start": actions, "deck": RunState.deck.size(),
+						"gold": ResourceManager.gold, "upgrade_points": ResourceManager.upgrade_points})
 				transitions += 1
 				print("FLOW ",trial," screen=",screen," act=",MapManager.act," row=",MapManager.node_position," hp=",ResourceManager.current_hp," deck=",RunState.deck.size())
 				last_screen = screen
@@ -168,6 +178,7 @@ func run_tests():
 					outcome = "unexpected_screen:" + screen
 					break
 		var report = {"trial":trial,"outcome":outcome,"act":MapManager.act,"row":MapManager.node_position,"hp":ResourceManager.current_hp,"actions":actions,"transitions":transitions,"deck":RunState.deck.size()}
+		report["encounters"] = encounters.duplicate(true)
 		reports.append(report)
 		print("FLOW RESULT ",JSON.stringify(report))
 	var f = FileAccess.open("user://run-flow-regression.json",FileAccess.WRITE)
